@@ -18,6 +18,8 @@ const TT = G.TILES = {
   u: { solid: true }, n: { solid: true }, V: { }, j: { solid: true }, d: { solid: true }, E: { solid: true },
   // player-built structures (stamped onto maps by js/build.js)
   A: { solid: true }, H: { solid: true }, J: { solid: true }, K: { solid: true },
+  // homestead: stone path, fence gate, wild thicket (land not yet owned), tiled kitchen/bathroom floor
+  Z: { }, Y: { }, X: { solid: true }, v: { },
 };
 TT.G.tall = TT.q.tall = true;
 
@@ -85,8 +87,8 @@ function fillShape(c, ms, e, rc, col) { shapePath(c, ms, e, rc); c.fillStyle = c
 
 // ---- Ground classes ------------------------------------------------------------
 // Each ground tile belongs to a layer class; higher classes are drawn on top of lower ones with rounded edges.
-const GR = 0, TG = 1, MA = 2, SA = 3, PA = 4, CV = 5, HY = 6, WA = 7, FL = 8;
-const DIRECT = { g: GR, f: GR, G: TG, q: MA, y: SA, p: PA, c: CV, e: CV, K: HY, w: WA, V: WA, T: FL, a: FL, m: FL };
+const GR = 0, TG = 1, MA = 2, SA = 3, PA = 4, CV = 5, HY = 6, WA = 7, FL = 8, ST = 9, TI = 10, NCLS = 11;
+const DIRECT = { g: GR, f: GR, G: TG, q: MA, y: SA, p: PA, c: CV, e: CV, K: HY, w: WA, V: WA, T: FL, a: FL, m: FL, Z: ST, v: TI };
 const INTERIOR = inSet('BkShPtbxOL');
 const ROOF = inSet('RQA'), WALL = inSet('WND'), BLD = inSet('RQAWND');
 const MASS = inSet('CEM');
@@ -95,11 +97,11 @@ function resolveCls(m, x, y, ch) {
   if (ch === 'z') { for (let k = 0; k < 4; k++) { const n = at(m, x + DX[k], y + DY[k]); if (n === 'w' || n === 'V') return WA; } }
   if (ch === 'D' || ch === 'M') { const b = DIRECT[at(m, x, y + 1)]; if (b !== undefined && b !== WA) return b; }
   if (INTERIOR(ch) || m.outdoor === false) return FL;
-  const cnt = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const cnt = new Array(NCLS).fill(0);
   let any = false;
   for (let k = 0; k < 8; k++) { const c = DIRECT[at(m, x + DX[k], y + DY[k])]; if (c !== undefined && c !== WA && c !== HY && c !== TG && c !== MA) { cnt[c] += k < 4 ? 2 : 1; any = true; } }
   if (!any) return m.bg === 'cave' ? CV : GR;
-  let best = 0; for (let i = 1; i < 9; i++) if (cnt[i] > cnt[best]) best = i;
+  let best = 0; for (let i = 1; i < NCLS; i++) if (cnt[i] > cnt[best]) best = i;
   return best;
 }
 // Per-map cache, rebuilt whenever m.t is replaced or m.rev changes (player building).
@@ -109,7 +111,7 @@ function mapState(m) {
   const h = m.t.length, w = m.t[0].length;
   s = m._ter = { t: m.t, rev: m.rev, w, h, cls: new Int8Array(w * h), g: new Array(w * h), p: new Array(w * h), amb: 0 };
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const ch = m.t[y][x], d = DIRECT[ch]; s.cls[y * w + x] = d !== undefined ? d : resolveCls(m, x, y, ch); }
-  let grass = 0; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if ('gGfq#nu'.indexOf(m.t[y][x]) >= 0) grass++;
+  let grass = 0; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if ('gGfq#nuX'.indexOf(m.t[y][x]) >= 0) grass++;
   s.amb = m.bg === 'cave' ? 2 : m.outdoor === false ? 3 : grass / (w * h) > .35 ? 1 : 0;
   return s;
 }
@@ -125,6 +127,8 @@ const LAYER = [
   { rings: [[.5, '#c8973c'], [1.3, '#eecd70']], rc: 3 },
   null,
   { rings: [[0, '#efcf98']] },
+  { rings: [[.5, '#7d7790'], [1.3, '#a7a1b6']], rc: 5 },   // ST: stone path (flagstones painted in tex)
+  { rings: [[0, '#a9cfca']] },                             // TI: tiled floor
 ];
 function tex(c, L, v, x0, y0) {
   const R = rng(v * 13 + L * 101 + 3);
@@ -154,6 +158,26 @@ function tex(c, L, v, x0, y0) {
       c.fillStyle = '#d2a66c'; c.fillRect(0, r * 4 + 3.6, 16, .4);
       const jx = 2 + ((r * 5 + v * 3 + y0 * 7) % 12); c.fillRect(jx, r * 4, .4, 3.6);
       el(c, (jx + 6) % 16, r * 4 + 2, 1.2, .35, 'rgba(190,140,80,.25)');
+    }
+  } else if (L === ST) {   // rounded flagstones in two staggered rows, mortar showing between
+    const tints = ['#e2dde9', '#e9e0d2', '#d7dde6', '#e4e0d8'];
+    const rows = [[.7, 6.9, [[.7, 7.1], [8.1, 15.3]]], [8.3, 7.1, [[-3.4, 4.6], [5.4, 10.8], [11.6, 19.6]]]];
+    if (v & 1) rows.reverse(), rows[0][0] = .7, rows[1][0] = 8.3;
+    let k = 0;
+    for (const [ry, rh, cols] of rows) for (const [a, b] of cols) {
+      const tint = tints[(k + v) % 4], dy = (R() - .5) * .5; k++;
+      rf(c, a, ry + .6 + dy, b - a, rh, 2, '#7f7992');
+      rr(c, a, ry + dy, b - a, rh, 2); c.fillStyle = lg(c, a, ry, a + 3, ry + rh, shade(tint, 1.06), tint, shade(tint, .9)); c.fill();
+      el(c, a + 2.2, ry + dy + 1.6, 1.4, .6, 'rgba(255,255,255,.6)');
+      if (R() < .35) { c.strokeStyle = 'rgba(110,100,130,.35)'; c.lineWidth = .35; c.beginPath(); const sx = a + 1.5 + R() * (b - a - 3); c.moveTo(sx, ry + dy + 1.5); c.lineTo(sx + .8, ry + dy + rh * .55); c.stroke(); }
+    }
+    if (v === 2) { el(c, 7.8, 7.7, 1.1, .45, '#7fcc4e'); el(c, 8.4, 7.5, .5, .3, '#a6e274'); }
+  } else if (L === TI) {   // glossy two-tone ceramic tiles with grout
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
+      const wht = (i + j) % 2 === 0;
+      rf(c, i * 4 + .25, j * 4 + .25, 3.5, 3.5, .7, wht ? '#fbfdfb' : '#bfe7df');
+      c.fillStyle = wht ? 'rgba(200,225,220,.6)' : 'rgba(130,190,180,.6)'; c.fillRect(i * 4 + .4, j * 4 + 3.2, 3.2, .45);
+      el(c, i * 4 + 1.2, j * 4 + 1.1, .7, .35, 'rgba(255,255,255,.85)');
     }
   }
 }
@@ -287,6 +311,7 @@ const PSH = {
   i: [8.5, 13.8, 6.4, 2.3, .24], l: [8.8, 14.8, 3.8, 1.4, .26], s: [8.6, 15, 4.6, 1.4, .22], x: [8.8, 15, 7.4, 1.9, .22], O: [8.6, 15.1, 6, 1.7, .24],
   L: [8.6, 15.1, 6.4, 1.7, .24], k: [8.8, 15.2, 8, 1.6, .2], S: [8.6, 15.4, 7.8, 1.4, .2], h: [8.8, 15.2, 7.6, 1.6, .2], P: [8.8, 15.2, 7.6, 1.6, .2],
   t: [8.8, 14.8, 7.6, 2.2, .18], b: [8.8, 15.2, 7.6, 1.6, .18], j: [8.6, 15, 7.6, 1.4, .14],
+  X: [8.8, 13.8, 8.6, 3.4, .34], Y: [8.4, 12.4, 6.4, 1.3, .14],
 };
 const CASTN = inSet('CEBWND'), CASTW = inSet('CEWNDRQAHJ');
 
@@ -460,6 +485,70 @@ function paintFence(c, ms) {
   if (ms & 8) { rail(0, 3, 8, 1.5); rail(0, 7.2, 8, 1.5); } if (ms & 2) { rail(8, 3, 8, 1.5); rail(8, 7.2, 8, 1.5); }
   rf(c, 6.2, -1.4, 3.6, 13.4, 1.4, '#9a6a3c'); rr(c, 6.2, -1.8, 3.4, 13, 1.4); c.fillStyle = lg(c, 6.2, 0, 9.6, 0, '#f0c48a', '#d39e64', '#b8844c'); c.fill();
   el(c, 7.9, -1, 1.5, .7, '#f7d8a6');
+}
+// Fence gate: two capped posts with a picket gate between them (vertical fences get an edge-on gate).
+function paintGate(c, ms) {
+  const vert = (ms & 5) && !(ms & 10);
+  const wood = (x, y, w, h, r, a, b) => { rf(c, x, y + .6, w, h, r, '#9a6a3c'); rr(c, x, y, w, h, r); c.fillStyle = lg(c, x, y, x + w, y + h, a || '#f4cf98', b || '#d7a368'); c.fill(); };
+  const post = (px, py, ht) => {
+    rf(c, px - 1.9, py - ht + .4, 3.8, ht + .2, 1.4, '#8a5a30'); rr(c, px - 1.8, py - ht, 3.6, ht, 1.4); c.fillStyle = lg(c, px - 1.8, 0, px + 1.8, 0, '#f0c48a', '#d39e64', '#b07a44'); c.fill();
+    el(c, px, py - ht + .5, 2.2, 1, '#8a5a30'); el(c, px, py - ht + .2, 2, .85, '#f7d8a6');
+  };
+  if (vert) {
+    post(8, 2.5, 8); 
+    wood(6.9, 3.6, 2.2, 10, .6, '#f7d6a4', '#dcaa70');
+    c.fillStyle = 'rgba(120,70,30,.35)'; for (const yy of [5.6, 8.4, 11.2]) c.fillRect(6.9, yy, 2.2, .4);
+    el(c, 8, 8, 1.6, .5, 'rgba(255,250,230,.4)');
+    rf(c, 6.4, 6.8, 3.2, 1, .4, '#8c8aa0');
+    post(8, 15.4, 8);
+    return;
+  }
+  // horizontal: gate leaf between the posts
+  wood(3, 2.4, 10, 1.6, .6); wood(3, 7.6, 10, 1.6, .6);
+  for (let i = 0; i < 4; i++) {
+    const px = 3.7 + i * 2.35;
+    c.beginPath(); c.moveTo(px, 11); c.lineTo(px, .4); c.lineTo(px + .85, -.9); c.lineTo(px + 1.7, .4); c.lineTo(px + 1.7, 11); c.closePath();
+    c.fillStyle = '#a8743f'; c.save(); c.translate(0, .6); c.fill(); c.restore();
+    c.fillStyle = lg(c, px, 0, px + 1.7, 0, '#fbe0b2', '#e2b073'); c.fill();
+  }
+  c.save(); c.beginPath(); c.moveTo(4, 8.6); c.lineTo(12, 3); c.lineWidth = 1.2; c.strokeStyle = '#b8844c'; c.stroke(); c.lineWidth = .4; c.strokeStyle = 'rgba(255,245,215,.6)'; c.stroke(); c.restore();
+  c.fillStyle = 'rgba(255,245,215,.55)'; c.fillRect(3.4, 2.6, 9.2, .35); c.fillRect(3.4, 7.8, 9.2, .35);
+  rf(c, 11.6, 4.8, 2.2, 1.1, .4, '#7c7a92'); el(c, 12.9, 5.35, .45, .45, '#c8c6da');   // latch
+  rf(c, 2.4, 2.6, 1.6, 1.2, .3, '#6c6a80'); rf(c, 2.4, 7.8, 1.6, 1.2, .3, '#6c6a80');   // hinges
+  post(1.9, 12, 13.6); post(14.1, 12, 13.6);
+}
+// Wild thicket: dark tangled bramble mounds with thorny vines and berries; overlapping neighbours read as one mass.
+const THK = ['#173e26', '#2a6236', '#3a7a40', '#68a356'];
+function paintThicket(c, v, stake) {
+  const R = rng(v * 23 + 11);
+  const cs = [[2.6, 9.8, 5.4], [13.4, 9.4, 5.6], [8, 4.4, 6.2], [3.4, 3.2, 4.4], [12.8, 2.6, 4.6], [8, 10.6, 6]];
+  toonBlob(c, cs, THK);
+  c.save(); blobPath(c, cs, 0, 0, 0); c.clip();
+  for (let i = 0; i < 7; i++) { const a = R() * 16, b = -2 + R() * 16; el(c, a, b, 1.6 + R(), 1, 'rgba(10,40,20,.28)'); }
+  for (let i = 0; i < 6; i++) { const a = 1 + R() * 14, b = -3 + R() * 14; c.strokeStyle = 'rgba(190,230,150,.32)'; c.lineWidth = .5; c.beginPath(); c.arc(a, b, 1.1, 1.1 * PI, 1.9 * PI); c.stroke(); }
+  c.restore();
+  // thorny bramble canes arching over the mound
+  for (let i = 0; i < 3; i++) {
+    const x0 = -1 + R() * 6 + i * 5, y0 = 12 + R() * 3, x1 = x0 + 4 + R() * 6, y1 = 11 + R() * 3, cxp = (x0 + x1) / 2 + (R() - .5) * 4, cyp = -6 + R() * 6;
+    c.lineWidth = 1.1; c.strokeStyle = '#4a2a22'; c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo(cxp, cyp, x1, y1); c.stroke();
+    c.lineWidth = .45; c.strokeStyle = '#9a5a44'; c.beginPath(); c.moveTo(x0, y0 - .3); c.quadraticCurveTo(cxp, cyp - .3, x1, y1 - .3); c.stroke();
+    for (let k = 1; k < 6; k++) {
+      const u = k / 6, px = (1 - u) * (1 - u) * x0 + 2 * u * (1 - u) * cxp + u * u * x1, py = (1 - u) * (1 - u) * y0 + 2 * u * (1 - u) * cyp + u * u * y1;
+      const s = k % 2 ? 1 : -1; c.fillStyle = '#e8d2b8'; c.beginPath(); c.moveTo(px - .35, py); c.lineTo(px + .35 * s * 2, py - 1.1); c.lineTo(px + .35, py); c.fill();
+    }
+  }
+  // dry twigs poking out of the top
+  c.strokeStyle = '#6a4a34'; c.lineWidth = .6;
+  for (let i = 0; i < 2; i++) { const a = 4 + R() * 8, b = -1 + R() * 2; c.beginPath(); c.moveTo(a, b + 2); c.lineTo(a + (R() - .5) * 3, b - 3); c.lineTo(a + (R() - .5) * 4, b - 4.5); c.stroke(); }
+  // dark berries
+  for (let i = 0; i < 4; i++) { const a = 2 + R() * 12, b = 1 + R() * 11; el(c, a, b + .3, .9, .8, '#1e1028'); el(c, a, b, .8, .8, '#5a2a6a'); el(c, a - .25, b - .3, .25, .2, 'rgba(255,255,255,.7)'); }
+  if (stake) {   // survey stake with a red ribbon: land you can buy later
+    c.fillStyle = lg(c, 10, 0, 12, 0, '#c89a62', '#a07040'); c.fillRect(10.4, -7, 1.4, 15);
+    c.beginPath(); c.moveTo(10.4, 8); c.lineTo(11.1, 9.4); c.lineTo(11.8, 8); c.fill();
+    rf(c, 9.6, -6, 3, 1.4, .5, '#e8423e');
+    c.fillStyle = '#e8423e'; c.beginPath(); c.moveTo(12.4, -5.6); c.quadraticCurveTo(14.4, -4.6, 15.6, -2.2); c.lineTo(14.6, -2.4); c.quadraticCurveTo(13.6, -4.4, 12, -4.8); c.fill();
+    c.fillStyle = '#ff8a7a'; c.fillRect(9.8, -5.8, 2.6, .4);
+  }
 }
 function paintCrops(c, v, fi) {
   const veg = ['#ff8a3a', '#f4f0e6', '#e8445a', '#ffd23a'][v];
@@ -706,7 +795,9 @@ function propSpec(s, m, x, y) {
     case 'i': return spec('cry' + (v % 3), 0, -4, 16, 20, c => paintCrystal(c, v % 3), { yb, ph, fx: fxCrystal, gc: CRY[v % 3][1] });
     case 'l': return spec('lamp', 2, -19, 12, 35, paintLamp, { yb, ph, fx: fxLamp });
     case 's': return spec('sign', 0, -1.5, 16, 17.5, paintSign, { yb });
-    case 'F': { const ms = sm(inSet('F'), false); return spec('fence' + ms, 0, -6, 16, 22.6, c => paintFence(c, ms), { yb }); }
+    case 'F': { const ms = sm(inSet('FY'), false); return spec('fence' + ms, 0, -6, 16, 22.6, c => paintFence(c, ms), { yb }); }
+    case 'Y': { const ms = sm(inSet('FY'), false); return spec('gate' + ms, 0, -6, 16, 22.6, c => paintGate(c, ms), { yb }); }
+    case 'X': { const stake = hash(x, y, 7) < .07; return spec('thicket' + v + (+stake), -3.5, -10, 23, 26, c => paintThicket(c, v, stake), { yb, br: .008, ph }); }
     case 'j': return spec('crop' + v, 0, -5, 16, 20, (c, fi) => paintCrops(c, v, fi), { yb, n: 4, anim: (t, tx, ty) => ((t / 14 + tx * 1.3 + ty) | 0) & 3 });
     case 'G': case 'q': return spec('tuft' + ch + (v & 3), -4, -6, 24, 23, (c, fi) => paintTuft(c, ch, v & 3, fi, false), { yb: y * 16 + 15.9, n: 8, anim: tuftFrame });
     case 'R': case 'Q': case 'A': {

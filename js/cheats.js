@@ -93,6 +93,12 @@ function unlockEverything() {
   for (const k of ['meadow', 'marsh', 'mine']) { S.flags['shard_' + k] = true; S.flags['placed_' + k] = true; }
   for (const k of Object.keys(G.ITEMS)) if (G.ITEMS[k].kind !== 'key') S.bag[k] = 99;
   S.money = 9999999;
+  // homestead: all the land, every vehicle and recipe
+  if (G.migrateState) G.migrateState(S);
+  if (S.home) S.home.deed = 3;
+  if (G.vehicles && G.vehicles.grant && G.VEHICLES) for (const id of Object.keys(G.VEHICLES)) if (!(S.vehicles.owned || []).includes(id)) G.vehicles.grant(id);
+  S.energy = G.farm && G.farm.energyMax ? G.farm.energyMax() : 100;
+  if (G.home && G.world.map) G.home.refresh();
 }
 
 async function testMenu() {
@@ -101,7 +107,7 @@ async function testMenu() {
   for (;;) {
     const items = ['UNLOCK EVERYTHING', ...OPTIONS.map(([k, n]) => `${n}: ${S.cheats[k] ? 'ON' : 'OFF'}`), 'ADD CREATURE', 'HEAL TEAM', 'TEST MODE OFF', 'BACK'];
     const c = await G.choose(items, { x: 4, y: 4, rowH: 12, index: idx, minW: 100 }); if (c < 0 || c === items.length - 1) break; idx = c;
-    if (c === 0) { unlockEverything(); S.options = S.options || {}; for (const [k] of OPTIONS) S.cheats[k] = true; G.audio.sfx('levelup'); await say(['Everything is unlocked!', 'The Dex is complete, all three shards are placed and the Great Lantern is lit (the Hollow Gate is open), every item is at 99, and all the infinite options are on.']); }
+    if (c === 0) { unlockEverything(); S.options = S.options || {}; for (const [k] of OPTIONS) S.cheats[k] = true; G.audio.sfx('levelup'); await say(['Everything is unlocked!', 'The Dex is complete, all three shards are placed and the Great Lantern is lit (the Hollow Gate is open), every item and material is at 99, and all the infinite options are on.', 'Your homestead owns all its land, and every vehicle is yours.']); }
     else if (c <= OPTIONS.length) { const k = OPTIONS[c - 1][0]; S.cheats[k] = !S.cheats[k]; G.audio.sfx('select'); }
     else if (c === OPTIONS.length + 1) {
       const id = await pickSpecies(); if (id < 0) continue;

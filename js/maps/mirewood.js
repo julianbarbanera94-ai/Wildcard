@@ -98,5 +98,19 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   const busy = (x, y) => m.npcs.concat(m.objs).some(o => Math.abs(o.x - x) + Math.abs(o.y - y) <= 2);
   const grow = (x0, y0, x1, y1, pr) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (m.t[y][x] === 'g' && !busy(x, y) && hash(x, y) < pr) set(m, x, y, hash(y, x) < .6 ? '#' : (hash(x + 1, y) < .5 ? 'n' : 'u')); };
   grow(1, 12, 10, 22, .22); grow(1, 27, 10, 41, .22); grow(12, 9, 13, 41, .12); grow(2, 44, 16, 49, .1); grow(27, 44, 73, 49, .1); grow(12, 2, 63, 5, .06);
+
+  // -- Bogroot Apothecary: a mossy blue-roofed hut in a clearing beside the entry path --
+  rect(m, 3, 18, 7, 6, 'g'); building(m, 4, 19, 5, 'Q', 2); rect(m, 6, 22, 1, 2, 'p');
+  scatter(m, 'q', [[3, 22], [9, 22]]); scatter(m, 'd', [[3, 19]]); scatter(m, 'f', [[4, 22], [8, 22], [5, 23], [7, 23]]); set(m, 9, 19, 'u');
+  m.labels = [{ x: 6, y: 19, text: 'BOGROOT APOTHECARY', style: 'shop' }];
+  warp(m, 6, 21, 'apothecary', 3, 5, UP);
+})();
+(function () {
+  const m = interior('apothecary', 'BOGROOT APOTHECARY', 8, 7, 3);
+  rect(m, 3, 2, 4, 1, 'k'); scatter(m, 'S', [[1, 1], [1, 2], [6, 1], [1, 3]]); set(m, 6, 4, 'x'); set(m, 6, 5, 't');
+  npc(m, 4, 1, DOWN, 'old', null, { still: true });
+  npc(m, 1, 5, RIGHT, 'bug', ['Glowcaps glow because they drink moonlight. That is what Granny Bogroot says, anyway.', 'Mix two of them with a spoon of Honey at a Forge and you get a Herb Salve.']);
+  for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Shop', fn: () => G.openShop ? G.openShop('apothecary') : G.story.says('The apothecary is closed for now.') });
+  warp(m, 3, 6, 'mirewood', 6, 22, DOWN);
 })();
 })();

@@ -38,7 +38,7 @@ const OUT = process.env.OUT || '/tmp';
   await key(['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'][d], 120);
   await until(() => G.scene !== G.world.scene, 8000, 'roamer battle'); await shot('roam-battle');
   await advance(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0, 30000, 'command');
-  for (let i = 0; i < 8 && await ev(() => G.scene !== G.world.scene); i++) {   // escaping is random: keep picking RUN
+  for (let i = 0; i < 30 && await ev(() => G.scene !== G.world.scene); i++) {   // escaping is random: keep picking RUN
     if (await ev(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0)) { await key('ArrowRight'); await key('ArrowDown'); await key('z'); }
     else if (await ev(() => G.ui.text && G.ui.text.arrow)) await key('z', 50); else await page.waitForTimeout(150);
   }
@@ -52,16 +52,21 @@ const OUT = process.env.OUT || '/tmp';
       if (A.canPlace('station', x, y) && G.worldApi.canWalk(x + 1, y - 1) && G.worldApi.canWalk(x, y + 2)) return { x, y }; } return null; });
   assert(spot, 'found a building spot');
   await ev(s => { G.placePlayer(s.x + 1, s.y - 1, 0); G.world.map.roamers.forEach(r => { r.timer = 99999; }); }, spot); await page.waitForTimeout(200);
-  await key('Enter'); await until(() => G.ui.layers.length > 0, 3000, 'start menu');
-  const buildIdx = await ev(() => 0);
-  await ev(() => { G.ui.layers.length = 0; G.world.busy = false; }); await page.waitForTimeout(100);   // close the start menu; open BUILD directly below
-  await ev(() => G.runWorld(() => G.buildMenu())); await until(() => G.ui.layers.length >= 2, 3000, 'build menu');
-  await shot('build-menu'); await key('z'); await page.waitForTimeout(300); await shot('build-place'); await key('z');
+  await ev(() => G.runWorld(() => G.buildMenu())); await until(() => G.ui.layers.length >= 1, 3000, 'build menu');
+  const ci = await ev(() => G.BUILD_CATS.filter(([c]) => Object.values(G.STRUCTURES).some(d => d.cat === c && !d.hidden && !d.homestead)).findIndex(c => c[0] === 'creature'));
+  for (let i = 0; i < ci; i++) await key('ArrowDown');
+  await key('z');                                                                            // CREATURES
+  await until(() => G.ui.layers.length >= 2, 3000, 'structure list'); await shot('build-menu');
+  const si = await ev(() => Object.values(G.STRUCTURES).filter(d => d.cat === 'creature' && !d.hidden && !d.homestead).map(d => d.id).indexOf('station'));
+  for (let i = 0; i < si; i++) await key('ArrowRight');
+  await key('z'); await page.waitForTimeout(300); await shot('build-place'); await key('z');
   await idle();
   const m0 = await ev(() => G.state.money);
-  assert.equal(await ev(() => G.state.builds.length), 1); assert.equal(m0, 20000 - 800); assert.equal(await ev(s => G.world.map.t[s.y + 1][s.x], spot), 'J');
+  const blocked = s => ev(s => G.world.map.block.has(s.x + ',' + (s.y + 1)), s);
+  assert.equal(await ev(() => G.state.builds.filter(b => b.type !== 'house').length), 1); assert.equal(m0, 20000 - 800); assert(await blocked(spot), 'station footprint is solid');
   await ev(s => { G.state.party[0].hp = 1; G.placePlayer(s.x, s.y + 2, 1); }, spot); await page.waitForTimeout(150);
-  await key('z'); await until(() => G.ui.layers.length > 0, 3000); await key('z');   // HEAL TEAM
+  await key('z'); await until(() => G.ui.layers.length > 0, 3000); await key('z');            // HEALING
+  for (let i = 0; i < 12 && await ev(() => G.state.party[0].hp !== G.state.party[0].stats.hp); i++) { await key('z', 50); await page.waitForTimeout(250); }   // HEAL TEAM
   await idle();
   assert(await ev(() => G.state.party[0].hp === G.state.party[0].stats.hp), 'station heals'); await shot('station');
   step('Healing Station: built via the build menu (cost deducted, tiles stamped) and heals the team');
@@ -71,13 +76,16 @@ const OUT = process.env.OUT || '/tmp';
       if (A.canPlace('nursery', x, y) && G.worldApi.canWalk(x + 1, y + 2)) { G.state.builds.push({ id: 'n1', type: 'nursery', map: G.world.mapId, x, y }); G.applyBuilds(G.world.map); G.placePlayer(x + 1, y + 2, 1); return; } } });
   await page.waitForTimeout(150);
   const lv0 = await ev(() => G.state.party[1].lvl);
-  await key('z'); await until(() => G.ui.layers.length > 0, 3000); await key('z');            // LEAVE A CREATURE
+  await key('z'); await until(() => G.ui.layers.length > 0, 3000); await key('z');            // NURSERY
+  await until(() => G.ui.layers.length > 0 && G.ui.text, 5000, 'nursery menu'); await key('z');   // LEAVE A CREATURE
   await until(() => G.ui.layers.length > 0 && !G.ui.text, 5000, 'party screen'); await key('ArrowRight'); await key('z');   // pick slot 2
+  await advance(() => G.ui.layers.length > 0 && G.ui.text && G.ui.text.lines.join(' ').includes('Nursery: 1/'), 8000, 'nursery menu again'); await page.waitForTimeout(200); await key('ArrowDown'); await key('z');   // DONE
   await idle();
-  assert.equal(await ev(() => G.state.party.length), 1); assert(await ev(() => !!G.state.builds.find(b => b.id === 'n1').pet));
+  assert.equal(await ev(() => G.state.party.length), 1); assert(await ev(() => G.state.builds.find(b => b.id === 'n1').pets.length === 1));
   await page.waitForTimeout(1200); await shot('nursery');
   await ev(() => { G.state.steps = (G.state.steps || 0) + 400; });                              // pretend we walked 400 steps
-  await key('z'); await advance(() => G.ui.layers.length > 0, 8000, 'nursery menu'); await key('z');   // TAKE IT BACK
+  await key('z'); await advance(() => G.ui.layers.length > 0, 8000, 'manage menu'); await key('z');   // NURSERY
+  await advance(() => G.ui.layers.length > 0 && G.ui.text && G.ui.text.lines.join(' ').includes('Nursery:'), 8000, 'nursery menu'); await key('z');   // TAKE <creature>
   await idle();
   const lv1 = await ev(() => G.state.party[1].lvl);
   assert(lv1 > lv0, `nursery creature levelled up (${lv0} -> ${lv1})`); step(`Nursery: creature left, gained EXP while walking, came back Lv${lv0} -> Lv${lv1}`);
@@ -98,8 +106,8 @@ const OUT = process.env.OUT || '/tmp';
   // 5) builds survive save + reload
   await ev(() => G.saveGame()); await page.reload(); await page.waitForTimeout(400); await key('z'); await key('z');
   await until(() => G.state && G.scene === G.world.scene, 6000, 'continue'); await page.waitForTimeout(500);
-  assert.equal(await ev(() => G.state.builds.length), 3); assert.equal(await ev(() => G.world.mapId), 'sunmeadow');
-  assert.equal(await ev(s => G.world.map.t[s.y + 1][s.x], spot), 'J');
+  assert.equal(await ev(() => G.state.builds.filter(b => b.type !== 'house').length), 3); assert.equal(await ev(() => G.world.mapId), 'sunmeadow');
+  assert(await blocked(spot), 'station still stamped after reload');
   step('builds are saved and re-stamped after reload');
 
   await browser.close();

@@ -177,11 +177,19 @@ const bagArt = () => K.cache('sbag', 56, 66, x => {
 });
 // ctx 'battle' -> returns { item, idx? } or null. ctx 'field' applies items itself.
 G.bagScreen = async function (where) {
-  let idx = 0, top = 0;
-  const names = () => Object.keys(G.state.bag).filter(k => G.state.bag[k] > 0);
+  let idx = 0, top = 0, pk = 0;
+  // Pockets (js/economy.js): in battle only the battle items pocket is shown.
+  const pockets = (G.POCKETS || [{ id: 'items', name: 'ITEMS', kinds: null }]).filter(p => where !== 'battle' || p.id === 'items');
+  const names = () => Object.keys(G.state.bag).filter(k => G.state.bag[k] > 0 && G.ITEMS[k] && (!pockets[pk].kinds || pockets[pk].kinds.includes(G.ITEMS[k].kind)));
+  const turn = d => { pk = (pk + d + pockets.length) % pockets.length; idx = 0; top = 0; G.audio.sfx('select'); };
   const layer = push({ draw(ctx) {
     const list = names(); bg(ctx, '#ffd3a1', 'rgba(255,255,255,.3)');
     header(ctx, 'BAG', '#ff8a5a');
+    if (pockets.length > 1) {   // pocket switcher above the list
+      K.pill(ctx, 104, 4, 120, 11, '#ff8a5a'); G.text(ctx, pockets[pk].name, 164, 6, { align: 'center', color: '#fff', shadow: '#c0502a', font: F6 });
+      G.text(ctx, '\u25C0', 98, 6, { color: '#f7843f', font: F6 }); G.text(ctx, '\u25B6', 226, 6, { color: '#f7843f', font: F6 });
+      G.tapZone(90, 0, 26, 17, () => turn(-1)); G.tapZone(212, 0, 28, 17, () => turn(1));
+    }
     G.frame(ctx, 90, 18, 148, 94, 'light');
     const rows = list.concat('CLOSE');
     rows.slice(top, top + 6).forEach((n, k) => {
@@ -204,12 +212,27 @@ G.bagScreen = async function (where) {
   for (;;) {
     await G.nextFrame(); const p = G.input.pressed, rows = names().length + 1;
     if (p.up && idx > 0) { idx--; G.audio.sfx('select'); } if (p.down && idx < rows - 1) { idx++; G.audio.sfx('select'); }
+    if (pockets.length > 1 && (p.left || p.right)) turn(p.left ? -1 : 1);
     if (idx < top) top = idx; if (idx >= top + 6) top = idx - 5;
     if (p.b) break;
     if (!p.a) continue;
     G.audio.sfx('select');
     const list = names(), item = list[idx]; if (!item) break;
     const it = G.ITEMS[item];
+    const st = { style: where === 'battle' ? 'dark' : 'light' };
+    if (it.kind === 'mat' || it.kind === 'seed') { await G.say(it.kind === 'seed' ? 'Plant seeds in a Garden Plot on your homestead.' : 'Materials are used for building, crafting and upgrades.', st); G.closeText(); continue; }
+    if (it.kind === 'tool') { await G.say(`Your ${item} is used automatically when you gather or farm.`, st); G.closeText(); continue; }
+    if (it.kind === 'food' || (it.kind === 'crop' && it.energy)) {
+      if (G.farm && G.farm.eat) await G.farm.eat(item);
+      else { G.state.bag[item]--; if (!G.state.bag[item]) delete G.state.bag[item]; G.state.energy = Math.min(100, (G.state.energy || 0) + it.energy); G.audio.sfx('heal'); await G.say(`You ate the ${item}. Energy +${it.energy}.`); }
+      G.closeText(); idx = Math.min(idx, names().length); continue;
+    }
+    if (it.kind === 'crop') { await G.say(`${item} is an ingredient. Cook it in your kitchen, or sell it.`, st); G.closeText(); continue; }
+    if (it.kind === 'treat') {
+      const t = await G.partyScreen({ mode: 'use' }); if (t < 0) continue;
+      if (G.useTreat) await G.useTreat(G.state.party[t], item); else { await G.say("It won't have any effect.", st); }
+      G.closeText(); idx = Math.min(idx, names().length); continue;
+    }
     if (it.kind === 'orb') {
       if (where === 'battle') { result = { item }; break; }
       await G.say("You can't use that here.", { style: 'light' }); G.closeText(); continue;
@@ -336,11 +359,12 @@ G.startMenu = async function () {
   let idx = 0;
   for (;;) {
     // BUILD sits after BAG; the rest of the menu keeps its old indices via `ch` below
-    const labels = ['DEX', 'PARTY', 'BAG', 'BUILD', S.name, 'SAVE', 'SETTINGS', 'EXIT'];
+    const labels = ['DEX', 'PARTY', 'BAG', 'BUILD', 'TRAVEL', S.name, 'SAVE', 'SETTINGS', 'EXIT'];
     const pick = await G.choose(labels, { right: 238, y: 4, index: idx, minW: 50, rowH: 13 });
-    if (pick < 0 || pick === 7) break; idx = pick;
+    if (pick < 0 || pick === 8) break; idx = pick;
     if (pick === 3) { await G.buildMenu(); break; }
-    const ch = pick > 3 ? pick - 1 : pick;
+    if (pick === 4) { if (G.travelMenu) await G.travelMenu(); else await G.worldApi.says('Travel is not available yet.'); break; }
+    const ch = pick > 4 ? pick - 2 : pick;
     if (ch === 0) await G.dexScreen();
     else if (ch === 1) await G.partyScreen({ mode: 'menu' });
     else if (ch === 2) await G.bagScreen('field');

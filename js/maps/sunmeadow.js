@@ -122,7 +122,21 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   trainer(m, 'sm_moss', 27, 33, LEFT, 'bug', { name: 'MOSS', cls: 'BUG CATCHER', sight: 4, team: [[18, 5], [18, 6], [19, 7]], pre: 'The pines are full of bugs. And so is my team!', win: 'Squashed...', post: 'Some say there is a hidden glade in those pines.', prize: 30 });
   trainer(m, 'sm_hazel', 3, 20, RIGHT, 'bug', { name: 'HAZEL', cls: 'MEADOW WARDEN', sight: 4, team: [[10, 7], [12, 7], [16, 8]], pre: 'I am Hazel, Warden of Sunmeadow. The MEADOW EMBER SHARD is mine to guard. Show me you can protect the vale!', win: 'You have the heart of a Warden. Take the shard, and relight that Lantern!', post: 'The Great Lantern is in the tower back in Lanternrest. Good luck!', prize: 40, shard: 'meadow' });
 
+  // Meadowbrook Seeds: a farm stand just off the road, with show beds of crops beside it.
+  rect(m, 57, 15, 9, 5, 'g'); building(m, 59, 15, 5, 'R', 2); rect(m, 61, 18, 1, 2, 'p');
+  rect(m, 64, 16, 2, 1, 'j'); rect(m, 64, 18, 2, 1, 'j'); rect(m, 57, 16, 2, 1, 'f'); scatter(m, 'l', [[58, 18]]); set(m, 65, 17, 'u');
+  m.labels = [{ x: 61, y: 15, text: 'MEADOWBROOK SEEDS', style: 'shop' }];
+  warp(m, 61, 17, 'seeds', 3, 5, UP);
+
   rect(m, 70, 20, 2, 2, 'p');
   warp(m, 71, 20, 'lanternrest', 1, 24, RIGHT); warp(m, 71, 21, 'lanternrest', 1, 25, RIGHT);
+})();
+(function () {
+  const m = interior('seeds', 'MEADOWBROOK SEEDS', 8, 7, 3);
+  rect(m, 3, 2, 4, 1, 'k'); scatter(m, 'S', [[1, 1], [1, 2], [6, 1]]); scatter(m, 'x', [[1, 4], [6, 5]]); set(m, 6, 4, 't');
+  npc(m, 4, 1, DOWN, 'lass', null, { still: true });
+  npc(m, 1, 5, RIGHT, 'old', ['Turnips are the easiest crop. Three days and they are ready!', 'Water every day, mind. A plot left dry for three days withers.']);
+  for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Shop', fn: () => G.openShop ? G.openShop('seeds') : G.story.says('The seed stand is closed for now.') });
+  warp(m, 3, 6, 'sunmeadow', 61, 18, DOWN);
 })();
 })();

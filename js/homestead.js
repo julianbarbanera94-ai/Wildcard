@@ -199,7 +199,7 @@ function whyNot(type, x, y, rot, ignore, lvl) {
     const ch = W.tileAt(tx, ty);
     if (!own && (!ch || !okTile[ch])) return 'The ground there is not clear.';
     if (!own && m.block.has(k)) return 'Something is already built there.';
-    if (W.tileWarp(tx, ty) || W.npcAt(tx, ty) || W.roamAt(tx, ty)) return 'Something is in the way.';
+    if ((W.tileWarp(tx, ty) && !own) || W.npcAt(tx, ty) || W.roamAt(tx, ty)) return 'Something is in the way.';
     const o = W.objAt(tx, ty); if (o && o.build !== ignore) return 'Something is in the way.';
     if ((tx === p.x && ty === p.y) || (tx === f.x && ty === f.y)) return 'You are standing there!';
   }
@@ -214,7 +214,7 @@ async function place(type, start, ignore) {
   const ax = p.x + V[p.dir][0], ay = p.y + V[p.dir][1];
   let x = start ? start.x : [ax - (w >> 1), ax - (w >> 1), ax - w + 1, ax][p.dir], y = start ? start.y : [ay, ay - h + 1, ay - (h >> 1), ay - (h >> 1)][p.dir];
   let tapGo = false;
-  const layer = { draw(ctx) {
+  const layer = { ghost: { get x() { return x; }, get y() { return y; }, get rot() { return rot; } }, draw(ctx) {
     const cam = G.world.cam || { cx: 0, cy: 0 }, why = whyNot(type, x, y, rot, ignore), ok = !why, pulse = .35 + Math.sin(G.frameNo / 8) * .1;
     const ox = G.uiX || 0, oy = G.uiY || 0;
     ctx.save(); ctx.translate(-ox, -oy);   // menus are centred; the grid and ghost sit on the map

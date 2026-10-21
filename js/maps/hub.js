@@ -46,7 +46,8 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   rect(m, 7, 16, 1, 6, 'p');
   rect(m, 12, 4, 7, 3, 'R'); rect(m, 12, 7, 7, 1, 'W'); scatter(m, 'N', [[13, 7], [17, 7]]); set(m, 15, 7, 'D');   // Lodge, door (15,7)
   building(m, 4, 4, 5, 'Q', -1);                         // neighbour's house
-  building(m, 21, 4, 5, 'R', -1);                        // neighbour's house
+  building(m, 21, 4, 5, 'R', 2);                         // Builder's Yard (once a neighbour's house), door (23,6)
+  rect(m, 23, 7, 1, 2, 'p'); scatter(m, 'd', [[26, 5], [26, 6]]);   // a log pile by the yard
   rect(m, 4, 9, 27, 1, 'p'); rect(m, 15, 8, 1, 1, 'p');
   // Fenced vegetable garden with crop rows; gap at the bottom.
   rect(m, 12, 12, 9, 1, 'F'); rect(m, 12, 12, 1, 7, 'F'); rect(m, 20, 12, 1, 7, 'F'); rect(m, 12, 18, 9, 1, 'F'); set(m, 16, 18, 'p');
@@ -92,11 +93,13 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   scatter(m, 'f', [[11, 16], [11, 17], [4, 16], [5, 16], [38, 7], [40, 7], [44, 31]]);
 
   // ---- Building plots: clear flat grass (kept clear last) ----
-  const plots = [[47, 3, 10, 10], [13, 41, 10, 8], [32, 37, 10, 10]];
+  const plots = [[47, 5, 10, 8], [13, 41, 10, 8], [32, 37, 10, 10]];
   plots.forEach(([x, y, w, h]) => rect(m, x, y, w, h, 'g'));
   // Fence posts framing each plot's corners.
   plots.forEach(([x, y, w, h]) => [[x - 1, y - 1, 1, 1], [x + w, y - 1, -1, 1], [x - 1, y + h, 1, -1], [x + w, y + h, -1, -1]].forEach(([cx, cy, sx, sy]) => {
     set(m, cx, cy, 'F'); set(m, cx + sx, cy, 'F'); set(m, cx, cy + sy, 'F'); }));
+  // Road north to the homestead: up the east side of the shrine grove, along the top of the NE plot, out at the top edge.
+  rect(m, 44, 2, 2, 8, 'p'); rect(m, 44, 2, 8, 2, 'p'); rect(m, 50, 0, 2, 3, 'p'); scatter(m, 'l', [[43, 2], [52, 2]]);
   sign(m, 46, 8, 'BUILDING PLOT\nOpen ground for a Warden to build on. Bring materials and make it yours!');
   sign(m, 24, 41, 'BUILDING PLOT\nOpen ground for a Warden to build on. Bring materials and make it yours!');
   sign(m, 31, 38, 'BUILDING PLOT\nOpen ground for a Warden to build on. Bring materials and make it yours!');
@@ -104,6 +107,7 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   // ---- Signs ----
   set(m, 24, 23, 's'); m.objs.push({ x: 24, y: 23, fn: () => G.story.says(G.story.questText()) });
   sign(m, 34, 23, 'LANTERNREST\nWhere the Great Lantern keeps the dark away.');
+  sign(m, 49, 1, 'YOUR HOMESTEAD\nNorth along this road. A little cabin and a plot of land of your own.');
   sign(m, 54, 39, 'THE HOLLOW GATE\nSealed until the Great Lantern burns again.');
 
   // ---- Villagers ----
@@ -115,6 +119,8 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   npc(m, 10, 24, DOWN, 'bug', ['Wild creatures roam right out in the open past the village roads.', 'If one bumps into you, it wants to battle. Tall grass hides the shy ones.'], { roam: 2 });
   npc(m, 18, 10, DOWN, 'mom', ['Our tomatoes keep vanishing. I blame the round fluffy ones from the meadow.', 'They leave a thank-you leaf every time, so I can not stay mad.'], { roam: 1 });
   npc(m, 30, 41, LEFT, 'boy', ['I am going to build the biggest house in the vale on this plot!', 'Right after I find out what a "material" is.'], { roam: 1 });
+  m.npcs.push({ x: 53, y: 3, dir: LEFT, style: { hair: '#2a1a10', skin: '#e8b890', shirt: '#ff8a3a', pants: '#3a5a8a', hat: '#ffd23a' }, still: true,
+    talk: () => G.vehicleQuest && G.vehicleQuest.courier ? G.vehicleQuest.courier() : G.story.says(['COURIER KID: I run deliveries all over the vale! Well, I walk them.', 'If I had a scooter I could go twice as fast. Come back later, maybe I will have a job for you!']) });
   npc(m, 3, 35, RIGHT, 'girl', ['The pond is so clear you can see the sky in it.', 'The marsh east of here is murkier. Bring boots. And patience.'], { still: true });
 
   // ---- Warps ----
@@ -123,9 +129,19 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   warp(m, 0, 24, 'sunmeadow', 70, 20, LEFT, need); warp(m, 0, 25, 'sunmeadow', 70, 21, LEFT, need);
   warp(m, 59, 24, 'mirewood', 1, 24, RIGHT, need); warp(m, 59, 25, 'mirewood', 1, 25, RIGHT, need);
   warp(m, 28, 0, 'ridge', 24, 50, UP, need); warp(m, 29, 0, 'ridge', 25, 50, UP, need);
+  warp(m, 50, 0, 'homestead', 27, 42, UP, need); warp(m, 51, 0, 'homestead', 28, 42, UP, need);
+  warp(m, 23, 6, 'yard', 3, 6, UP);
   warp(m, 28, 51, 'shore', 30, 1, DOWN, need); warp(m, 29, 51, 'shore', 31, 1, DOWN, need);
   const gate = () => G.state.flags.lanternLit ? null : 'The archway is sealed by a faint, flickering light. Relight the Great Lantern first.';
   warp(m, 52, 38, 'hollow', 18, 30, UP, gate); warp(m, 53, 38, 'hollow', 19, 30, UP, gate);
+
+  // ---- Name plates over the town's services ----
+  m.labels = [
+    { x: 15, y: 4, text: 'WARDEN LODGE · HEALING', style: 'heal' },
+    { x: 43, y: 28, text: 'GENERAL STORE', style: 'shop' },
+    { x: 23, y: 4, text: "BUILDER'S YARD", style: 'craft' },
+    { x: 39, y: 4, text: 'HEARTH SHRINE', style: 'home' },
+  ];
 })();
 (function () {
   const m = interior('cottage', 'YOUR COTTAGE', 8, 7, 4);
@@ -157,6 +173,14 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   npc(m, 5, 5, LEFT, 'girl', ['Wardens who clear the Mine sometimes carry ULTRA ORBS. I could never afford one!']);
   for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 3, fn: () => G.shopMenu() });
   warp(m, 3, 7, 'lanternrest', 43, 31, DOWN);
+})();
+(function () {
+  const m = interior('yard', "BUILDER'S YARD", 8, 8, 3);
+  rect(m, 3, 3, 4, 1, 'k'); scatter(m, 'x', [[1, 1], [2, 1], [1, 2], [6, 5], [6, 6]]); scatter(m, 'S', [[5, 1], [6, 1]]); set(m, 1, 5, 't');
+  npc(m, 4, 2, DOWN, 'hiker', null, { still: true });
+  npc(m, 2, 6, RIGHT, 'boy', ['Planks and bricks come out of a Refinery. If you are in a hurry, the Yard sells them ready-made.', 'They buy spare materials too, if your shed is overflowing.']);
+  for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 3, prompt: 'Shop', fn: () => G.openShop ? G.openShop('builder') : G.story.says("BUILDER'S YARD: We are still unloading the cart. Come back soon!") });
+  warp(m, 3, 7, 'lanternrest', 23, 7, DOWN);
 })();
 (function () {
   const m = interior('tower', 'THE GREAT LANTERN', 12, 10, 6);

@@ -68,6 +68,29 @@ const hash = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.54
     m.npcs.some(n => n.trainer && ((n.dir > 1 && y === n.y && Math.abs(x - n.x) <= n.trainer.sight) || (n.dir < 2 && x === n.x && Math.abs(y - n.y) <= n.trainer.sight))) ||
     [[0, 1], [0, -1], [1, 0], [-1, 0]].some(([dx, dy]) => m.t[y + dy] && m.t[y + dy][x + dx] === 'p');
   for (let y = 5; y < 51; y++) for (let x = 1; x < 51; x++) if (m.t[y][x] === 'g' && !keep(x, y) && hash(x * 3, y) < .1) set(m, x, y, hash(y, x) < .75 ? 'n' : 'r');
+
+  // -- Mine Row: a Healing Post and the Ridgehold Forge built against the cliff beside the mine mouth --
+  building(m, 30, 4, 5, 'R', 2); building(m, 36, 4, 5, 'Q', 2); set(m, 35, 5, 'g'); set(m, 35, 6, 'l'); set(m, 41, 5, 'd');
+  m.labels = [{ x: 32, y: 4, text: 'HEALING POST', style: 'heal' }, { x: 38, y: 4, text: 'RIDGEHOLD FORGE', style: 'shop' }];
+  warp(m, 32, 6, 'ridgeheal', 3, 5, UP); warp(m, 38, 6, 'forgeshop', 3, 5, UP);
+  // -- an abandoned quad bike, rusting in the sand at the west lookout (the vehicles owner draws and repairs it) --
+  m.objs.push({ x: 6, y: 21, kind: 'quad', ball: false, prompt: 'Old quad bike', hide: () => G.state.flags.quadFound, fn: () => G.vehicleQuest && G.vehicleQuest.quad ? G.vehicleQuest.quad() : G.story.says('An old quad bike, half buried in the sand. Its engine is long dead.') });
+})();
+(function () {
+  const m = interior('ridgeheal', 'RIDGE HEALING POST', 8, 7, 3);
+  rect(m, 3, 2, 4, 1, 'k'); set(m, 1, 1, 'h'); scatter(m, 'S', [[6, 1]]); rect(m, 5, 4, 2, 1, 'a'); set(m, 1, 5, 't');
+  npc(m, 4, 1, DOWN, 'nurse', null, { still: true });
+  npc(m, 6, 5, LEFT, 'hiker', ['Miners come up out of the dark with their Bondlings half asleep. This post is a lifesaver.']);
+  for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Heal', fn: () => G.healUI ? G.healUI({ name: 'RIDGE HEALING POST', free: true }) : G.story.nurse() });
+  warp(m, 3, 6, 'ridge', 32, 7, DOWN);
+})();
+(function () {
+  const m = interior('forgeshop', 'RIDGEHOLD FORGE', 8, 7, 3);
+  rect(m, 3, 2, 4, 1, 'k'); scatter(m, 'L', [[1, 1]]); scatter(m, 'x', [[6, 1], [1, 4], [1, 5]]); set(m, 6, 5, 'O');
+  npc(m, 4, 1, DOWN, 'hiker', null, { still: true, style: { hair: '#3a2a20', skin: '#e0a880', shirt: '#7a4a2a', pants: '#3a3a48', hat: '#4a4a58' } });
+  npc(m, 5, 4, LEFT, 'kade', ['Smiths on the Ridge have worked iron since before the Lantern was lit.', 'Bring your ore here if you have no use for it. We pay fair.']);
+  for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Shop', fn: () => G.openShop ? G.openShop('forge') : G.story.says('The forge fire is out for now.') });
+  warp(m, 3, 6, 'ridge', 38, 7, DOWN);
 })();
 
 // ---- Glimmer Mine: crystal caves guarded by the Mine Warden ----
