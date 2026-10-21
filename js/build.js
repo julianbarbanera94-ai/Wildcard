@@ -83,11 +83,13 @@ async function place(type) {
   const def = G.STRUCTURES[type];
   const layer = { draw(ctx) {
     const cam = G.world.cam || { cx: 0, cy: 0 }, ok = canPlace(type, x, y), pulse = .35 + Math.sin(G.frameNo / 8) * .1;
+    ctx.save(); ctx.translate(-(G.uiX || 0), -(G.uiY || 0));   // menus are centred; the ghost footprint sits on the map
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
       const sx = (x + i) * 16 - cam.cx, sy = (y + j) * 16 - cam.cy;
       ctx.fillStyle = ok ? `rgba(90,220,140,${pulse})` : `rgba(240,80,80,${pulse})`; ctx.fillRect(sx + .5, sy + .5, 15, 15);
       ctx.strokeStyle = ok ? '#2a9a5a' : '#b83030'; ctx.lineWidth = .6; ctx.strokeRect(sx + .5, sy + .5, 15, 15);
     }
+    ctx.restore();
     G.frame(ctx, 2, 2, 236, 22, 'light');
     G.text(ctx, `${def.name}  $${def.cost}`, 10, 8); G.text(ctx, ok ? 'A: build   B: cancel' : 'Can\'t build here', 230, 8, { align: 'right', color: ok ? '#2a7a4a' : '#b83030' });
   } };

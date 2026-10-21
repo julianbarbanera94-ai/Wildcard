@@ -34,13 +34,29 @@
   #pad .stick .ring::before { content: ''; position: absolute; inset: 22px; border-radius: 50%; border: 2px dashed rgba(240,160,70,.35); }
   #pad .stick .knob { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6dc, #ffbe5c 75%); border: 3px solid #f0962e; box-shadow: 0 4px 0 rgba(200,110,30,.35), inset 0 2px 0 #fff; transition: transform .08s ease-out; }
   #pad .stick.on .knob { transition: none; }
-  @media (pointer: coarse) { #pad { display: flex; } #help { display: none; } body { gap: 12px; justify-content: flex-start; } #screen { width: 100vw; border-width: 0; border-radius: 0; box-shadow: 0 6px 18px rgba(80,60,120,.25); } }
-  /* Phones held sideways: the screen fills the height and the pad floats over the empty margins. */
+  /* Touch screens. Portrait: the game fills the width at the top, the controls get the bottom of the screen. */
+  @media (pointer: coarse) {
+    body { gap: 0; justify-content: flex-start; height: 100dvh; }
+    #help { display: none; }
+    #screen { width: 100vw; height: 60dvh; aspect-ratio: auto; max-width: none; border-width: 0; border-radius: 0; box-shadow: 0 6px 18px rgba(80,60,120,.25); }
+    #pad { display: flex; flex: 1; width: 100vw; max-width: 560px; align-items: center; justify-content: space-between; padding: 12px max(22px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-bottom)); }
+    #pad .stick { width: min(40vw, 170px); height: min(40vw, 170px); }
+    #pad .stick .knob { width: 38%; height: 38%; margin: -19% 0 0 -19%; }
+    #pad .ab { grid-template-columns: repeat(2, min(18vw, 74px)); gap: min(3vw, 14px); }
+    #pad .ab button { height: min(18vw, 74px); font-size: 22px; }
+    #pad .ab button[data-k="start"], #pad .ab button[data-k="orb"] { height: 36px; }
+  }
+  /* Landscape: the game fills the whole screen edge to edge; the controls float over it, sized to the side margins
+     left beside the centred 3:2 menu panel (margin = (100vw - 150dvh) / 2). */
   @media (pointer: coarse) and (orientation: landscape) {
-    body { justify-content: center; gap: 0; }
-    #screen { width: auto; height: 100vh; max-width: 100vw; }
-    #pad { position: fixed; left: 0; right: 0; bottom: 8px; width: auto; pointer-events: none; padding: 0 max(14px, env(safe-area-inset-left)) 0 max(14px, env(safe-area-inset-right)); }
-    #pad button, #pad .stick { pointer-events: auto; opacity: .78; }
+    body { justify-content: center; --m: max(96px, calc((100vw - 150dvh) / 2 - 10px)); }
+    #screen { width: 100vw; height: 100dvh; aspect-ratio: auto; box-shadow: none; }
+    #pad { position: fixed; left: 0; right: 0; bottom: 0; flex: none; max-width: none; width: auto; pointer-events: none; padding: 0 max(8px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right)); align-items: flex-end; }
+    #pad .stick { width: min(var(--m), 40vh, 150px); height: min(var(--m), 40vh, 150px); }
+    #pad .ab { grid-template-columns: repeat(2, min(calc(var(--m) / 2 - 4px), 17vh, 64px)); gap: 6px; }
+    #pad .ab button { height: min(calc(var(--m) / 2 - 4px), 17vh, 64px); font-size: 18px; }
+    #pad .ab button[data-k="start"], #pad .ab button[data-k="orb"] { height: 28px; font-size: 11px; }
+    #pad button, #pad .stick { pointer-events: auto; opacity: .8; }
   }
 </style>
 </head>

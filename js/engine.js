@@ -86,11 +86,30 @@ function tick() {
   waiters.splice(0).forEach(r => r());
   G.scene && G.scene.update && G.scene.update();
 }
+// The logical screen grows to match the real one: wider than 3:2 (landscape phones) G.W > 240, taller (portrait)
+// G.H > 160. Scenes marked `wide` (the overworld) use all of it; everything else (battles, title, menus, dialogue)
+// is laid out for 240x160 and drawn centred horizontally and anchored to the bottom, offset by (G.uiX, G.uiY).
+const BASE_W = 240, BASE_H = 160;
+function centred(ctx, ox, fn) {
+  const fw = G.W, fh = G.H; ctx.save(); ctx.translate(ox, G.uiY); G.W = BASE_W; G.H = BASE_H;
+  try { fn(); } finally { G.W = fw; G.H = fh; ctx.restore(); }
+}
 function draw(ctx) {
+  const ox = G.uiX = (G.W - BASE_W) / 2, oy = G.uiY = G.H - BASE_H;
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, G.W, G.H);
-  G.scene && G.scene.draw(ctx);
-  if (G.ui.text) G.drawTextbox(ctx, G.ui.text);
-  G.ui.layers.forEach(l => l.draw(ctx));
+  const sc = G.scene;
+  if (sc && sc.wide) sc.draw(ctx);
+  else if (sc) {
+    centred(ctx, ox, () => sc.draw(ctx));
+    // stretch the outermost column/row of the scene out to the screen edges, so backdrops reach edge to edge
+    const S = G.S, c = ctx.canvas;
+    if (ox > 0) {
+      ctx.drawImage(c, Math.round(ox * S) + 1, 0, 1, c.height, 0, 0, ox, G.H);
+      ctx.drawImage(c, Math.round((ox + BASE_W) * S) - 2, 0, 1, c.height, ox + BASE_W, 0, ox, G.H);
+    }
+    if (oy > 0) ctx.drawImage(c, 0, Math.round(oy * S) + 1, c.width, 1, 0, 0, G.W, oy);
+  }
+  centred(ctx, ox, () => { if (G.ui.text) G.drawTextbox(ctx, G.ui.text); G.ui.layers.forEach(l => l.draw(ctx)); });
   const f = G.ui.fade; if (f.a > 0) { ctx.globalAlpha = Math.min(1, f.a); ctx.fillStyle = f.color; ctx.fillRect(0, 0, G.W, G.H); ctx.globalAlpha = 1; }
   if (G.ui.wipe > 0) { // battle-entry shutters
     ctx.fillStyle = '#000'; const n = 8, hh = G.H / n;
@@ -102,8 +121,11 @@ G.start = function (canvas) {
   const ctx = canvas.getContext('2d', { alpha: false });
   // The game is laid out in 240x160 logical units; the backing store is sized to the real screen so art stays sharp.
   const fit = () => {
-    const w = canvas.getBoundingClientRect().width || 960, s = Math.max(3, Math.min(8, Math.round(w * (window.devicePixelRatio || 1) / G.W)));
-    if (canvas.width !== G.W * s) { canvas.width = G.W * s; canvas.height = G.H * s; }
+    const r = canvas.getBoundingClientRect(), w = r.width || 960, h = r.height || w / 1.5, a = w / h;
+    if (a >= 1.5) { G.H = BASE_H; G.W = Math.max(BASE_W, Math.min(420, Math.round(BASE_H * a))); }   // wider: see more sideways
+    else { G.W = BASE_W; G.H = Math.max(BASE_H, Math.min(400, Math.round(BASE_W / a))); }           // taller: see more up and down
+    const s = Math.max(3, Math.min(8, Math.round(w * (window.devicePixelRatio || 1) / G.W)));
+    if (canvas.width !== G.W * s || canvas.height !== G.H * s) { canvas.width = G.W * s; canvas.height = G.H * s; }
     G.S = s; ctx.setTransform(s, 0, 0, s, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   };
   fit(); addEventListener('resize', fit);

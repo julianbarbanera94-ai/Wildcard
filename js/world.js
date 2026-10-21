@@ -437,7 +437,7 @@ function draw(ctx) {
   if (world.bubble) { const n = world.bubble.n; G.drawBubble(ctx, n.x * 16 + n.ox - cx, n.y * 16 + n.oy - cy, t); }
   if (world.banner) G.drawBanner(ctx, world.banner.text, world.banner.t);
 }
-world.scene = { update, draw };
+world.scene = { update, draw, wide: true };
 // Species packs declare where they live: habitat [[mapId, minLv, maxLv, weight], ...]. Merge into encounter tables.
 G.badHabitats = [];
 for (const s of Object.values(G.SPECIES)) for (const [id, lo, hi, wt] of s.habitat || []) {
