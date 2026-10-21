@@ -9,7 +9,7 @@ This document is the source of truth for anyone (person or agent) changing the g
 - Art should be generated at **at least 4 px per logical unit** (a 16 px tile -> a 64 px offscreen canvas) and drawn with an explicit destination size in logical units: `ctx.drawImage(img, x, y, 16, 16)`. Never rely on an image's natural size, and never use a source rectangle that assumes a canvas size.
 - Cache everything that is not animated. **No canvas creation and no `new Image` per frame**: only at cache-fill time. Budget: roughly 400 drawImage calls a frame; 60 fps on a mid-range phone.
 - `G.frameNo` (and the `t` argument passed to draw functions) counts 60 Hz frames; use it for animation (`Math.sin(t / 30)` and so on).
-- Font: **Nunito** 700/800/900 is bundled in `fonts/` (`G.FONT = '800 8px Nunito, ...'`). Sizes are logical px.
+- Font: **Nunito** 700/800/900, embedded as data in `js/fonts.js` (file:// blocks font files). `G.FONT = '800 8px Nunito, ...'`. Sizes are logical px.
 
 ## Visual direction ("Pokopia-like")
 

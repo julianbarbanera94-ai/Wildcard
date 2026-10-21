@@ -22,7 +22,7 @@ if [ ! -f "$KS" ]; then
   echo "Generated signing key $KS - back it up: updates must be signed with the same key."
 fi
 # 1. stage the game as the app's assets
-mkdir -p "$W/assets"; cp "$ROOT/index.html" "$W/assets/"; cp -r "$ROOT/js" "$W/assets/js"; cp -r "$ROOT/fonts" "$W/assets/fonts"
+mkdir -p "$W/assets"; cp "$ROOT/index.html" "$W/assets/"; cp -r "$ROOT/js" "$W/assets/js"
 # 2. Java -> classes -> dex
 mkdir -p "$W/classes"; javac -nowarn -source 8 -target 8 -bootclasspath "$JAR" -d "$W/classes" $(find "$HERE/src" -name '*.java') 2>&1 | grep -v -E '^(Picked|warning|Note)' || true
 dalvik-exchange --dex --min-sdk-version=24 --output="$W/classes.dex" "$W/classes" 2>&1 | grep -v Picked || true
