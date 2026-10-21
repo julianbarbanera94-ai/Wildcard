@@ -138,7 +138,7 @@ D(41, 'Pinchip', ['Water'], [46, 58, 58, 34, 38, 46], 235, 55, {
   desc: 'A shy pool crab. It waves one big claw at anything bigger than itself.',
   habitat: [['shore', 4, 9, 10]],
 });
-ART[41] = { main: '#ff7e5a', belly: '#ffe2c4', body: 'shell', fists: true, claws: true, bubbles: true, mouth: 'open', eye: 'round', eyeR: .13, iris: '#401818', cheek: '#ffb8a0', legLift: 3 };
+ART[41] = { main: '#ff7e5a', belly: '#ffe2c4', fists: true, claws: true, bubbles: true, mouth: 'open', eye: 'round', eyeR: .13, iris: '#401818', cheek: '#ffb8a0', legLift: 3 };
 D(42, 'Brinecrab', ['Water', 'Rock'], [66, 84, 102, 48, 68, 48], 100, 140, {
   evo: [34, 43],
   learn: [[1, 'Pinch Snap'], [1, 'Water Gun'], [1, 'Harden'], [18, 'Rock Throw'], [22, 'Bubble Beam'], [28, 'Rock Slide']],
@@ -146,13 +146,13 @@ D(42, 'Brinecrab', ['Water', 'Rock'], [66, 84, 102, 48, 68, 48], 100, 140, {
   desc: 'Barnacles crust its shell like armor. Its claws can crack a clam in one snap.',
   habitat: [['shore', 10, 10, 1]],
 });
-ART[42] = { main: '#e8644a', belly: '#f6dcc0', acc: '#8a94a4', body: 'shell', rockBack: true, fists: true, claws: true, spots: '#ece4d4', crystals: true, bubbles: true, mouth: 'fang', eye: 'normal', iris: '#401818', legLift: 3 };
+ART[42] = { main: '#e8644a', belly: '#f6dcc0', acc: '#8a94a4', rockBack: true, fists: true, claws: true, spots: '#ece4d4', crystals: true, bubbles: true, mouth: 'fang', eye: 'normal', iris: '#401818', legLift: 3 };
 D(43, 'Crabarch', ['Water', 'Rock'], [84, 112, 128, 66, 86, 56], 45, 235, {
   learn: [[1, 'Pinch Snap'], [1, 'Bubble Beam'], [1, 'Rock Throw'], [30, 'Rock Slide'], [34, 'Surf'], [40, 'Boulder Crash']],
   look: { stage: 3, form: 'wide', feat: ['arms', 'legs', 'spikes', 'horns'] },
   desc: 'The tide-pool king. Its castle shell stands against the biggest waves.',
 });
-ART[43] = { main: '#d4483c', belly: '#f2d4b8', acc: '#8e98aa', body: 'shell', rockBack: true, armor: true, crown: true, gem: true, fists: true, claws: true, shellSpikes: true, tusks: true, crystals: true, mouth: 'fang', eye: 'fierce', iris: '#ffd040', legLift: 3 };
+ART[43] = { main: '#d4483c', belly: '#f2d4b8', acc: '#8e98aa', rockBack: true, armor: true, crown: true, gem: true, fists: true, claws: true, shellSpikes: true, tusks: true, crystals: true, mouth: 'fang', eye: 'fierce', iris: '#ffd040', legLift: 3 };
 
 // ---- Flower fairies (44-46) ---------------------------------------------
 D(44, 'Blossling', ['Fairy'], [44, 32, 40, 56, 56, 60], 230, 55, {
@@ -278,7 +278,7 @@ ART[58] = { main: '#c4d8ee', belly: '#f6fbff', acc: '#6aa8e0', ear: 'nub', tail:
 D(59, 'Padhop', ['Water', 'Grass'], [50, 48, 48, 46, 46, 50], 230, 55, {
   evo: [20, 60],
   learn: [[1, 'Tackle'], [1, 'Growl'], [4, 'Dew Drop'], [8, 'Vine Whip'], [13, 'Mud Shot'], [17, 'Bubble Beam']],
-  look: { stage: 1, form: 'round', feat: ['leaf', 'legs'] },
+  look: { stage: 1, form: 'wide', feat: ['leaf', 'legs'] },
   desc: 'A frog that wears a lily pad as a hat. It hops from puddle to puddle.',
   habitat: [['mirewood', 6, 10, 9], ['shore', 4, 8, 3]],
 });
@@ -314,7 +314,7 @@ D(63, 'Fleecit', ['Normal'], [100, 60, 74, 68, 90, 38], 100, 120, {
   desc: 'A cloud-wool sheep that dozes anywhere. Counting its wool puts trainers to sleep.',
   habitat: [['sunmeadow', 5, 9, 5]],
 });
-ART[63] = { main: '#fff6ee', belly: '#fffaf4', face: '#5a4a6a', acc: '#d8c8a0', body: 'cloud', ear: 'droopy', horn: 'ram', tail: 'puff', mouth: 'smile', eye: 'sleepy', nose: true, bow: true, cheek: '#ff9ab8', iris: '#e8d8f0' };
+ART[63] = { main: '#fff6ee', belly: '#fffaf4', face: '#e8c4a8', acc: '#c8a878', body: 'cloud', ear: 'droopy', horn: 'ram', tail: 'puff', mouth: 'smile', eye: 'sleepy', nose: true, bow: true, cheek: '#ff9ab8', iris: '#e8d8f0' };
 D(64, 'Starbrine', ['Water', 'Psychic'], [70, 58, 78, 92, 82, 86], 90, 150, {
   learn: [[1, 'Water Gun'], [1, 'Harden'], [6, 'Confusion'], [10, 'Dew Drop'], [18, 'Psybeam'], [22, 'Bubble Beam'], [30, 'Tide Roll'], [40, 'Psychic']],
   look: { stage: 2, form: 'round', feat: ['spikes', 'arms'] },
