@@ -57,8 +57,9 @@ const OUT = process.env.OUT || '/tmp';
 
   // 4) mine boss ambush: shard + reward, then relight the Great Lantern, open the gate, catch Joker ------------
   await ev(() => { const S = G.state; S.party.length = 0; for (let i = 0; i < 3; i++) { const j = G.makeCreature(25, 60); j.moves = [{ id: 'Quake', pp: 10 }]; S.party.push(j); } S.bag = { 'Ultra Orb': 30 }; S.flags = { starter: true };
-    G.loadMap('mine'); G.placePlayer(10, 13, 1); });
-  await page.waitForTimeout(400); await key('ArrowUp', 250);                      // step to (10,12): inside Kade's line of sight
+    G.loadMap('mine'); const k = G.world.map.npcs.find(n => n.trainer && n.trainer.id === 'mn_kade'); const v = G.worldApi.VEC[k.dir]; const s = k.trainer.sight;
+    window.__kd = [1, 0, 3, 2][k.dir]; G.placePlayer(k.x + v[0] * (s + 1), k.y + v[1] * (s + 1), window.__kd); G.world.map.roamers = []; G.world.map._spawn = false; });
+  await page.waitForTimeout(400); await key(['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'][await ev(() => window.__kd)], 250);   // step into Kade's line of sight
   await until(() => G.world.busy, 5000, 'trainer spotted'); await page.waitForTimeout(500); await shot('boss-spotted');
   await fight(() => !G.state.flags.mn_kade); await idle();
   assert.equal(await ev(() => G.state.bag['Ultra Orb']), 33); assert(await ev(() => G.state.flags.shard_mine));
@@ -70,10 +71,10 @@ const OUT = process.env.OUT || '/tmp';
     await advance(() => !G.world.busy, 30000, 'pedestal ' + x);
   }
   assert(await ev(() => G.state.flags.lanternLit)); await shot('lantern-lit'); step('placing three shards relights the Great Lantern');
-  await ev(() => { G.loadMap('lanternrest'); G.placePlayer(26, 21, 1); }); await page.waitForTimeout(300);
-  await key('ArrowUp', 500); await until(() => G.world.mapId === 'hollow', 6000, 'hollow gate opens after relight'); step('Hollow Gate opens once the Lantern is lit');
-  await ev(() => { window.__mk = G.makeCreature; G.makeCreature = (id, l) => { const c = window.__mk(id, l); if (id === 25) { c.hp = 1; c.status = 'slp'; } return c; }; G.placePlayer(9, 5, 1); });
-  await page.waitForTimeout(300); await shot('joker-room'); await key('z');   // talk to the Joker (facing up at (9,4))
+  await ev(() => { G.loadMap('lanternrest'); G.placePlayer(52, 39, 1); }); await page.waitForTimeout(300);
+  await key('ArrowUp', 300); await until(() => G.world.mapId === 'hollow', 6000, 'hollow gate opens after relight'); step('Hollow Gate opens once the Lantern is lit');
+  await ev(() => { window.__mk = G.makeCreature; G.makeCreature = (id, l) => { const c = window.__mk(id, l); if (id === 25) { c.hp = 1; c.status = 'slp'; } return c; }; const j = G.world.map.npcs.find(n => n.creature === 25); G.placePlayer(j.x, j.y + 1, 1); });
+  await page.waitForTimeout(300); await shot('joker-room'); await key('z');   // talk to the Joker (facing up)
   await advance(cmdReady, 40000, 'joker battle'); await page.waitForTimeout(200); await shot('joker-battle');
   for (let tries = 0; tries < 12; tries++) {
     if (!(await ev(() => G.scene !== G.world.scene))) break;
@@ -86,12 +87,12 @@ const OUT = process.env.OUT || '/tmp';
   await page.waitForTimeout(300); await shot('after-joker');
 
   // 4b) the lead creature follows the player -------------------------------------------------
-  await ev(() => { const S = G.state; S.party.length = 0; S.party.push(G.makeCreature(1, 8), G.makeCreature(4, 8)); G.ui.layers.length = 0; G.closeText(); G.world.busy = false; G.scene = G.world.scene; G.ui.fade.a = 0; G.loadMap('lanternrest'); G.placePlayer(14, 16, 1); });
+  await ev(() => { const S = G.state; S.party.length = 0; S.party.push(G.makeCreature(1, 8), G.makeCreature(4, 8)); G.ui.layers.length = 0; G.closeText(); G.world.busy = false; G.scene = G.world.scene; G.ui.fade.a = 0; G.loadMap('lanternrest'); const m = G.world.map, W = G.worldApi; outer: for (let y = 2; y < m.h - 8; y++) for (let x = 2; x < m.w - 2; x++) { let ok = true; for (let k = 0; k < 6; k++) if (!W.canWalk(x, y + k) || W.tileWarp(x, y + k)) ok = false; if (ok) { G.placePlayer(x, y + 1, 1); break outer; } } });
   await page.waitForTimeout(300);
   const trail = [];
   for (let i = 0; i < 4; i++) { const before = await ev(() => ({ x: G.world.p.x, y: G.world.p.y })); await key('ArrowDown', 380); await page.waitForTimeout(150); const f = await ev(() => ({ fx: G.world.f.x, fy: G.world.f.y, px: G.world.p.x, py: G.world.p.y })); trail.push([before, f]); }
   for (const [b4, f] of trail) assert(f.fx === b4.x && f.fy === b4.y || (f.fx === f.px && f.fy === f.py - 1), `follower should stand where the player was: ${JSON.stringify([b4, f])}`);
-  assert(await ev(() => G.world.p.y > 16)); await shot('follower');
+  await shot('follower');
   await ev(() => { const w = G.world; w.f.x = w.f.tx = w.p.x; w.f.y = w.f.ty = w.p.y - 1; w.p.dir = 1; }); await key('z');   // face the partner and talk to it
   await until(() => G.world.busy, 3000, 'partner talk'); await shot('partner-talk'); await advance(() => !G.world.busy, 10000);
   await ev(() => { G.state.party[0].hp = 0; }); await page.waitForTimeout(200);

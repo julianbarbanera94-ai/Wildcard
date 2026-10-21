@@ -42,10 +42,72 @@ function canWalk(x, y, ignoreNpc) {
   const t = tileAt(x, y); if (!t || G.TILES[t].solid) return false;
   if (!ignoreNpc && npcAt(x, y)) return false;
   const o = objAt(x, y); if (o && o.ball) return false;
+  if (!ignoreNpc && roamAt(x, y)) return false;
   return true;
 }
+// ---- Roaming wild creatures ---------------------------------------------------
+// Visible wild creatures spawn from the area's encounter table. Bold ones chase the player (slower than walking),
+// shy ones keep their distance, curious ones mill about. Touching one, or pressing A on it, starts a battle.
+const ROAM_GROUND = { g: 1, G: 1, q: 1, y: 1, c: 1, e: 1, f: 1, p: 1 };
+const roamAt = (x, y, skip) => (world.map.roamers || []).find(r => r !== skip && ((r.x === x && r.y === y) || (r.tx === x && r.ty === y)));
+function temperOf(id) { const b = G.SPECIES[id].base; return b[1] >= 62 || b[3] >= 80 ? 'bold' : b[5] >= 60 ? 'shy' : 'curious'; }
+function roamFree(r, x, y) {
+  const ch = tileAt(x, y); if (!ch || !ROAM_GROUND[ch] || G.TILES[ch].solid) return false;
+  if (tileWarp(x, y) || npcAt(x, y) || objAt(x, y)) return false;
+  if ((x === p.x && y === p.y) || (x === fol.x && y === fol.y) || (x === fol.tx && y === fol.ty)) return false;
+  if (p.moving && x === p.x + VEC[p.dir][0] && y === p.y + VEC[p.dir][1]) return false;
+  return !roamAt(x, y, r);
+}
+function spawnRoamers(m) {
+  m._spawn = false;
+  if (!m.enc || (m.roamers && G.state.frames - (m.roamLeft || 0) < 3600)) return;   // the same creatures are still there if you come back within a minute
+  const cells = [];
+  for (let y = 1; y < m.h - 1; y++) for (let x = 1; x < m.w - 1; x++) { const ch = m.t[y][x]; if (ROAM_GROUND[ch] && ch !== 'p') cells.push([x, y, !!G.TILES[ch].enc]); }
+  if (!cells.length) { m.roamers = []; return; }
+  const want = Math.max(4, Math.min(16, Math.round(cells.length / 80)));
+  m.roamers = [];
+  for (let tries = 0; m.roamers.length < want && tries < 600; tries++) {
+    const [x, y, enc] = cells[G.rand(cells.length)];
+    if ((!enc && Math.random() < .55) || Math.abs(x - p.x) + Math.abs(y - p.y) < 7 || !roamFree(null, x, y)) continue;
+    const c = pickWild(m);
+    m.roamers.push({ x, y, ox: 0, oy: 0, dir: G.rand(4), c, temper: temperOf(c.id), timer: 30 + G.rand(150), cool: 0, alert: 0 });
+  }
+}
+function updateRoamers() {
+  const list = world.map.roamers; if (!list) return;
+  for (const r of list) {
+    if (r.alert > 0) r.alert--;
+    if (r.cool > 0) r.cool--;
+    if (r.moving) continue;
+    const dx = p.x - r.x, dy = p.y - r.y, dist = Math.abs(dx) + Math.abs(dy);
+    if (r.temper === 'bold' && dist === 1 && !p.moving && !r.cool) { roamBattle(r, true); return; }
+    if (--r.timer > 0) continue;
+    const toward = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? RIGHT : LEFT) : (dy > 0 ? DOWN : UP);
+    let d = -1, speed = .5;
+    if (r.temper === 'bold' && dist <= 5 && !r.cool) { if (!r.chasing) { r.chasing = true; r.alert = 40; G.audio.sfx('exclaim'); r.timer = 40; r.dir = toward; continue; } d = toward; speed = .75; r.timer = 2; }
+    else if (r.temper === 'shy' && dist <= 3) { d = OPP[toward]; speed = 1; r.timer = 4; }
+    else { r.chasing = false; r.timer = 50 + G.rand(160); if (Math.random() < .65) d = G.rand(4); else r.dir = G.rand(4); }
+    if (d < 0) continue;
+    const [vx, vy] = VEC[d];
+    if (roamFree(r, r.x + vx, r.y + vy)) stepEntity(r, d, speed);
+    else { r.dir = d; if (r.chasing) { const alt = Math.abs(dx) > Math.abs(dy) ? (dy > 0 ? DOWN : dy < 0 ? UP : -1) : (dx > 0 ? RIGHT : dx < 0 ? LEFT : -1); if (alt >= 0 && roamFree(r, r.x + VEC[alt][0], r.y + VEC[alt][1])) stepEntity(r, alt, speed); } }
+  }
+}
+const roamBattle = (r, charged) => run(() => roamFight(r, charged));
+async function roamFight(r, charged) {
+  {
+    r.dir = p.x > r.x ? RIGHT : p.x < r.x ? LEFT : p.y > r.y ? DOWN : UP; p.dir = OPP[r.dir]; r.alert = 0;
+    world.bubble = { n: r, t: 0 }; G.audio.sfx('exclaim'); await G.wait(charged ? 30 : 18); world.bubble = null;
+    if (charged) await says(`The wild ${G.name(r.c)} charged at you!`);
+    const res = await runBattle({ wild: r.c, bg: world.map.bg });
+    const list = world.map.roamers || [];
+    if (res === 'win' || res === 'caught') list.splice(list.indexOf(r), 1); else { r.cool = 360; r.chasing = false; }
+  }
+}
 G.loadMap = function (id) {
-  world.mapId = id; world.map = maps[id]; world.map.npcs.forEach(n => { n.ox0 = n.ox0 === undefined ? n.x : n.ox0; n.oy0 = n.oy0 === undefined ? n.y : n.oy0; n.ox = 0; n.oy = 0; n.frame = 0; n.timer = 60 + G.rand(120); delete n.tx; delete n.ty; });
+  if (world.map && G.state) world.map.roamLeft = G.state.frames;
+  world.mapId = id; world.map = maps[id]; world.map._spawn = true;
+  if (G.applyBuilds) G.applyBuilds(world.map); world.map.npcs.forEach(n => { n.ox0 = n.ox0 === undefined ? n.x : n.ox0; n.oy0 = n.oy0 === undefined ? n.y : n.oy0; n.ox = 0; n.oy = 0; n.frame = 0; n.timer = 60 + G.rand(120); delete n.tx; delete n.ty; });
   if (world.map.outdoor || world.map.banner) world.banner = { text: world.map.name, t: 0 };
   G.audio.music(world.map.music);
 };
@@ -69,6 +131,7 @@ function run(fn) {
   fn().catch(e => console.error(e)).finally(() => { world.busy = false; G.closeText(); });
 }
 G.runWorld = run;
+G.worldApi = { canWalk, npcAt, objAt, tileAt, tileWarp, roamAt, says, flags: () => G.state.flags, VEC };
 G.story = { says, questText, orrin, wren, pedestal, moll, chooseStarter, nurse, joker };
 
 async function warpTo(id, x, y, dir) {
@@ -90,6 +153,7 @@ async function interact() {
     await o.fn(); return;
   }
   const n = npcAt(tx, ty); if (n) { await talkTo(n); return; }
+  const r = roamAt(tx, ty); if (r && !r.moving) { await roamFight(r, false); return; }
   const lead = leadCreature();
   if (lead && tx === fol.x && ty === fol.y) await partnerTalk(lead);
 }
@@ -223,8 +287,8 @@ function sees(n) {
   for (let i = 1; i < dist; i++) if (!canWalk(n.x + dx * i, n.y + dy * i, true)) return false;
   return true;
 }
-function pickWild() {
-  const tab = world.map.enc, total = tab.reduce((a, e) => a + e[3], 0); let r = G.rand(total), e = tab[0];
+function pickWild(m) {
+  const tab = (m || world.map).enc, total = tab.reduce((a, e) => a + e[3], 0); let r = G.rand(total), e = tab[0];
   for (const x of tab) { if ((r -= x[3]) < 0) { e = x; break; } }
   return G.makeCreature(e[0], e[1] + G.rand(e[2] - e[1] + 1));
 }
@@ -240,7 +304,7 @@ function afterStep() {
     return;
   }
   for (const n of npcsOf()) if (n.trainer && sees(n)) { run(() => spotted(n)); return; }
-  if (G.TILES[tileAt(p.x, p.y)].enc && m.enc && Math.random() < .15) run(async () => { await runBattle({ wild: pickWild(), bg: m.bg }); });
+  if (G.TILES[tileAt(p.x, p.y)].enc && m.enc && Math.random() < .07) run(async () => { await runBattle({ wild: pickWild(), bg: m.bg }); });
 }
 function heldDir() {
   const h = G.input.held, order = ['down', 'up', 'left', 'right'];
@@ -252,11 +316,12 @@ function update() {
   G.state.frames++;
   if (world.banner && ++world.banner.t > 120) world.banner = null;
   if (world.busy) return;
+  if (world.map._spawn) spawnRoamers(world.map);
   const inp = G.input;
   if (p.moving) {
     const sp = inp.held.b ? 2 : 1; p.prog += sp; const [dx, dy] = VEC[p.dir];
     p.ox = dx * Math.min(16, p.prog); p.oy = dy * Math.min(16, p.prog);
-    if (p.prog >= 16) { p.x += dx; p.y += dy; p.ox = p.oy = 0; p.moving = false; p.alt ^= 1; followEnd(); afterStep(); }
+    if (p.prog >= 16) { p.x += dx; p.y += dy; p.ox = p.oy = 0; p.moving = false; p.alt ^= 1; G.state.steps = (G.state.steps || 0) + 1; followEnd(); afterStep(); }
     // NPC wandering
   } else {
     if (inp.pressed.start) { run(async () => { G.audio.sfx('select'); await G.startMenu(); }); return; }
@@ -267,6 +332,8 @@ function update() {
       else if (p.turn > 0) p.turn--;
       else {
         const [dx, dy] = VEC[d];
+        const r = roamAt(p.x + dx, p.y + dy);
+        if (r && !r.cool && !r.moving) { roamBattle(r, false); return; }
         if (canWalk(p.x + dx, p.y + dy)) { p.moving = true; p.prog = 0; followBegin(); }
         else if (p.bump++ % 20 === 0) G.audio.sfx('bump');
       }
@@ -284,6 +351,7 @@ function update() {
       n.dir = d;
     }
   }
+  updateRoamers();
 }
 
 // ---- Drawing ---------------------------------------------------------------
@@ -296,6 +364,7 @@ function draw(ctx) {
   let cx = mw <= G.W ? -(G.W - mw) / 2 : Math.max(0, Math.min(mw - G.W, pxp - G.W / 2));
   let cy = mh <= G.H ? -(G.H - mh) / 2 : Math.max(0, Math.min(mh - G.H, pyp - G.H / 2));
   cx = Math.round(cx * G.S) / G.S; cy = Math.round(cy * G.S) / G.S;   // snap to real pixels, not logical ones
+  world.cam = { cx, cy };
   const x0 = Math.max(0, Math.floor(cx / 16)), x1 = Math.min(m.w - 1, Math.floor((cx + G.W) / 16)), y0 = Math.max(0, Math.floor(cy / 16)), y1 = Math.min(m.h - 1, Math.floor((cy + G.H) / 16));
   G.terrain.drawGround(ctx, m, x0, y0, x1, y1, cx, cy, t);
   // Everything that stands up (scenery, objects, people, creatures) is depth-sorted by its base line.
@@ -326,6 +395,11 @@ function draw(ctx) {
     const st = G.SPECIES[lead.id].look.stage || 1, size = 18 + st * 3, moving = prog > 0 && prog < 16;
     const hop = moving ? Math.abs(Math.sin(prog / 16 * Math.PI * 2)) * 2 : (Math.sin(t / 22) > .85 ? 1 : 0);
     items.push({ y: fy + cy + 16.25 - .5, draw: c => { G.drawCreatureMini(c, lead.id, fx, fy, size, t, moving, hop); grassAt(c, fx, fy, Math.round((fx + cx) / 16), Math.round((fy + cy) / 16), t); } });
+  }
+  for (const r of m.roamers || []) {
+    const x = r.x * 16 + r.ox - cx, y = r.y * 16 + r.oy - cy; if (x < -24 || x > G.W + 8 || y < -24 || y > G.H + 8) continue;
+    const size = 15 + (G.SPECIES[r.c.id].look.stage || 1) * 3, pr = Math.abs(r.ox) + Math.abs(r.oy), hop = r.moving ? Math.abs(Math.sin(pr / 16 * Math.PI * 2)) * 2.5 : 0;
+    items.push({ y: r.y * 16 + r.oy + 16.15, draw: c => { G.drawCreatureMini(c, r.c.id, x, y, size, t + r.x * 13, r.moving, hop); grassAt(c, x, y, Math.round((r.x * 16 + r.ox) / 16), Math.round((r.y * 16 + r.oy) / 16), t); if (r.alert > 0) G.drawBubble(c, x, y, t); } });
   }
   if (world.extraDraw) world.extraDraw(items, cx, cy, t);
   items.sort((a, b) => a.y - b.y);

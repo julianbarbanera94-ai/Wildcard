@@ -32,7 +32,7 @@ const OUT = process.env.OUT || '/tmp';
   await shot('02-pebble'); step('walked out of the cottage into Lanternrest');
 
   // --- gating: can't enter grass without a starter ---
-  await ev(() => { G.placePlayer(14, 2, 1); });
+  await ev(() => { G.placePlayer(28, 1, 1); });
   await key('ArrowUp', 600);
   await until(() => G.world.busy, 3000, 'gate message'); await mash(4, 'z'); await until(() => !G.world.busy);
   assert.equal(await ev(() => G.world.mapId), 'lanternrest'); step('roads are blocked until a starter is chosen');
@@ -84,8 +84,10 @@ const OUT = process.env.OUT || '/tmp';
   step('won a trainer battle (prize money + EXP awarded)');
 
   // --- encounters when walking in tall grass ---
-  await ev(() => { G.loadMap('sunmeadow'); G.placePlayer(9, 15, 2); window.__origRandom = Math.random; Math.random = () => 0.01; });
-  await page.waitForTimeout(200); await key('ArrowLeft', 400);
+  await ev(() => { G.loadMap('sunmeadow'); const m = G.world.map, W = G.worldApi; window.__gd = -1;
+    outer: for (let y = 2; y < m.h - 2; y++) for (let x = 2; x < m.w - 2; x++) { if (m.t[y][x] !== 'G' || W.npcAt(x, y)) continue; for (const [dx, dy, d] of [[1, 0, 2], [-1, 0, 3], [0, 1, 1], [0, -1, 0]]) { const px = x + dx, py = y + dy; if (W.canWalk(px, py) && m.t[py][px] !== 'G' && !W.tileWarp(px, py)) { G.placePlayer(px, py, d); window.__gd = d; break outer; } } }
+    (m.roamers || []).length = 0; m._spawn = false; window.__origRandom = Math.random; Math.random = () => 0.01; });
+  await page.waitForTimeout(200); await key(['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'][await ev(() => window.__gd)], 400);
   await until(() => G.scene !== G.world.scene, 6000, 'grass encounter'); await ev(() => { Math.random = window.__origRandom; });
   await advance(cmdReady, 20000, 'encounter command menu'); await shot('09-grass-encounter');
   await key('ArrowDown'); await key('ArrowRight'); await key('z');            // RUN (index 3)
@@ -107,7 +109,7 @@ const OUT = process.env.OUT || '/tmp';
   await ev(() => { G.ui.layers.length = 0; G.closeText(); G.world.busy = false; });
 
   // --- start menu, party, bag, dex screens render ---
-  await ev(() => { G.loadMap('lanternrest'); G.placePlayer(14, 9, 0); });
+  await ev(() => { G.loadMap('lanternrest'); G.placePlayer(28, 1, 0); });
   await page.waitForTimeout(300); await key('Enter'); await page.waitForTimeout(300); await shot('11-start-menu');
   await key('ArrowDown'); await key('z'); await page.waitForTimeout(300); await shot('12-party'); await key('z'); await page.waitForTimeout(250); await shot('12b-party-submenu');
   await key('ArrowDown'); await key('z'); await page.waitForTimeout(300); await shot('13-summary'); await key('x'); await key('x'); await key('x');
