@@ -204,4 +204,28 @@ G.drawMenu = function (ctx, m) {
     G.text(ctx, String(it), cx + 10, cy + 2, dark ? { color: sel ? '#ffffff' : '#d6f4f6', shadow: '#0c2a40' } : { color: sel ? '#3a2a48' : '#5a4a66' });
   });
 };
+
+// ---- World labels and hints ------------------------------------------------------
+// A name plate centred at (cx, y) in screen units: a rounded board with the building's name.
+// style: 'shop' (default warm wood), 'heal' (pink cross), 'home' (green), 'craft' (slate).
+const PLATE = { shop: ['#fff6e0', '#c88a3c', '#6a4210'], heal: ['#fff0f4', '#ff6b8a', '#9a2a48'], home: ['#f0ffe8', '#5fae3f', '#2a5a1a'], craft: ['#eef2fa', '#6a7ea8', '#26304a'] };
+G.drawSignPlate = function (ctx, text, cx, y, t, style) {
+  const [bg, rim, ink] = PLATE[style] || PLATE.shop, f = G.FONT_S || G.FONT;
+  ctx.save(); ctx.font = f; const w = Math.ceil(ctx.measureText(text).width) + 10, h = 10, x = Math.round(cx - w / 2), yy = Math.round(y - h - 2);
+  ctx.fillStyle = 'rgba(40,30,60,.22)'; kit.rr(ctx, x + 1, yy + 1.5, w, h, 4); ctx.fill();
+  ctx.fillStyle = rim; kit.rr(ctx, x - .8, yy - .8, w + 1.6, h + 1.6, 4.6); ctx.fill();
+  ctx.fillStyle = bg; kit.rr(ctx, x, yy, w, h, 4); ctx.fill();
+  if (style === 'heal') { ctx.fillStyle = rim; ctx.fillRect(x + 3, yy + 4, 4, 2); ctx.fillRect(x + 4, yy + 3, 2, 4); }
+  ctx.restore();
+  G.text(ctx, text, cx + (style === 'heal' ? 2 : 0), yy + 1.5, { align: 'center', color: ink, shadow: false, font: f });
+};
+// A small "A: something" chip near the bottom of the screen for whatever the player faces.
+G.drawHint = function (ctx, text, t) {
+  const f = G.FONT_S || G.FONT; ctx.save(); ctx.font = f; const w = Math.ceil(ctx.measureText(text).width) + 22; ctx.restore();
+  const x = Math.round(G.W / 2 - w / 2), y = G.H - 18;
+  ctx.fillStyle = 'rgba(30,20,50,.55)'; kit.rr(ctx, x, y, w, 12, 6); ctx.fill();
+  ctx.fillStyle = '#4cc95a'; ctx.beginPath(); ctx.arc(x + 7, y + 6, 4.2, 0, 7); ctx.fill();
+  G.text(ctx, G.touch ? 'A' : 'Z', x + 7, y + 2.2, { align: 'center', color: '#fff', shadow: false, font: f });
+  G.text(ctx, text, x + 14, y + 2.2, { color: '#fff', shadow: false, font: f });
+};
 })();

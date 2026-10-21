@@ -6,6 +6,21 @@ const DOWN = 0, UP = 1, LEFT = 2, RIGHT = 3;
 const OPP = [UP, DOWN, RIGHT, LEFT];
 
 const maps = G.MAPS;
+// Extension points for the homestead, farming, crafting and vehicle systems (see docs/HOMESTEAD.md).
+const hooks = G.hooks = {
+  load: [],       // (map) after a map is loaded and builds are applied
+  tick: [],       // () every overworld frame while idle
+  interact: [],   // async (tx, ty) -> true when handled; runs after objects, people and creatures
+  prompt: [],     // (tx, ty) -> 'Gather wood' etc. for the facing tile, shown as a small hint
+  draw: [],       // (items, cx, cy, t): push depth-sorted { y, draw(ctx) } items
+  overlay: [],    // (ctx, cx, cy, t): drawn above the map, below banners (labels, HUD chips)
+  beforeWarp: [], // async (warp) before the player warps
+  enter: null,    // (x, y, ch) -> true (allow even if solid), false (deny) or undefined, for the player only
+  speed: null,    // (held) -> pixels per frame for the player's step
+  turn: null,     // () -> frames to wait before stepping after turning
+  encRate: null,  // (rate) -> adjusted wild-encounter rate in tall grass
+  drawPlayer: null, // (ctx, x, y, dir, frame, t, grass) -> true when it drew the player itself
+};
 
 // ---- State -----------------------------------------------------------------
 G.newState = () => ({
@@ -40,10 +55,19 @@ const objAt = (x, y) => world.map.objs.find(o => o.x === x && o.y === y && !(o.h
 const tileAt = (x, y) => (x < 0 || y < 0 || x >= world.map.w || y >= world.map.h) ? null : world.map.t[y][x];
 function canWalk(x, y, ignoreNpc) {
   const t = tileAt(x, y); if (!t || G.TILES[t].solid) return false;
+  if (world.map.block && world.map.block.has(x + ',' + y)) return false;
   if (!ignoreNpc && npcAt(x, y)) return false;
   const o = objAt(x, y); if (o && o.ball) return false;
   if (!ignoreNpc && roamAt(x, y)) return false;
   return true;
+}
+// Can the player step here? Vehicles may forbid tiles (cars stay on roads) or allow solid ones (a hoverboard over water).
+function canStep(x, y) {
+  const ch = tileAt(x, y); if (!ch) return false;
+  const v = hooks.enter ? hooks.enter(x, y, ch) : undefined;
+  if (v === false) return false;
+  if (v === true) { if (world.map.block && world.map.block.has(x + ',' + y)) return false; if (npcAt(x, y) || roamAt(x, y)) return false; const o = objAt(x, y); return !o; }
+  return canWalk(x, y);
 }
 // ---- Roaming wild creatures ---------------------------------------------------
 // Visible wild creatures spawn from the area's encounter table. Bold ones chase the player (slower than walking),
@@ -132,6 +156,7 @@ G.loadMap = function (id) {
   world.mapId = id; world.map = maps[id]; world.map._spawn = true;
   if (G.applyBuilds) G.applyBuilds(world.map); world.map.npcs.forEach(n => { n.ox0 = n.ox0 === undefined ? n.x : n.ox0; n.oy0 = n.oy0 === undefined ? n.y : n.oy0; n.ox = 0; n.oy = 0; n.frame = 0; n.timer = 60 + G.rand(120); delete n.tx; delete n.ty; });
   if (world.map.outdoor || world.map.banner) world.banner = { text: world.map.name, t: 0 };
+  for (const h of hooks.load) h(world.map);
   G.audio.music(world.map.music);
 };
 G.placePlayer = (x, y, dir) => {
@@ -154,7 +179,7 @@ function run(fn) {
   fn().catch(e => console.error(e)).finally(() => { world.busy = false; G.closeText(); });
 }
 G.runWorld = run;
-G.worldApi = { canWalk, npcAt, objAt, tileAt, tileWarp, roamAt, says, flags: () => G.state.flags, VEC };
+G.worldApi = { canWalk, canStep, npcAt, objAt, tileAt, tileWarp, roamAt, says, flags: () => G.state.flags, VEC, facing: () => [p.x + VEC[p.dir][0], p.y + VEC[p.dir][1]], warpTo: (id, x, y, dir) => warpTo(id, x, y, dir) };
 G.story = { says, questText, orrin, wren, pedestal, moll, chooseStarter, nurse, joker };
 
 async function warpTo(id, x, y, dir) {
@@ -177,6 +202,7 @@ async function interact() {
   }
   const n = npcAt(tx, ty); if (n) { await talkTo(n); return; }
   const r = roamAt(tx, ty); if (r && !r.moving) { await roamFight(r, false); return; }
+  for (const h of hooks.interact) if (await h(tx, ty)) return;
   const lead = leadCreature();
   if (lead && tx === fol.x && ty === fol.y) await partnerTalk(lead);
 }
@@ -316,6 +342,13 @@ function pickWild(m) {
   return G.makeCreature(e[0], e[1] + G.rand(e[2] - e[1] + 1));
 }
 
+function promptFor(tx, ty) {
+  const o = objAt(tx, ty);
+  if (o) return o.item ? 'Pick up' : o.prompt ? (typeof o.prompt === 'function' ? o.prompt() : o.prompt) : null;
+  const n = npcAt(tx, ty); if (n) return n.trainer && !flags()[n.trainer.id] ? null : 'Talk';
+  for (const h of hooks.prompt) { const s = h(tx, ty); if (s) return s; }
+  return null;
+}
 // ---- Per-frame update ------------------------------------------------------
 function afterStep() {
   const S = G.state, m = world.map;
@@ -323,11 +356,11 @@ function afterStep() {
   if (w) {
     const block = w.need && w.need();
     if (block) run(async () => { await says(block); await stepEntity(p, OPP[p.dir], 1, true); });
-    else run(() => warpTo(w.to, w.tx, w.ty, w.dir));
+    else run(async () => { for (const h of hooks.beforeWarp) await h(w); await warpTo(w.to, w.tx, w.ty, w.dir); });
     return;
   }
   for (const n of npcsOf()) if (n.trainer && sees(n)) { run(() => spotted(n)); return; }
-  if (G.TILES[tileAt(p.x, p.y)].enc && m.enc && Math.random() < .07) run(async () => { await runBattle({ wild: pickWild(), bg: m.bg }); });
+  if (G.TILES[tileAt(p.x, p.y)].enc && m.enc && Math.random() < (hooks.encRate ? hooks.encRate(.07) : .07)) run(async () => { await runBattle({ wild: pickWild(), bg: m.bg }); });
 }
 function heldDir() {
   const h = G.input.held, order = ['down', 'up', 'left', 'right'];
@@ -340,10 +373,11 @@ function update() {
   if (world.banner && ++world.banner.t > 120) world.banner = null;
   if (world.busy) return;
   if (G.cheatTick) G.cheatTick();
+  for (const h of hooks.tick) h();
   if (world.map._spawn) spawnRoamers(world.map);
   const inp = G.input;
   if (p.moving) {
-    const sp = inp.held.b ? 2 : 1; p.prog += sp; const [dx, dy] = VEC[p.dir];
+    const sp = hooks.speed ? hooks.speed(inp.held) : inp.held.b ? 2 : 1; p.prog += sp; const [dx, dy] = VEC[p.dir];
     p.ox = dx * Math.min(16, p.prog); p.oy = dy * Math.min(16, p.prog);
     if (p.prog >= 16) { p.x += dx; p.y += dy; p.ox = p.oy = 0; p.moving = false; p.alt ^= 1; G.state.steps = (G.state.steps || 0) + 1; followEnd(); afterStep(); }
     // NPC wandering
@@ -353,13 +387,13 @@ function update() {
     if (inp.pressed.orb) { run(throwOrbAt); return; }
     const d = heldDir();
     if (d >= 0) {
-      if (p.dir !== d) { p.dir = d; p.turn = 5; }
+      if (p.dir !== d) { p.dir = d; p.turn = hooks.turn ? hooks.turn() : 5; }
       else if (p.turn > 0) p.turn--;
       else {
         const [dx, dy] = VEC[d];
         const r = roamAt(p.x + dx, p.y + dy);
         if (r && !r.cool && !r.moving) { roamBattle(r, false); return; }
-        if (canWalk(p.x + dx, p.y + dy)) { p.moving = true; p.prog = 0; followBegin(); }
+        if (canStep(p.x + dx, p.y + dy)) { p.moving = true; p.prog = 0; followBegin(); }
         else if (p.bump++ % 20 === 0) G.audio.sfx('bump');
       }
     } else { p.turn = 0; p.bump = 0; }
@@ -410,8 +444,9 @@ function draw(ctx) {
   const px = p.x * 16 + p.ox - cx, py = p.y * 16 + p.oy - cy;
   items.push({ y: p.y * 16 + p.oy + 16.3, draw: c => {
     const f = p.moving ? (p.prog % 16 < 8 ? (p.alt ? 1 : 2) : 0) : 0;
-    G.drawChar(c, S.style, p.dir, f, px, py, t);
     const ahead = p.moving && p.prog > 8 ? [p.x + VEC[p.dir][0], p.y + VEC[p.dir][1]] : [p.x, p.y];
+    if (hooks.drawPlayer && hooks.drawPlayer(c, px, py, p.dir, f, t, () => grassAt(c, px, py, ahead[0], ahead[1], t))) return;
+    G.drawChar(c, S.style, p.dir, f, px, py, t);
     grassAt(c, px, py, ahead[0], ahead[1], t);
   } });
   const lead = leadCreature();
@@ -427,12 +462,20 @@ function draw(ctx) {
     items.push({ y: r.y * 16 + r.oy + 16.15, draw: c => { G.drawCreatureMini(c, r.c.id, x, y, size, t + r.x * 13, r.moving, hop); grassAt(c, x, y, Math.round((r.x * 16 + r.ox) / 16), Math.round((r.y * 16 + r.oy) / 16), t); if (r.alert > 0) G.drawBubble(c, x, y, t); } });
   }
   if (world.extraDraw) world.extraDraw(items, cx, cy, t);
+  for (const h of hooks.draw) h(items, cx, cy, t);
   items.sort((a, b) => a.y - b.y);
   for (const it of items) it.draw(ctx);
   G.terrain.drawOverlay(ctx, m, x0, y0, x1, y1, cx, cy, t);
   if (world.thrown) {   // an orb arcing toward a roaming creature
     const o = world.thrown, k = o.t / o.T, x = o.x0 + (o.x1 - o.x0) * k - cx, y = o.y0 + (o.y1 - o.y0) * k - Math.sin(k * Math.PI) * 26 - cy;
     ctx.save(); ctx.translate(x, y); ctx.rotate(k * 9); G.terrain.drawObject(ctx, 'ball', -8, -9, t, {}); ctx.restore();
+  }
+  for (const h of hooks.overlay) h(ctx, cx, cy, t);
+  // Building name plates (map.labels: [{ x, y, text }] with x, y the tile the plate is centred over).
+  for (const L of m.labels || []) { const x = L.x * 16 + 8 - cx, y = L.y * 16 - cy; if (x > -80 && x < G.W + 80 && y > -20 && y < G.H + 20) G.drawSignPlate(ctx, L.text, x, y, t, L.style); }
+  // Context hint for whatever the player is facing.
+  if (!world.busy && !p.moving && G.scene === world.scene && !G.ui.layers.length && !G.ui.text) {
+    const hint = promptFor(p.x + VEC[p.dir][0], p.y + VEC[p.dir][1]); if (hint) G.drawHint(ctx, hint, t);
   }
   if (world.bubble) { const n = world.bubble.n; G.drawBubble(ctx, n.x * 16 + n.ox - cx, n.y * 16 + n.oy - cy, t); }
   if (world.banner) G.drawBanner(ctx, world.banner.text, world.banner.t);
