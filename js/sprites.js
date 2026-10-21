@@ -25,6 +25,7 @@ function hsl(h, s, l) {
 function adj(c, dl, sm = 1, dh = 0) { const [h, s, l] = hslOf(c); return hsl(h + dh, s * sm * (dl < 0 ? 1.08 : 1), l + dl); }
 const lineOf = c => { const [h, s, l] = hslOf(c); return hsl(h, Math.min(1, s * 1.1 + .08), l * .56); };
 const vivid = c => { const [h, s, l] = hslOf(c); return hsl(h, Math.min(1, s * 1.18 + .05), Math.min(.72, l + .05)); };
+const okCol = v => typeof v === 'string' && /^(#[0-9a-f]{3}|#[0-9a-f]{6}([0-9a-f]{2})?|rgba?\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+.*\))$/i.test(v.trim());
 function rgba(c, a) { const [r, g, b] = G.rgbOf(c); return `rgba(${r},${g},${b},${a})`; }
 
 // ---- Painting primitives (all in design units) --------------------------------
@@ -369,6 +370,7 @@ function defaultArt(sp) {
 function buildParts(sp) {
   let c = C[sp.id] || (G.CREATURE_ART || {})[sp.id];
   if (!c || typeof c !== 'object') c = defaultArt(sp);
+  for (const kk in c) if (/(^(main|belly|acc|face|iris|cheek|spots|brow)$|Col$)/.test(kk) && c[kk] != null && !okCol(c[kk])) { if (c === C[sp.id] || c === G.CREATURE_ART[sp.id]) c = Object.assign({}, c); delete c[kk]; }
   if (NEWB.has(c.body)) { const d = BODY_DEF[c.body], o = Object.assign({}, c); for (const kk in d) if (o[kk] === undefined) o[kk] = d[kk]; c = o; }
   const B = plan(sp, c), { body, head, f, st } = B, nb = B.nb || null;
   const R = G.mulberry(sp.id * 7919 + 13), R2 = G.mulberry((sp.id | 0) * 104729 + 71);
@@ -996,6 +998,11 @@ function buildParts(sp) {
   if (c.body === 'cater') fo.eyeY = .02;
   if (B.merged && c.body !== 'drop') fo.eyeY = -.08;
   if (c.joker) fo.brow = '#5a1a60';
+  const EYEY = { fish: -.05, jelly: -.14, shroom: .3, crystal: .02, blob: .05, bird: -.06, cloud: .02, dragon: -.12 };
+  if (nb && EYEY[nb] !== undefined && c.eyeY === undefined) fo.eyeY = EYEY[nb];
+  if (nb === 'dragon') fo.mouthY = .2;
+  if (c.eyeY !== undefined) fo.eyeY = c.eyeY;
+  addFlags(fo);
   const faceFn = closed => x => {
     if (c.joker) { star(x, hd.cx - hd.rx * .42, hd.cy + hd.ry * .08, hd.rx * .3, '#ff4fa6', { line: false, flat: true }); paint(x, p => { const px = hd.cx + hd.rx * .42, py = hd.cy + hd.ry * .52; p.moveTo(px, py - 3.5); p.lineTo(px + 2.2, py); p.lineTo(px, py + 3.5); p.lineTo(px - 2.2, py); p.closePath(); }, '#6a3fc0', hd.cx, hd.cy, 3, { line: false, flat: true }); }
     face(x, hd, Object.assign({}, fo, { closed: closed && c.eye !== 'sleepy' ? true : false }));
@@ -1004,9 +1011,153 @@ function buildParts(sp) {
   };
   parts.push({ z: 3, zb: null, fn: faceFn(false), fnc: faceFn(true) });
   // Back view: a soft darker cap over the back of the head reads as "seen from behind".
-  add(null, 2.3, x => { x.save(); x.beginPath(); ellP(hd.cx, hd.cy, hd.rx, hd.ry)(x); x.clip(); const g = x.createLinearGradient(0, hd.cy - hd.ry, 0, hd.cy + hd.ry); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, rgba(lineOf(skin), .22)); x.fillStyle = g; x.fillRect(0, 0, 100, 100); x.restore(); });
+  add(null, 2.3, x => { x.save(); x.beginPath(); (headPath || ellP(hd.cx, hd.cy, hd.rx, hd.ry))(x); x.clip(); const g = x.createLinearGradient(0, hd.cy - hd.ry, 0, hd.cy + hd.ry); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, rgba(lineOf(skin), .22)); x.fillStyle = g; x.fillRect(0, 0, 100, 100); x.restore(); });
 
   return parts;
+
+  // ---- Extra flags (accessories and effects) -------------------------------------------------
+  function addFlags(fo) {
+    const M = B.merged, k = SC, big = Math.max(body.rx || 0, hd.rx);
+    const ey = hd.cy + hd.ry * (fo.eyeY || .08), rnd = fo.eye === 'round';
+    const erx = hd.rx * (fo.eyeR || (rnd ? .175 : .155)), ery = erx * (fo.eyeAsp || (rnd ? 1.08 : 1.38)), esp = hd.rx * (fo.eyeSp || .42);
+    const my = ey + ery * 1.45 + hd.ry * (fo.mouthY || 0);
+    const nY = M ? body.cy + body.ry * .5 : hd.cy + hd.ry * .86, nW = M ? body.rx * .84 : hd.rx * .62;
+    const both = (z, fnf, zb) => parts.push({ z, zb: zb === undefined ? z : zb, fn: fnf(false), fnb: fnf(true) });
+    const mx = (back, v) => back ? 100 - v : v;
+    if (c.petals) {
+      const pc = c.petalCol || acc, n = st >= 3 ? 10 : st === 2 ? 9 : 8, z = M ? -.6 : 1.9;
+      add(z, z, x => {
+        for (const layer of st >= 2 ? [1, 0] : [0]) for (let i = 0; i < n; i++) {
+          const a = -Math.PI / 2 + (i + layer * .5) * TAU / n, [px, py] = onEll(hd, a, 1.02 + layer * .14);
+          E(x, px, py, hd.rx * (.36 + layer * .04), hd.rx * .21, layer ? adj(pc, -.07) : pc, { rot: a, hi: .14 });
+        }
+      });
+    }
+    if (c.icicles) {
+      const y0 = M ? body.cy + body.ry * .55 : hd.cy + hd.ry * .8, w = M ? body.rx * .72 : hd.rx * .7, n = st >= 3 ? 7 : st === 2 ? 6 : 5;
+      add(2.15, 2.15, x => {
+        const band = p => { p.moveTo(50 - w, y0); p.quadraticCurveTo(50, y0 + 5, 50 + w, y0); };
+        stroke(x, band, '#7ab8d8', 4.6); stroke(x, band, '#e8faff', 2.8);
+        for (let i = 0; i < n; i++) { const u = -1 + 2 * (i + .5) / n, px = 50 + u * w * .95, py = y0 + 2.4 * (1 - u * u); cone(x, px, py, (i % 2 ? 6 : 9) * k, 4.4, Math.PI / 2, '#d4f4ff', 0, { line: '#7ab8d8', hi: .3, lw: 1 }); }
+      });
+    }
+    if (c.armor) {
+      const ac = c.armorCol || (c.acc ? acc : '#b8c4d6');
+      const pl = M ? { y: body.cy + body.ry * .45, w: body.rx * .5, h: body.ry * .48 } : { y: body.cy - body.ry * .45, w: body.rx * .62, h: body.ry * 1.2 };
+      const shield = p => { p.moveTo(50 - pl.w, pl.y); p.quadraticCurveTo(50, pl.y - 3, 50 + pl.w, pl.y); p.quadraticCurveTo(50 + pl.w, pl.y + pl.h * .7, 50, pl.y + pl.h); p.quadraticCurveTo(50 - pl.w, pl.y + pl.h * .7, 50 - pl.w, pl.y); p.closePath(); };
+      add(.7, null, x => { paint(x, shield, ac, 50, pl.y + pl.h * .4, pl.w, { hi: .3 }); stroke(x, p => { p.moveTo(50, pl.y + 1); p.lineTo(50, pl.y + pl.h - 2); }, rgba('#ffffff', .45), 1.2); for (const s of [-1, 1]) E(x, 50 + s * pl.w * .62, pl.y + 2.6, 1.3, 1.3, adj(ac, .25), { lw: .7 }); });
+      add(null, .7, x => { const bw = body.rx * .82, by0 = body.cy - body.ry * .7; paint(x, p => p.roundRect(50 - bw, by0, bw * 2, body.ry * 1.25, bw * .45), ac, 50, body.cy, bw, { hi: .25 }); for (let i = -1; i <= 1; i++) stroke(x, p => { p.moveTo(50 - bw * .8, by0 + body.ry * (.3 + (i + 1) * .3)); p.lineTo(50 + bw * .8, by0 + body.ry * (.3 + (i + 1) * .3)); }, rgba(lineOf(ac), .5), 1.1); });
+      const pads = x => { for (const s of [-1, 1]) { const px = 50 + s * body.rx * (M ? .9 : .88), py = M ? body.cy + body.ry * .1 : body.cy - body.ry * .55; E(x, px, py, 7.5 * k, 5.6 * k, ac, { hi: .3, rot: s * .3 }); shine(x, px - 2, py - 2, 2.4, 1.4, .7); } };
+      add(1.2, 1.2, pads);
+      if (st >= 3) add(2.55, 2.55, x => { const [bx, by] = onEll(hd, -Math.PI / 2, .9); paint(x, p => { p.ellipse(hd.cx, hd.cy - hd.ry * .35, hd.rx * 1.02, hd.ry * .7, 0, Math.PI * 1.08, Math.PI * 1.92); p.quadraticCurveTo(hd.cx, hd.cy - hd.ry * .55, hd.cx - hd.rx * .95, hd.cy - hd.ry * .52); p.closePath(); }, ac, hd.cx, hd.cy - hd.ry * .7, hd.rx, { hi: .3 }); cone(x, bx, by - 2, 9 * k, 6 * k, -Math.PI / 2, adj(ac, .1), 0); });
+    }
+    if (c.scarf) {
+      const scC = c.scarfCol || acc, w = nW, y0 = nY;
+      both(2.15, back => x => {
+        const tl = (x0, x1, y1) => { tube(x, bezPts([x0, y0 + 1], [x0 + (x1 - x0) * .3, y0 + 6], [x1, y1 - 6], [x1, y1]), 7 * k, 6 * k, adj(scC, -.04)); };
+        if (back) { tl(48, 45, y0 + 15 * k); tl(52, 57, y0 + 13 * k); }
+        paint(x, p => { p.moveTo(50 - w, y0 - 3); p.quadraticCurveTo(50, y0 + 4, 50 + w, y0 - 3); p.lineTo(50 + w, y0 + 2.5); p.quadraticCurveTo(50, y0 + 10, 50 - w, y0 + 2.5); p.closePath(); }, scC, 50, y0, w, { hi: .2 });
+        stroke(x, p => { p.moveTo(50 - w * .9, y0 + .5); p.quadraticCurveTo(50, y0 + 7, 50 + w * .9, y0 + .5); }, rgba('#ffffff', .4), 1.2);
+        if (!back) { const kx = 50 + w * .48; tl(kx, kx + 4 * k, y0 + 16 * k); E(x, kx, y0 + 3, 3.6 * k, 3.2 * k, adj(scC, .04)); }
+      });
+    }
+    if (c.halo) {
+      add(5, 5, x => { const hy = hd.cy - hd.ry - 7 * k, rx = hd.rx * .55, ry = 3.4 * k; const r = p => p.ellipse(50, hy, rx, ry, 0, 0, TAU); stroke(x, r, rgba('#ffe46a', .35), 6); stroke(x, r, '#c8961e', 3.4); stroke(x, r, '#ffe46a', 1.9); sparkle(x, 50 + rx, hy - 1, 2.4, '#ffffff'); });
+    }
+    if (c.gears) {
+      const gc = c.gearCol || (c.acc ? acc : '#b0b8c8');
+      const gear = (x, cx, cy, r, n) => { paint(x, cogP(cx, cy, r, n), gc, cx, cy, r, { hi: .22 }); E(x, cx, cy, r * .45, r * .45, adj(gc, -.1)); E(x, cx, cy, r * .17, r * .17, lineOf(gc), { flat: true, line: false }); };
+      const G0 = [[50 + body.rx * .85, body.cy - body.ry * .55, 10 * k, 8], [50 + body.rx * .85 + 12 * k, body.cy - body.ry * .55 - 9 * k, 6 * k, 6]].concat(st >= 2 ? [[50 - body.rx * .82, body.cy - body.ry * .8, 7.5 * k, 7]] : []);
+      both(-.8, back => x => { for (const [gx, gy, r, n] of G0) gear(x, mx(back, gx), gy, r, n); }, 3.5);
+    }
+    if (c.bow) {
+      const bc = c.bowCol || (c.acc ? acc : '#ff6fa8'), [bx0, by] = onEll(hd, -Math.PI / 2 + .75, .92), r = 6.5 * k;
+      both(2.6, back => x => {
+        const bx = mx(back, bx0);
+        for (const s of [-1, 1]) tube(x, [[bx, by], [bx + s * 2.5, by + 4 * k], [bx + s * 3.5, by + 8 * k]], 3.4 * k, 3 * k, adj(bc, -.06));
+        for (const s of [-1, 1]) paint(x, p => { p.moveTo(bx, by); p.bezierCurveTo(bx + s * r * 1.7, by - r * 1.4, bx + s * r * 1.9, by + r * .9, bx, by); p.closePath(); }, bc, bx + s * r * .8, by - r * .2, r, { hi: .25 });
+        E(x, bx, by, r * .42, r * .4, adj(bc, .05));
+      });
+    }
+    if (c.crown) {
+      const cc = c.crownCol || '#ffd24a', w = hd.rx * .5 * (st >= 3 ? 1.15 : 1), h = 10 * k, by = hd.cy - hd.ry * .82;
+      both(2.7, back => x => {
+        const pts = [[50 - w, by], [50 - w * 1.12, by - h], [50 - w * .5, by - h * .5], [50, by - h * 1.18], [50 + w * .5, by - h * .5], [50 + w * 1.12, by - h], [50 + w, by]];
+        paint(x, p => { pts.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])); p.quadraticCurveTo(50, by + 3, 50 - w, by); p.closePath(); }, cc, 50, by - h * .5, w, { hi: .25 });
+        for (const i of [1, 3, 5]) E(x, pts[i][0], pts[i][1], 1.9 * k, 1.9 * k, adj(cc, .1), { lw: .8 });
+        if (!back) gemShape(x, 50, by - h * .38, 2.8 * k, c.gemCol || '#ff4f8a');
+      });
+    }
+    if (c.tentacles) {
+      const n = st >= 3 ? 6 : st === 2 ? 5 : 4, J = nb === 'jelly', tcol = c.tentCol || (J ? adj(main, .08) : adj(main, -.03));
+      const by = body.cy + body.ry * (J ? .35 : .55);
+      add(-.4, -.4, x => {
+        if (J) x.globalAlpha = .9;
+        for (let i = 0; i < n; i++) {
+          const u = -1 + 2 * (i + .5) / n, bx = 50 + u * body.rx * (J ? .72 : .62), wv = (i % 2 ? 1 : -1) * 4 * k;
+          const ex = J ? bx + wv * .5 : 50 + u * body.rx * 1.3, ey = J ? 89 - Math.abs(u) * 4 : 90;
+          const pts = J ? bezPts([bx, by], [bx + wv, by + (ey - by) * .35], [bx - wv, by + (ey - by) * .7], [ex, ey]) : bezPts([bx, by], [bx + u * 4, by + 10], [ex - u * 6, ey + 1], [ex + u * 3, ey - 3]);
+          tube(x, pts, (J ? 5 : 7) * k, (J ? 1.6 : 3) * k, tcol);
+          if (!J) for (let j = 6; j < 18; j += 4) E(x, pts[j][0], pts[j][1] + 1, 1.1, 1, belly2, { flat: true, line: false });
+        }
+        x.globalAlpha = 1;
+      });
+    }
+    if (c.snowcap) {
+      const e = B.cap || hd, th = M ? .62 : .55, n = 5;
+      add(B.cap ? 2.56 : 2.5, B.cap ? 2.56 : 2.5, x => {
+        const xl = e.cx - e.rx * 1.04 * Math.cos(th), xr = e.cx + e.rx * 1.04 * Math.cos(th), yy = e.cy - e.ry * 1.04 * Math.sin(th);
+        paint(x, p => { p.ellipse(e.cx, e.cy, e.rx * 1.04, e.ry * 1.04, 0, Math.PI + th, TAU - th); for (let i = 1; i <= n; i++) { const xa = xr + (xl - xr) * (i - .5) / n, xb = xr + (xl - xr) * i / n; p.quadraticCurveTo(xa, yy + (i % 2 ? 6 : 3.5) * k, xb, yy + (i === n ? 0 : 1)); } p.closePath(); }, '#ffffff', e.cx, e.cy - e.ry * .8, e.rx, { line: '#a8c8e8', hi: .02, lo: .1 });
+        sparkle(x, e.cx - e.rx * .35, e.cy - e.ry * .9, 2.2, '#bfe8ff');
+      });
+    }
+    if (c.leafSkirt) {
+      const y0 = body.cy + body.ry * (M ? .35 : .2), w = body.rx * (M ? .9 : .95), n = st >= 3 ? 9 : 7;
+      add(.55, .55, x => {
+        for (const pass of [0, 1]) for (let i = pass; i < n; i += 2) {
+          const u = -1 + 2 * i / (n - 1), px = 50 + u * w * .92, py = y0 + (1 - u * u) * 3, a = Math.PI / 2 - u * .95;
+          const len = Math.min((12 + (i % 2) * 3) * k, (91.5 - py) / Math.max(.3, Math.sin(a)));
+          leaf(x, px, py - 2, len, 5 * k, a, i % 2 ? adj(leafG, -.08) : leafG);
+        }
+      });
+    }
+    if (c.flowerCrown) {
+      const cols = [c.flowerCol || acc, '#fff4f8', '#ffc0dc'], js = st >= 2 ? [-3, -2, -1, 0, 1, 2, 3] : [-2, -1, 0, 1, 2], step = st >= 2 ? .34 : .42;
+      add(2.6, 2.6, x => {
+        for (const j of js) { if (j === js[js.length - 1]) continue; const [lx, ly] = onEll(hd, -Math.PI / 2 + (j + .5) * step, .93); leaf(x, lx, ly, 6 * k, 2.4 * k, -Math.PI / 2 + (j + .5) * step, leafG); }
+        for (const j of js) { const [px, py] = onEll(hd, -Math.PI / 2 + j * step, .92); flower5(x, px, py, 5 * k, cols[(j + 9) % 3]); }
+      });
+    }
+    if (c.mushroomSpots && nb !== 'shroom') {
+      const e = hd, sc = c.spots || '#fff6e8', path = headPath || ellP(e.cx, e.cy, e.rx, e.ry);
+      add(M ? .45 : 2.05, M ? .45 : 2.05, x => { x.save(); x.beginPath(); path(x); x.clip(); for (const [u, v, r] of [[-.6, -.62, .17], [.08, -.86, .2], [.66, -.55, .15], [-.9, .1, .13], [.9, .2, .12]]) E(x, e.cx + u * e.rx, e.cy + v * e.ry, r * e.rx, r * e.rx * .85, sc, { line: rgba(lineOf(main), .3), lw: .8 }); x.restore(); });
+    }
+    if (c.gem) {
+      const gc = c.gemCol || (c.acc ? acc : '#5ad8ff'), gy = hd.cy - hd.ry * (M ? .56 : .52);
+      add(3.2, null, x => gemShape(x, 50, gy, 4.6 * k, gc));
+    }
+    if (c.sparkles) {
+      const top = Math.min(hd.cy - hd.ry, body.cy - body.ry), L = 50 - big - 5, Rr = 50 + big + 5, scol = c.sparkleCol || '#fff2a0';
+      const S = [[L, top + 8, 4], [Rr, top + 3, 3.4], [Rr + 1, body.cy + 2, 2.6], [L - 1, body.cy + body.ry * .3, 2.6], [50 + hd.rx * .65, top - 5, 2.4]].concat(st >= 3 ? [[50 - hd.rx * .7, top - 3, 2.2]] : []);
+      both(5, back => x => S.forEach(([sx, sy, r], i) => sparkle(x, mx(back, sx + (R2() - .5) * 0), sy, r * (st >= 2 ? 1.15 : 1), i % 2 ? '#ffffff' : scol)));
+    }
+    if (c.smoke) {
+      const smc = c.smokeCol || '#bdb6c8', sx = 50 + hd.rx * .55, sy = hd.cy - hd.ry * .8;
+      both(-2.5, back => x => { for (let i = st >= 2 ? 3 : 2; i >= 0; i--) { x.globalAlpha = .9 - i * .17; const r = (3.6 + i * 1.7) * k, px = mx(back, sx + i * 5 * k), py = sy - 4 - i * 8 * k; paint(x, fluffPath(px, py, r, r * .88, 7, 1.3), smc, px, py, r, { hi: .12, line: adj(smc, -.12) }); } x.globalAlpha = 1; });
+    }
+    if (c.bubbles) {
+      const bc = c.bubbleCol || '#9fd8ff', top = hd.cy - hd.ry;
+      const S = [[50 - big - 6, hd.cy - 2, 4], [50 + big + 5, hd.cy - hd.ry * .6, 3], [50 + big + 3, body.cy + 4, 2.2], [50 - big - 2, top - 2, 2.4]].concat(st >= 2 ? [[50 + hd.rx * .3, top - 7, 2.8]] : []);
+      both(5, back => x => S.forEach(([bx, by, r]) => bubble(x, mx(back, bx), by, r * k, bc)));
+    }
+    if (c.whiskers) {
+      const wc = rgba(lineOf(skin), .85), wy = ey + ery * 1.1;
+      const lines = (x, x0) => { for (const s of [-1, 1]) for (const d of [-1, 0, 1]) stroke(x, p => { p.moveTo(hd.cx + s * x0, wy + d * 1.6); p.quadraticCurveTo(hd.cx + s * (hd.rx + 2), wy + d * 2.6 - 1, hd.cx + s * (hd.rx + 9 * k), wy + d * 4.4); }, wc, 1.1); };
+      add(3.1, null, x => lines(x, esp + erx * 1.5));
+      add(null, 1.9, x => lines(x, hd.rx * .6));
+    }
+    if (c.tusks) add(3.1, null, x => { for (const s of [-1, 1]) cone(x, hd.cx + s * hd.rx * .24, my + 1.5, 8 * k, 4 * k, -Math.PI / 2 + s * .55, '#fffaf0', -s * .3, { lw: 1.1, hi: .1 }); });
+  }
 }
 
 // Renders the parts for one view into ctx (already transformed into design units).
@@ -1017,7 +1168,7 @@ function drawParts(x, parts, mode) {
     const fn = mode === 'b' ? (p.fnb || p.fn) : mode === 'k' ? (p.fnc || p.fn) : p.fn; if (fn) list.push([z, fn]);
   }
   list.sort((a, b) => a[0] - b[0]);
-  for (const [, fn] of list) { x.save(); fn(x); x.restore(); }
+  for (const [, fn] of list) { x.save(); try { fn(x); } catch (e) { if (!drawParts.warned) { drawParts.warned = true; console.warn('creature part failed', e); } } x.restore(); }
 }
 const tipOf = (bx, by, len, ang, k) => [bx + Math.cos(ang) * len * k, by + Math.sin(ang) * len * k];
 
@@ -1034,7 +1185,9 @@ function measure(parts, mode) {
 
 const SPR = 256, spriteCache = {};
 function genCreature(id) {
-  const parts = buildParts(G.SPECIES[id]);
+  const sp = G.SPECIES[id] || { id: id | 0, types: ['Normal'], look: { stage: 1, form: 'round', feat: [] } };
+  let parts;
+  try { parts = buildParts(sp); } catch (e) { console.warn('creature art fallback for', id, e); parts = buildParts(Object.assign({}, sp, { id: -1 - (id | 0) })); }
   const a = measure(parts, 'f'), b = measure(parts, 'b');
   const bx0 = Math.min(a[0], b[0]), by0 = Math.min(a[1], b[1]), bx1 = Math.max(a[2], b[2]), by1 = Math.max(a[3], b[3]);
   const s = Math.min(1, 92 / (by1 - by0), 95 / (bx1 - bx0)), U = SPR / 100;
