@@ -316,6 +316,7 @@ function update() {
   G.state.frames++;
   if (world.banner && ++world.banner.t > 120) world.banner = null;
   if (world.busy) return;
+  if (G.cheatTick) G.cheatTick();
   if (world.map._spawn) spawnRoamers(world.map);
   const inp = G.input;
   if (p.moving) {

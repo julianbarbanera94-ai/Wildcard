@@ -328,7 +328,7 @@ async function animExp(f, to, frames) {
 // ---- Status & stat effects ------------------------------------------------
 const STATUS_MSG = { slp: 'fell asleep!', par: 'is paralyzed! It may be unable to move!', psn: 'was poisoned!', brn: 'was burned!' };
 async function inflict(f, status) {
-  if (f.c.status || f.c.hp <= 0) return false;
+  if (f.c.status || f.c.hp <= 0 || (G.cheat('god') && G.state.party.includes(f.c))) return false;
   const ty = G.SPECIES[f.c.id].types;
   if ((status === 'psn' && ty.includes('Poison')) || (status === 'brn' && ty.includes('Fire')) || (status === 'par' && ty.includes('Electric'))) return false;
   f.c.status = status; if (status === 'slp') f.sleep = 1 + rnd(3);
@@ -351,12 +351,13 @@ async function useMove(att, def, move) {
   }
   if (att.c.status === 'par' && rnd(4) === 0) { await msg(`${nm(att)} is fully paralyzed!\nIt can't move!`); return; }
   await msg(`${nm(att)} used ${move.name}!`, 22);
-  const slot = att.c.moves.find(m => m.id === move.name); if (slot) slot.pp--;
+  const slot = att.c.moves.find(m => m.id === move.name); if (slot && !G.cheat('pp')) slot.pp--;
   if (move.acc < 100 && rnd(100) >= move.acc) { await msg(`${nm(att)}'s attack missed!`); return; }
   if (move.pow > 0) {
     const crit = rnd(16) === 0, r = G.calcDamage(att, def, move, { crit, roll: .85 + Math.random() * .15 });
     if (r.eff === 0) { await msg(`It doesn't affect ${nm(def)}...`); return; }
     await animAttack(att, def, move, r.eff);
+    if (G.cheat('god') && G.state.party.includes(def.c)) r.dmg = 0;
     def.c.hp = Math.max(0, def.c.hp - r.dmg); await drain(def);
     if (crit) await msg('A critical hit!');
     if (r.eff > 1) await msg("It's super effective!"); else if (r.eff < 1) await msg("It's not very effective...");
@@ -504,9 +505,9 @@ async function doSwitch(idx, forced) {
 // ---- Catching -------------------------------------------------------------
 async function throwOrb(item) {
   const bonus = G.ITEMS[item].mult;
-  G.state.bag[item]--; if (!G.state.bag[item]) delete G.state.bag[item];
+  if (!G.cheat('items')) { G.state.bag[item]--; if (!G.state.bag[item]) delete G.state.bag[item]; }
   await msg(`${G.state.name} used the ${item.toUpperCase()}!`, 14);
-  const res = G.catchCheck(b.foe.c, bonus), [fx, fy] = center(b.foe);
+  const res = G.cheat('catch') ? { shakes: 3, caught: true } : G.catchCheck(b.foe.c, bonus), [fx, fy] = center(b.foe);
   G.audio.sfx('throw');
   b.orb = { x: 40, y: 70, rot: 0, s: 1 };
   for (let i = 0; i <= 26; i++) { const t = i / 26; b.orb.x = 40 + (fx - 40) * t; b.orb.y = 70 + (fy - 70) * t - Math.sin(t * Math.PI) * 50; b.orb.rot = t * 12; await G.nextFrame(); }
@@ -546,7 +547,7 @@ async function throwOrb(item) {
 // ---- Items in battle ------------------------------------------------------
 async function useItem(a) {
   const c = G.state.party[a.idx], r = G.applyItem(c, a.item);
-  G.state.bag[a.item]--; if (!G.state.bag[a.item]) delete G.state.bag[a.item];
+  if (!G.cheat('items')) { G.state.bag[a.item]--; if (!G.state.bag[a.item]) delete G.state.bag[a.item]; }
   if (c === b.me.c) { G.audio.sfx('heal'); await drain(b.me); }
   await msg(`${G.state.name} used the ${a.item.toUpperCase()}!\n${r.msg}`);
 }
@@ -554,7 +555,7 @@ async function useItem(a) {
 // ---- Turn flow ------------------------------------------------------------
 async function endOfTurn(f) {
   if (f.c.hp <= 0) return;
-  if (f.c.status === 'psn' || f.c.status === 'brn') {
+  if ((f.c.status === 'psn' || f.c.status === 'brn') && !(G.cheat('god') && G.state.party.includes(f.c))) {
     f.c.hp = Math.max(0, f.c.hp - Math.max(1, Math.floor(f.c.stats.hp / 8)));
     await shake(f); await drain(f);
     await msg(`${nm(f)} is hurt by its ${f.c.status === 'psn' ? 'poison' : 'burn'}!`);

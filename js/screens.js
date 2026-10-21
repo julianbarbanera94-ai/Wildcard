@@ -242,7 +242,12 @@ G.dexScreen = async function () {
       spot(ctx, 180, 42, 32, G.TYPE_COL[sp.types[0]]);
       ctx.drawImage(G.creatureSprite(id), 148, 8 + Math.sin(G.frameNo / 16) * 1.2, 64, 64); G.text(ctx, sp.name.toUpperCase(), 180, 76, { align: 'center', font: G.FONT_B });
       sp.types.forEach((t, k) => G.typeBadge(ctx, t, 128 + (sp.types.length === 1 ? 40 : k * 38 + 2), 88));
-      if (d > 1) G.wrap(sp.desc, 100).forEach((l, k) => G.text(ctx, l, 130, 104 + k * 10, { font: F6 }));
+      if (d > 1) {
+        G.wrap(sp.desc, 100).forEach((l, k) => G.text(ctx, l, 130, 104 + k * 10, { font: F6 }));
+        const from = Object.values(G.SPECIES).find(o => o.evo && o.evo[1] === sp.id);
+        const evo = sp.evo ? `Evolves into ${G.SPECIES[sp.evo[1]].name} at Lv${sp.evo[0]}` : from ? `Evolved from ${from.name}` : 'Does not evolve';
+        G.text(ctx, evo, 130, 132, { font: F6, color: '#7a5a30', shadow: false });
+      }
       else G.text(ctx, 'Not yet caught.', 130, 108, { font: F6 });
     } else { spot(ctx, 180, 42, 32, '#b8a8c8'); G.text(ctx, '?', 180, 28, { align: 'center', color: '#fff', shadow: '#8a7a98', font: '900 24px ' + G.FONT_FAM }); G.text(ctx, 'Unknown', 180, 80, { align: 'center', color: '#8a7a98' }); }
     const seen = Object.keys(G.state.dex).length, caught = Object.values(G.state.dex).filter(v => v > 1).length;
@@ -327,7 +332,7 @@ G.startMenu = async function () {
   let idx = 0;
   for (;;) {
     // BUILD sits after BAG; the rest of the menu keeps its old indices via `ch` below
-    const labels = ['DEX', 'PARTY', 'BAG', 'BUILD', S.name, 'SAVE', G.audio.muted ? 'SOUND: OFF' : 'SOUND: ON', 'EXIT'];
+    const labels = ['DEX', 'PARTY', 'BAG', 'BUILD', S.name, 'SAVE', 'SETTINGS', 'EXIT'];
     const pick = await G.choose(labels, { right: 238, y: 4, index: idx, minW: 50, rowH: 13 });
     if (pick < 0 || pick === 7) break; idx = pick;
     if (pick === 3) { await G.buildMenu(); break; }
@@ -348,7 +353,7 @@ G.startMenu = async function () {
     } else if (ch === 4) {
       if (await (async () => { await G.say('Would you like to save the game?', { auto: 1 }); return G.yesNo(); })()) { if (G.saveGame()) { G.audio.sfx('levelup'); await G.say(`${S.name} saved the game.`); } else await G.say('Saving failed! Storage may be full or disabled.'); }
       G.closeText();
-    } else if (ch === 5) G.audio.toggle();
+    } else if (ch === 5) await G.settingsMenu();
   }
 };
 })();

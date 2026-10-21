@@ -18,6 +18,10 @@ Open `index.html` in a browser, or serve the folder (`python3 -m http.server`) a
 
 On phones and tablets an on-screen D-pad and buttons appear.
 
+## Test Mode
+
+START → SETTINGS → TEST MODE, then enter the password (`Julian1`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
+
 ## Android APK
 
 A tiny native shell (`android/`) wraps the game in a full-screen WebView, locked to landscape, with the on-screen pad, Back button mapped to B, autosave when the app is backgrounded, and sound paused in the background. Requires Android 7.0+ (API 24).
@@ -70,6 +74,7 @@ js/mapkit.js        map-building helpers
 js/maps/*.js        the world: hub village, Sunmeadow, Mirewood, Ridge + Mine, Shore + Hollow
 js/world.js         overworld runtime: movement, follower, roaming creatures, trainers, story, save/load
 js/build.js         player building: base, healing station, nursery, decorations
+js/cheats.js        Settings and the password-gated Test Mode
 js/main.js          title screen and boot
 docs/CONTRACT.md    rendering model, APIs, file ownership and map contract
 tests/              logic unit tests and headless-browser playthroughs
@@ -85,6 +90,7 @@ node tests/maps.test.js                        # map data + every NPC/item/warp 
 npm i playwright && node tests/e2e-play.js     # headless playthrough: new game, capture, trainer, shop, save/load
 node tests/e2e-extra.js                        # level-up, evolution, whiteout, boss, relight, follower, Joker capture, fuzz bot
 node tests/e2e-world.js                        # roaming creatures, building, healing station, nursery EXP, base, saved builds
+node tests/e2e-cheats.js                       # Settings, password prompt, Test Mode options
 ```
 
 The end-to-end tests drive the real game with keyboard input in headless Chromium. Set `PW` to the playwright module path, `CHROME` to a Chromium binary and `OUT` to a folder for screenshots if the defaults don't apply.

@@ -90,7 +90,10 @@ const OUT = process.env.OUT || '/tmp';
   await page.waitForTimeout(200); await key(['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'][await ev(() => window.__gd)], 400);
   await until(() => G.scene !== G.world.scene, 6000, 'grass encounter'); await ev(() => { Math.random = window.__origRandom; });
   await advance(cmdReady, 20000, 'encounter command menu'); await shot('09-grass-encounter');
-  await key('ArrowDown'); await key('ArrowRight'); await key('z');            // RUN (index 3)
+  for (let i = 0; i < 400 && await ev(() => G.scene !== G.world.scene); i++) {   // escaping is random: keep picking RUN
+    if (await ev(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0)) { await key('ArrowDown'); await key('ArrowRight'); await key('z'); }
+    else if (await ev(() => G.ui.text && G.ui.text.arrow)) await key('z', 50); else await page.waitForTimeout(100);
+  }
   await until(() => G.scene === G.world.scene && !G.world.busy, 30000, 'back in overworld'); step('walking into tall grass triggers a wild battle; RUN returns to the overworld');
   await until(() => !G.world.busy && G.ui.fade.a === 0, 15000, 'world idle after RUN');
 

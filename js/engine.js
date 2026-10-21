@@ -11,7 +11,7 @@ const KEYS = {
 };
 G.press = k => { if (!input.held[k]) input.next[k] = true; input.held[k] = true; G.audio.init(); };
 G.release = k => { input.held[k] = false; };
-addEventListener('keydown', e => { const k = KEYS[e.key]; if (k) { e.preventDefault(); if (!e.repeat) G.press(k); } });
+addEventListener('keydown', e => { if (G.keyHook && G.keyHook(e)) { e.preventDefault(); return; } const k = KEYS[e.key]; if (k) { e.preventDefault(); if (!e.repeat) G.press(k); } });
 addEventListener('keyup', e => { const k = KEYS[e.key]; if (k) G.release(k); });
 addEventListener('blur', () => { input.held = {}; });
 addEventListener('contextmenu', e => e.preventDefault());

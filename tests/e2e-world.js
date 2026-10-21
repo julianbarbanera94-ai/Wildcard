@@ -31,13 +31,17 @@ const OUT = process.env.OUT || '/tmp';
   await page.waitForTimeout(6000);
   const pos1 = await ev(() => G.world.map.roamers.map(r => r.x + ',' + r.y).join(' '));
   assert.notEqual(pos0, pos1, 'roamers move around'); await shot('roamers');
-  const d = await ev(() => { const P = G.world.p, rs = G.world.map.roamers; rs.sort((a, b) => Math.abs(a.x - P.x) + Math.abs(a.y - P.y) - Math.abs(b.x - P.x) - Math.abs(b.y - P.y));
+  await ev(() => G.world.map.roamers.forEach(r => { r.timer = 99999; })); await page.waitForTimeout(800);
+  const d = await ev(() => { const P = G.world.p, rs = G.world.map.roamers.filter(r => !r.moving); rs.sort((a, b) => Math.abs(a.x - P.x) + Math.abs(a.y - P.y) - Math.abs(b.x - P.x) - Math.abs(b.y - P.y));
     for (const r of rs) for (const [dx, dy, dir] of [[0, -1, 0], [0, 1, 1], [1, 0, 2], [-1, 0, 3]]) if (G.worldApi.canWalk(r.x + dx, r.y + dy) && !G.worldApi.tileWarp(r.x + dx, r.y + dy)) { G.placePlayer(r.x + dx, r.y + dy, dir); r.timer = 99999; r.cool = 0; window.__target = r; return dir; } return -1; });
   assert(d >= 0);
   await key(['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'][d], 120);
   await until(() => G.scene !== G.world.scene, 8000, 'roamer battle'); await shot('roam-battle');
   await advance(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0, 30000, 'command');
-  await key('ArrowRight'); await key('ArrowDown'); await key('z');   // RUN
+  for (let i = 0; i < 8 && await ev(() => G.scene !== G.world.scene); i++) {   // escaping is random: keep picking RUN
+    if (await ev(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0)) { await key('ArrowRight'); await key('ArrowDown'); await key('z'); }
+    else if (await ev(() => G.ui.text && G.ui.text.arrow)) await key('z', 50); else await page.waitForTimeout(150);
+  }
   await idle();
   assert(await ev(() => window.__target.cool > 0 && G.world.map.roamers.includes(window.__target)), 'a creature you ran from stays but backs off');
   step(`${n0} roaming creatures spawn, wander, and start a battle when bumped into`);
