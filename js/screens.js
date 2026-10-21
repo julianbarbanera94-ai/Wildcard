@@ -326,9 +326,12 @@ G.startMenu = async function () {
   const S = G.state;
   let idx = 0;
   for (;;) {
-    const labels = ['DEX', 'PARTY', 'BAG', S.name, 'SAVE', G.audio.muted ? 'SOUND: OFF' : 'SOUND: ON', 'EXIT'];
-    const ch = await G.choose(labels, { right: 238, y: 4, index: idx, minW: 50 });
-    if (ch < 0 || ch === 6) break; idx = ch;
+    // BUILD sits after BAG; the rest of the menu keeps its old indices via `ch` below
+    const labels = ['DEX', 'PARTY', 'BAG', 'BUILD', S.name, 'SAVE', G.audio.muted ? 'SOUND: OFF' : 'SOUND: ON', 'EXIT'];
+    const pick = await G.choose(labels, { right: 238, y: 4, index: idx, minW: 50, rowH: 13 });
+    if (pick < 0 || pick === 7) break; idx = pick;
+    if (pick === 3) { await G.buildMenu(); break; }
+    const ch = pick > 3 ? pick - 1 : pick;
     if (ch === 0) await G.dexScreen();
     else if (ch === 1) await G.partyScreen({ mode: 'menu' });
     else if (ch === 2) await G.bagScreen('field');

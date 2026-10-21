@@ -1,8 +1,8 @@
 # WILDCARD
 
-A creature-catching RPG for the browser with the feel of the GBA-era monster-collecting games: a tile-based overworld you can roam freely, tall grass full of wild creatures, turn-based battles, capture orbs, a party of six with your lead partner walking behind you, trainers, a Lodge for healing and a Trading Post.
+A cosy creature-catching RPG for the browser and Android, with bright, soft, animated art in the spirit of Pokopia: a big free-roam world where wild creatures wander the map, turn-based battles, capture orbs, a party of six with your lead partner walking behind you, trainers, and your own buildings (a base, healing stations, nurseries and decorations).
 
-Everything is original and generated in code. There are no image or audio files: tiles, characters, all 25 creatures and the chiptune music are drawn or synthesised at runtime. No build step and no dependencies.
+Everything is original and generated in code. There are no image or audio files: scenery, characters, all 25 creatures, the UI and the chiptune music are drawn or synthesised at runtime (smooth vector shapes rendered at the screen's real resolution). The only bundled asset is the Nunito font (SIL OFL), embedded in `js/fonts.js`. No build step and no dependencies.
 
 ## Play
 
@@ -45,9 +45,10 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
    - **East, Mirewood Marsh:** boardwalks and marsh grass with bug and poison creatures. Warden Bog holds the Marsh Ember Shard. Fisher Moll has a side quest.
    - **North, the Ridge and Glimmer Mine:** the hardest region. Warden Kade holds the Mine Ember Shard.
    - **South, Tidepool Shore:** optional, with hidden items, rare creatures in the dune grass, and Moll's lost lantern.
-3. Weaken wild creatures and throw an orb from the BAG to catch them. Sleep and poison improve your odds. Trainers will spot you and walk up for a battle.
-4. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
-5. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
+3. Wild creatures roam the map. Bold ones notice you and give chase, shy ones scurry off, curious ones mill about. Bump into one (or press A on it) to battle; more hide in the tall grass. Weaken them and throw an orb from the BAG to catch them. Sleep and poison improve your odds. Trainers will spot you and walk up for a battle.
+4. **Build** (START → BUILD) on open grass or sand outdoors; each village and region has marked building plots. A **Base** you can walk into (bed to rest, PC), a **Healing Station** (heal any time), a **Nursery** (leave a creature; it earns EXP for every step you walk), and decorations (lamps, flowers, bushes, pines, fences). Press A on a structure to use it or take it down for half the cost back. Builds are saved.
+5. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
+6. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
 
 Features: 25 species with evolution lines, 13 types with a type chart, STAB, critical hits, accuracy, stat stages, sleep/paralysis/poison/burn, Gen-3 style capture maths and escape odds, EXP and levelling with move learning (forget-a-move prompt) and evolution, whiteout and respawn, party/summary/bag/Dex/PC/shop screens, and saving to the browser's `localStorage` via START → SAVE.
 
@@ -55,18 +56,26 @@ Features: 25 species with evolution lines, 13 types with a type chart, STAB, cri
 
 ```
 index.html          page, canvas and touch controls
+js/fonts.js         embedded Nunito font
 js/data.js          types, moves, species, items
 js/creature.js      stats, EXP, damage and capture maths (no DOM, unit-testable)
-js/gfx.js           procedural tiles, characters, creature sprites, UI frames
-js/engine.js        input, audio/music, game loop, dialogue boxes, menus, fades
+js/gfx.js           shared canvas helpers
+js/terrain.js       tile flags and all scenery art: ground, water, grass, trees, buildings, ambient effects
+js/sprites.js       creature and character art (vector, cached)
+js/uikit.js         panels, text, menus, HP bars, badges
+js/engine.js        input, audio/music, game loop, dialogue, menus, fades
 js/screens.js       party, summary, bag, Dex, PC, shop, start menu
 js/battle.js        battle scene, turn logic, catching, EXP, evolution
-js/world.js         maps, overworld, NPCs, trainers, warps, encounters, save/load
+js/mapkit.js        map-building helpers
+js/maps/*.js        the world: hub village, Sunmeadow, Mirewood, Ridge + Mine, Shore + Hollow
+js/world.js         overworld runtime: movement, follower, roaming creatures, trainers, story, save/load
+js/build.js         player building: base, healing station, nursery, decorations
 js/main.js          title screen and boot
+docs/CONTRACT.md    rendering model, APIs, file ownership and map contract
 tests/              logic unit tests and headless-browser playthroughs
 ```
 
-To add a creature, add an `sp(...)` line in `data.js` (its look is generated from its types and `look` features). To add an area, build a map in `world.js` with the helpers there (`newMap`, `rect`, `building`, `warp`, `npc`, `trainer`).
+To add a creature, add an `sp(...)` line in `data.js` (its look is generated from its types and `look` features). To add an area, add a file in `js/maps/` using the helpers in `js/mapkit.js` (`newMap`, `rect`, `building`, `warp`, `npc`, `trainer`) and a `<script>` tag in `index.html`.
 
 ## Tests
 
@@ -75,6 +84,7 @@ node tests/logic.test.js                       # data integrity + battle/catch m
 node tests/maps.test.js                        # map data + every NPC/item/warp is reachable on foot
 npm i playwright && node tests/e2e-play.js     # headless playthrough: new game, capture, trainer, shop, save/load
 node tests/e2e-extra.js                        # level-up, evolution, whiteout, boss, relight, follower, Joker capture, fuzz bot
+node tests/e2e-world.js                        # roaming creatures, building, healing station, nursery EXP, base, saved builds
 ```
 
 The end-to-end tests drive the real game with keyboard input in headless Chromium. Set `PW` to the playwright module path, `CHROME` to a Chromium binary and `OUT` to a folder for screenshots if the defaults don't apply.
