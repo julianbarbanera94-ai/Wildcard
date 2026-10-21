@@ -143,6 +143,7 @@ G.bagScreen = async function (where) {
       if (where === 'battle') { result = { item }; break; }
       await G.say("You can't use that here.", { style: 'light' }); G.closeText(); continue;
     }
+    if (it.kind === 'key') { await G.say("You can't use that right now.", { style: where === 'battle' ? 'dark' : 'light' }); G.closeText(); continue; }
     const t = await G.partyScreen({ mode: 'use' });
     if (t < 0) continue;
     const c = G.state.party[t];
@@ -234,7 +235,7 @@ G.shopMenu = async function () {
       }
       await G.say('Anything else?');
     } else if (ch === 1) {
-      const names = Object.keys(S.bag).filter(k => S.bag[k] > 0);
+      const names = Object.keys(S.bag).filter(k => S.bag[k] > 0 && G.ITEMS[k].kind !== 'key');
       if (!names.length) { await G.say('You have nothing to sell.'); continue; }
       const i = await G.choose(names.map(n => `${n} x${S.bag[n]} $${G.ITEMS[n].price >> 1}`), { x: 4, y: 28 });
       if (i < 0) continue;
@@ -260,9 +261,9 @@ G.startMenu = async function () {
     else if (ch === 2) await G.bagScreen('field');
     else if (ch === 3) {
       const t = Math.floor(S.frames / 3600), caught = Object.values(S.dex).filter(v => v > 1).length;
-      const l = push({ draw(ctx) { G.frame(ctx, 20, 20, 200, 110, 'light'); G.text(ctx, 'TRAINER CARD', 120, 28, { align: 'center' });
-        [['NAME', S.name], ['MONEY', '$' + S.money], ['DEX', `${caught} caught / ${Object.keys(S.dex).length} seen`], ['TIME', `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`]].forEach(([k, v], i) => { G.text(ctx, k, 34, 48 + i * 17); G.text(ctx, String(v), 206, 48 + i * 17, { align: 'right' }); });
-        ctx.drawImage(G.charSprite(S.style)[0][0], 100, 112, 16, 20); } });
+      const l = push({ draw(ctx) { G.frame(ctx, 20, 12, 200, 124, 'light'); G.text(ctx, 'WARDEN CARD', 120, 20, { align: 'center' });
+        [['NAME', S.name], ['MONEY', '$' + S.money], ['DEX', `${caught} caught / ${Object.keys(S.dex).length} seen`], ['SHARDS', `${['meadow', 'marsh', 'mine'].filter(k => S.flags['shard_' + k]).length} / 3`], ['TIME', `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`]].forEach(([k, v], i) => { G.text(ctx, k, 34, 38 + i * 15); G.text(ctx, String(v), 206, 38 + i * 15, { align: 'right' }); });
+        ctx.drawImage(G.charSprite(S.style)[0][0], 112, 112, 16, 20); } });
       await G.waitA(); pop(l);
     } else if (ch === 4) {
       if (await (async () => { await G.say('Would you like to save the game?', { auto: 1 }); return G.yesNo(); })()) { if (G.saveGame()) { G.audio.sfx('levelup'); await G.say(`${S.name} saved the game.`); } else await G.say('Saving failed! Storage may be full or disabled.'); }

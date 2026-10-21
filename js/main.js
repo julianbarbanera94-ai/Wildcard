@@ -21,8 +21,9 @@ const title = {
 
 async function intro() {
   G.ui.style = 'light';
-  await G.say('Welcome to the wild frontier!\nHere, creatures roam the tall grass, forests and caves.');
-  await G.say('You live in PEBBLE TOWN. Today, Prof. Quill is waiting to hand you your very first partner.');
+  await G.say('LANTERNREST, the vale of the Great Lantern.\nIts flame has kept the wild creatures calm for three hundred years.');
+  await G.say('But the Lantern is dying, and the Wildcard that guards the vale has vanished. Lantern Night is almost here.');
+  await G.say('You are a young Warden-in-training. Your grandfather Orrin is downstairs, and Elder Wren is waiting at the Hearth Shrine.');
   G.closeText();
 }
 

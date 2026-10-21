@@ -191,6 +191,7 @@ G.ITEMS = {
   'Super Potion': { kind: 'heal', amt: 50, price: 700, desc: 'Restores 50 HP.' },
   'Full Heal': { kind: 'cure', price: 600, desc: 'Cures any status problem.' },
   'Revive': { kind: 'revive', price: 1500, desc: 'Revives a fainted creature to half HP.' },
+  'Old Lantern': { kind: 'key', price: 0, desc: 'A battered brass lantern. Someone must be missing it.' },
 };
 G.MART_STOCK = ['Catch Orb', 'Super Orb', 'Potion', 'Super Potion', 'Full Heal', 'Revive'];
 G.STATUS_NAME = { slp: 'SLP', par: 'PAR', psn: 'PSN', brn: 'BRN' };

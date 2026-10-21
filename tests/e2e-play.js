@@ -24,21 +24,21 @@ const OUT = process.env.OUT || '/tmp';
   await shot('01-intro');
   for (let i = 0; i < 30 && await ev(() => G.world.busy); i++) await key('z', 50);
   await until(() => !G.world.busy, 8000, 'intro finished');
-  assert.equal(await ev(() => G.state.map), 'home'); step('new game starts in home');
+  assert.equal(await ev(() => G.state.map), 'cottage'); step('new game starts in the cottage');
 
   // --- walk out of the house with real key input ---
   await key('ArrowDown', 700);
-  await until(() => G.state && G.world.mapId === 'pebble', 6000, 'walk to pebble'); await page.waitForTimeout(700);
-  await shot('02-pebble'); step('walked through door into Pebble Town');
+  await until(() => G.state && G.world.mapId === 'lanternrest', 6000, 'walk to Lanternrest'); await page.waitForTimeout(700);
+  await shot('02-pebble'); step('walked out of the cottage into Lanternrest');
 
   // --- gating: can't enter grass without a starter ---
-  await ev(() => { G.placePlayer(10, 2, 1); });
+  await ev(() => { G.placePlayer(14, 2, 1); });
   await key('ArrowUp', 600);
   await until(() => G.world.busy, 3000, 'gate message'); await mash(4, 'z'); await until(() => !G.world.busy);
-  assert.equal(await ev(() => G.world.mapId), 'pebble'); step('route blocked until a starter is chosen');
+  assert.equal(await ev(() => G.world.mapId), 'lanternrest'); step('roads are blocked until a starter is chosen');
 
   // --- pick the starter in the lab ---
-  await ev(() => { G.loadMap('lab'); G.placePlayer(4, 4, 1); });
+  await ev(() => { G.loadMap('shrine'); G.placePlayer(5, 4, 1); });
   await page.waitForTimeout(300); await key('z');
   await until(() => G.ui.text, 3000); await page.waitForTimeout(800); await shot('03-starter-pick');
   await mash(3, 'z');                                       // finish text, YES
@@ -58,7 +58,7 @@ const OUT = process.env.OUT || '/tmp';
   };
 
   // --- wild battle & capture ---
-  await ev(() => { G.loadMap('route1'); G.placePlayer(10, 20, 1); window.__wild = G.makeCreature(10, 3); window.__wild.hp = 1; G.runWorld(async () => { window.__res = await G.startBattle({ wild: window.__wild }); await G.fadeTo(0, 5); }); });
+  await ev(() => { G.loadMap('sunmeadow'); G.placePlayer(10, 20, 1); window.__wild = G.makeCreature(10, 3); window.__wild.hp = 1; G.runWorld(async () => { window.__res = await G.startBattle({ wild: window.__wild }); await G.fadeTo(0, 5); }); });
   await advance(cmdReady, 20000, 'command menu');
   await page.waitForTimeout(300); await shot('05-command-menu');
   await key('z'); await page.waitForTimeout(300); await shot('06-move-menu'); await key('x'); await page.waitForTimeout(200);
@@ -84,7 +84,7 @@ const OUT = process.env.OUT || '/tmp';
   step('won a trainer battle (prize money + EXP awarded)');
 
   // --- encounters when walking in tall grass ---
-  await ev(() => { G.loadMap('route1'); G.placePlayer(8, 25, 2); window.__origRandom = Math.random; Math.random = () => 0.01; });
+  await ev(() => { G.loadMap('sunmeadow'); G.placePlayer(9, 15, 2); window.__origRandom = Math.random; Math.random = () => 0.01; });
   await page.waitForTimeout(200); await key('ArrowLeft', 400);
   await until(() => G.scene !== G.world.scene, 6000, 'grass encounter'); await ev(() => { Math.random = window.__origRandom; });
   await advance(cmdReady, 20000, 'encounter command menu'); await shot('09-grass-encounter');
@@ -93,21 +93,21 @@ const OUT = process.env.OUT || '/tmp';
   await until(() => !G.world.busy && G.ui.fade.a === 0, 15000, 'world idle after RUN');
 
   // --- Center heal, shop & PC through the real menus ---
-  await ev(() => { G.state.party[0].hp = 3; G.state.party[0].status = 'psn'; G.loadMap('center'); G.placePlayer(4, 3, 1); });
+  await ev(() => { G.state.party[0].hp = 3; G.state.party[0].status = 'psn'; G.loadMap('lodge'); G.placePlayer(4, 3, 1); });
   await page.waitForTimeout(300); await key('z');
   await advance(() => G.ui.layers.length > 0, 8000, 'heal yes/no'); await key('z');          // YES
   await until(() => G.state.party[0].hp === G.state.party[0].stats.hp, 8000, 'healed'); await advance(() => !G.world.busy, 15000);
-  assert.equal(await ev(() => G.state.party[0].status), null); step('Creature Center heals HP and status');
-  await ev(() => { G.loadMap('mart'); G.placePlayer(4, 4, 1); G.state.money = 1000; });
+  assert.equal(await ev(() => G.state.party[0].status), null); step('Warden Lodge heals HP and status');
+  await ev(() => { G.loadMap('post'); G.placePlayer(4, 4, 1); G.state.money = 1000; });
   await page.waitForTimeout(300); await key('z'); await advance(() => G.ui.layers.length >= 2, 8000, 'shop menu');
   await shot('10-shop'); await key('z'); await page.waitForTimeout(500); await shot('10b-shop-buy');
   await key('z');                                                                                           // BUY -> Catch Orb
   await advance(() => G.ui.text && G.ui.text.lines.join(' ').includes('How many') && G.ui.text.shown > 20, 8000, 'quantity picker'); await page.waitForTimeout(400); await key('ArrowUp'); await page.waitForTimeout(150); await shot('10c-shop-qty'); await key('z');   // qty 2
-  await until(() => G.state.money === 600, 6000, 'purchase'); assert.equal(await ev(() => G.state.bag['Catch Orb']), 11); step('bought 2 Catch Orbs at the Mart ($1000 -> $600)');
+  await until(() => G.state.money === 600, 6000, 'purchase'); assert.equal(await ev(() => G.state.bag['Catch Orb']), 11); step('bought 2 Catch Orbs at the Trading Post ($1000 -> $600)');
   await ev(() => { G.ui.layers.length = 0; G.closeText(); G.world.busy = false; });
 
   // --- start menu, party, bag, dex screens render ---
-  await ev(() => { G.loadMap('pebble'); G.placePlayer(10, 8, 0); });
+  await ev(() => { G.loadMap('lanternrest'); G.placePlayer(14, 9, 0); });
   await page.waitForTimeout(300); await key('Enter'); await page.waitForTimeout(300); await shot('11-start-menu');
   await key('ArrowDown'); await key('z'); await page.waitForTimeout(300); await shot('12-party'); await key('z'); await page.waitForTimeout(250); await shot('12b-party-submenu');
   await key('ArrowDown'); await key('z'); await page.waitForTimeout(300); await shot('13-summary'); await key('x'); await key('x'); await key('x');

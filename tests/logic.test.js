@@ -1,6 +1,6 @@
 // Run with: node tests/logic.test.js  — checks data integrity and core battle maths.
 const fs = require('fs'), vm = require('vm'), path = require('path'), assert = require('assert');
-for (const f of ['data', 'creature']) vm.runInThisContext(fs.readFileSync(path.join(__dirname, '../js', f + '.js'), 'utf8'), { filename: f });
+for (const f of ["data", "creature"]) vm.runInThisContext(fs.readFileSync(path.join(__dirname, '../js', f + '.js'), 'utf8'), { filename: f });
 const G = globalThis.G;
 let n = 0; const t = (name, fn) => { fn(); n++; console.log('ok -', name); };
 

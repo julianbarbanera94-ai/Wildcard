@@ -1,6 +1,6 @@
 # WILDCARD
 
-A creature-catching RPG for the browser in the style of the GBA-era Pokémon games (think *Emerald*): tile-based overworld, tall grass full of wild creatures, turn-based battles, capture orbs, a party of six, trainers, Creature Centers and a Mart.
+A creature-catching RPG for the browser with the feel of the GBA-era monster-collecting games: a tile-based overworld you can roam freely, tall grass full of wild creatures, turn-based battles, capture orbs, a party of six with your lead partner walking behind you, trainers, a Lodge for healing and a Trading Post.
 
 Everything is original and generated in code. There are no image or audio files: tiles, characters, all 25 creatures and the chiptune music are drawn or synthesised at runtime. No build step and no dependencies.
 
@@ -37,11 +37,17 @@ Notes:
 
 ## The game
 
-1. Talk to Mom, then go next door and pick a starter from Prof. Quill's table.
-2. Walk through tall grass to meet wild creatures. Weaken them, then throw an orb from the BAG to catch them. Sleep and poison improve your odds.
-3. Beat trainers on Route 1 and Route 2 for money and EXP. They will spot you and walk up for a battle.
-4. Heal for free at the Creature Center in Marlow Town. Its PC stores extra creatures. Buy orbs and potions at the Mart.
-5. Fight through Echo Cave, beat the Ranger, and try to catch the legendary **Joker**, the Wildcard.
+You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Great Lantern has kept the wild creatures of the vale calm for 300 years. It is dying, and the legendary **Wildcard** that guards the vale has vanished.
+
+1. Wake up in your cottage, meet Elder Wren at the Hearth Shrine, and wake a **Bondling** (your starter) from its hearth stone. It follows you around the map from then on. Press A facing it to talk to it.
+2. The village has four roads, and you can take them in any order:
+   - **West, Sunmeadow:** open grassland and the easiest region. Warden Hazel holds the Meadow Ember Shard.
+   - **East, Mirewood Marsh:** boardwalks and marsh grass with bug and poison creatures. Warden Bog holds the Marsh Ember Shard. Fisher Moll has a side quest.
+   - **North, the Ridge and Glimmer Mine:** the hardest region. Warden Kade holds the Mine Ember Shard.
+   - **South, Tidepool Shore:** optional, with hidden items, rare creatures in the dune grass, and Moll's lost lantern.
+3. Weaken wild creatures and throw an orb from the BAG to catch them. Sleep and poison improve your odds. Trainers will spot you and walk up for a battle.
+4. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
+5. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
 
 Features: 25 species with evolution lines, 13 types with a type chart, STAB, critical hits, accuracy, stat stages, sleep/paralysis/poison/burn, Gen-3 style capture maths and escape odds, EXP and levelling with move learning (forget-a-move prompt) and evolution, whiteout and respawn, party/summary/bag/Dex/PC/shop screens, and saving to the browser's `localStorage` via START → SAVE.
 
@@ -66,8 +72,9 @@ To add a creature, add an `sp(...)` line in `data.js` (its look is generated fro
 
 ```
 node tests/logic.test.js                       # data integrity + battle/catch maths
+node tests/maps.test.js                        # map data + every NPC/item/warp is reachable on foot
 npm i playwright && node tests/e2e-play.js     # headless playthrough: new game, capture, trainer, shop, save/load
-node tests/e2e-extra.js                        # level-up, evolution, whiteout, boss, Joker capture, fuzz bot
+node tests/e2e-extra.js                        # level-up, evolution, whiteout, boss, relight, follower, Joker capture, fuzz bot
 ```
 
 The end-to-end tests drive the real game with keyboard input in headless Chromium. Set `PW` to the playwright module path, `CHROME` to a Chromium binary and `OUT` to a folder for screenshots if the defaults don't apply.

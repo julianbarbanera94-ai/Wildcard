@@ -49,21 +49,31 @@ const OUT = process.env.OUT || '/tmp';
   step('level-up learns a move and the forget-a-move flow works');
 
   // 3) whiteout and respawn ---------------------------------------------------------------
-  await ev(() => { const S = G.state; S.party.length = 0; S.party.push(G.makeCreature(10, 2)); S.money = 1000; S.flags.respawn = 'center'; G.loadMap('route1'); G.placePlayer(10, 20, 1); window.__res = undefined;
+  await ev(() => { const S = G.state; S.party.length = 0; S.party.push(G.makeCreature(10, 2)); S.money = 1000; S.flags.respawn = 'lodge'; G.loadMap('sunmeadow'); G.placePlayer(10, 20, 1); window.__res = undefined;
     const t = { name: 'BOSS', cls: 'ACE', style: G.PLAYER_STYLE, prize: 1, team: [G.makeCreature(25, 40)] }; G.runWorld(async () => { window.__res = await G.startBattle({ trainer: t }); /* afterBattle handled by world in real play */ }); });
   await fight(() => window.__res === undefined);
   assert.equal(await ev(() => window.__res), 'lose'); step('losing every creature ends the battle with "lose"');
   await ev(() => { G.scene = G.world.scene; G.ui.fade.a = 0; G.world.busy = false; });
 
-  // 4) cave boss ambush + reward, then catch Joker ----------------------------------------
+  // 4) mine boss ambush: shard + reward, then relight the Great Lantern, open the gate, catch Joker ------------
   await ev(() => { const S = G.state; S.party.length = 0; for (let i = 0; i < 3; i++) { const j = G.makeCreature(25, 60); j.moves = [{ id: 'Quake', pp: 10 }]; S.party.push(j); } S.bag = { 'Ultra Orb': 30 }; S.flags = { starter: true };
-    G.loadMap('cave'); G.placePlayer(10, 13, 1); window.__ultra0 = 30; });
+    G.loadMap('mine'); G.placePlayer(10, 13, 1); });
   await page.waitForTimeout(400); await key('ArrowUp', 250);                      // step to (10,12): inside Kade's line of sight
   await until(() => G.world.busy, 5000, 'trainer spotted'); await page.waitForTimeout(500); await shot('boss-spotted');
-  await fight(() => !G.state.flags.cave_kade); await idle();
-  assert.equal(await ev(() => G.state.bag['Ultra Orb']), 33); step('cave boss spots the player, battles, and pays 3 Ultra Orbs');
-  await ev(() => { window.__mk = G.makeCreature; G.makeCreature = (id, l) => { const c = window.__mk(id, l); if (id === 25) { c.hp = 1; c.status = 'slp'; } return c; }; G.placePlayer(10, 4, 1); });
-  await page.waitForTimeout(300); await shot('joker-room'); await key('z');   // talk to the Joker (facing up at (10,3))
+  await fight(() => !G.state.flags.mn_kade); await idle();
+  assert.equal(await ev(() => G.state.bag['Ultra Orb']), 33); assert(await ev(() => G.state.flags.shard_mine));
+  step('mine warden spots the player, battles, and gives the Mine Ember Shard + 3 Ultra Orbs');
+  // relight: the other two shards are given directly; the Mine shard goes in via the real pedestal interaction
+  await ev(() => { Object.assign(G.state.flags, { shard_meadow: true, shard_marsh: true }); G.loadMap('tower'); });
+  for (const [x, y, d] of [[3, 4, 1], [9, 4, 1], [6, 3, 1]]) {
+    await ev(([x, y, d]) => { G.placePlayer(x, y, d); }, [x, y, d]); await page.waitForTimeout(250); await key('z');
+    await advance(() => !G.world.busy, 30000, 'pedestal ' + x);
+  }
+  assert(await ev(() => G.state.flags.lanternLit)); await shot('lantern-lit'); step('placing three shards relights the Great Lantern');
+  await ev(() => { G.loadMap('lanternrest'); G.placePlayer(26, 21, 1); }); await page.waitForTimeout(300);
+  await key('ArrowUp', 500); await until(() => G.world.mapId === 'hollow', 6000, 'hollow gate opens after relight'); step('Hollow Gate opens once the Lantern is lit');
+  await ev(() => { window.__mk = G.makeCreature; G.makeCreature = (id, l) => { const c = window.__mk(id, l); if (id === 25) { c.hp = 1; c.status = 'slp'; } return c; }; G.placePlayer(9, 5, 1); });
+  await page.waitForTimeout(300); await shot('joker-room'); await key('z');   // talk to the Joker (facing up at (9,4))
   await advance(cmdReady, 40000, 'joker battle'); await page.waitForTimeout(200); await shot('joker-battle');
   for (let tries = 0; tries < 12; tries++) {
     if (!(await ev(() => G.scene !== G.world.scene))) break;
@@ -72,8 +82,20 @@ const OUT = process.env.OUT || '/tmp';
   }
   await until(() => G.state.flags.jokerCaught, 60000, 'Joker caught'); await advance(() => !G.world.busy, 40000);
   assert(await ev(() => G.state.party.length === 4 || G.state.box.length >= 1), 'joker stored'); assert.equal(await ev(() => G.state.dex[25]), 2);
-  step('caught the legendary Joker; it is removed from the cave'); await ev(() => { G.makeCreature = window.__mk; });
+  step('caught the legendary Joker; it is removed from the Hollow'); await ev(() => { G.makeCreature = window.__mk; });
   await page.waitForTimeout(300); await shot('after-joker');
+
+  // 4b) the lead creature follows the player -------------------------------------------------
+  await ev(() => { const S = G.state; S.party.length = 0; S.party.push(G.makeCreature(1, 8), G.makeCreature(4, 8)); G.ui.layers.length = 0; G.closeText(); G.world.busy = false; G.scene = G.world.scene; G.ui.fade.a = 0; G.loadMap('lanternrest'); G.placePlayer(14, 16, 1); });
+  await page.waitForTimeout(300);
+  const trail = [];
+  for (let i = 0; i < 4; i++) { const before = await ev(() => ({ x: G.world.p.x, y: G.world.p.y })); await key('ArrowDown', 380); await page.waitForTimeout(150); const f = await ev(() => ({ fx: G.world.f.x, fy: G.world.f.y, px: G.world.p.x, py: G.world.p.y })); trail.push([before, f]); }
+  for (const [b4, f] of trail) assert(f.fx === b4.x && f.fy === b4.y || (f.fx === f.px && f.fy === f.py - 1), `follower should stand where the player was: ${JSON.stringify([b4, f])}`);
+  assert(await ev(() => G.world.p.y > 16)); await shot('follower');
+  await ev(() => { const w = G.world; w.f.x = w.f.tx = w.p.x; w.f.y = w.f.ty = w.p.y - 1; w.p.dir = 1; }); await key('z');   // face the partner and talk to it
+  await until(() => G.world.busy, 3000, 'partner talk'); await shot('partner-talk'); await advance(() => !G.world.busy, 10000);
+  await ev(() => { G.state.party[0].hp = 0; }); await page.waitForTimeout(200);
+  assert.equal(await ev(() => { const P = G.state.party; return (P[0].hp > 0 ? P[0] : P.find(c => c.hp > 0)).id; }), 4); step('lead creature follows one tile behind; pressing A talks to it; a fainted lead hands over to the next');
 
   // 5) randomised bot: 8 mixed battles must all terminate without errors -------------------
   const results = await page.evaluate(async () => {

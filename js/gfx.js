@@ -22,6 +22,7 @@ const T = G.TILES = {
   M: { }, c: { }, e: { enc: true }, C: { solid: true },
   T: { }, B: { solid: true }, m: { }, k: { solid: true }, S: { solid: true }, h: { solid: true }, P: { solid: true },
   t: { solid: true }, b: { solid: true }, a: { }, x: { solid: true },
+  y: { }, q: { enc: true }, z: { }, l: { solid: true }, i: { solid: true }, O: { solid: true }, L: { solid: true },
 };
 const cache = {};
 function paint(ch, fr) {
@@ -60,6 +61,16 @@ function paint(ch, fr) {
     case 't': floor('#e8c888', '#d0a868'); px(1, 4, 14, 10, '#a06838'); px(1, 4, 14, 3, '#c89050'); px(1, 13, 14, 1, '#6a4020'); break;
     case 'b': floor('#e8c888', '#d0a868'); px(1, 1, 14, 14, '#4868c8'); px(1, 1, 14, 5, '#f0f0f0'); px(2, 2, 12, 3, '#fff'); break;
     case 'x': floor('#e8c888', '#d0a868'); px(2, 2, 12, 12, '#7a5a30'); px(3, 3, 10, 10, '#a07840'); break;
+    case 'y': px(0, 0, 16, 16, '#ead9a2'); for (let i = 0; i < 10; i++) px(R() * 15 | 0, R() * 15 | 0, 1, 1, i % 2 ? '#d2bf84' : '#f6ecc8'); break;
+    case 'q': px(0, 0, 16, 16, '#2f6a52'); for (let j = 0; j < 2; j++) for (let i = 0; i < 4; i++) {
+      const bx = i * 4 + (j ? 2 : 0), by = 2 + j * 7; px(bx, by + 3, 3, 4, '#23523f'); px(bx + 1, by - 1, 1, 5, '#6cc29a'); px(bx + 2, by + 1, 1, 3, '#4a9c78'); px(bx, by + 2, 1, 3, '#3f8a68'); } break;
+    case 'z': px(0, 0, 16, 16, '#a97f4b'); for (let i = 0; i < 4; i++) { px(0, i * 4 + 3, 16, 1, '#7a5630'); px(0, i * 4, 16, 1, '#c79a60'); } px(3, 0, 1, 16, '#8d6a3c'); px(11, 0, 1, 16, '#8d6a3c'); break;
+    case 'l': grass('#68b848', '#4a9a38', '#88d060'); px(7, 6, 2, 10, '#40404c'); px(5, 14, 6, 2, '#40404c'); px(4, 1, 8, 6, '#40404c'); px(5, 2, 6, 4, '#ffe680'); px(6, 3, 4, 2, '#fff8c8'); break;
+    case 'i': px(0, 0, 16, 16, '#9a8a78'); for (let i = 0; i < 5; i++) px(R() * 15 | 0, R() * 15 | 0, 2, 1, '#847462');
+      x.fillStyle = '#4a78c8'; x.beginPath(); x.moveTo(8, 1); x.lineTo(12, 13); x.lineTo(4, 13); x.fill(); x.fillStyle = '#9ad8ff'; x.beginPath(); x.moveTo(8, 1); x.lineTo(8, 13); x.lineTo(4, 13); x.fill();
+      x.fillStyle = '#b080e8'; x.beginPath(); x.moveTo(12, 6); x.lineTo(15, 14); x.lineTo(10, 14); x.fill(); px(2, 14, 12, 1, '#5a4a40'); break;
+    case 'O': floor('#e8c888', '#d0a868'); px(3, 6, 10, 9, '#8a8a9a'); px(3, 6, 10, 2, '#b4b4c4'); px(4, 3, 8, 4, '#6a6a7c'); px(5, 4, 6, 2, '#2a2a38'); px(3, 14, 10, 1, '#5a5a6a'); break;
+    case 'L': floor('#e8c888', '#d0a868'); px(2, 8, 12, 7, '#6a6a7c'); px(2, 8, 12, 2, '#9a9aac'); px(4, 4, 8, 5, '#4a4a58'); px(5, 5, 6, 3, '#2a1a1a'); px(2, 14, 12, 1, '#44444f'); break;
     default: px(0, 0, 16, 16, '#000');
   }
   return c;
