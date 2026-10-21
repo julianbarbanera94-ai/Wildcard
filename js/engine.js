@@ -14,6 +14,14 @@ G.release = k => { input.held[k] = false; };
 addEventListener('keydown', e => { const k = KEYS[e.key]; if (k) { e.preventDefault(); if (!e.repeat) G.press(k); } });
 addEventListener('keyup', e => { const k = KEYS[e.key]; if (k) G.release(k); });
 addEventListener('blur', () => { input.held = {}; });
+addEventListener('contextmenu', e => e.preventDefault());
+// Pause sound and drop held keys while the page/app is in the background; save progress when leaving.
+document.addEventListener('visibilitychange', () => {
+  const a = G.audio;
+  if (document.hidden) { input.held = {}; if (a.ctx) a.ctx.suspend(); if (G.autosave) G.autosave(); }
+  else if (a.ctx) a.ctx.resume();
+});
+addEventListener('pagehide', () => { if (G.autosave) G.autosave(); });
 
 // ---- Audio ----------------------------------------------------------------
 const NOTE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
@@ -35,7 +43,7 @@ const TUNES = {
 const parse = s => s.split(' ').map(t => { const [n, b] = t.split(':'); return [n, +b]; });
 const audio = G.audio = {
   ctx: null, muted: false, cur: null, timer: null,
-  init() { if (this.ctx) return; try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.master = this.ctx.createGain(); this.master.gain.value = .12; this.master.connect(this.ctx.destination); if (this.want) this.music(this.want); } catch (e) { } },
+  init() { if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume(); return; } try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.master = this.ctx.createGain(); this.master.gain.value = .12; this.master.connect(this.ctx.destination); if (this.want) this.music(this.want); } catch (e) { } },
   tone(f, t, d, type, vol) {
     if (!this.ctx || !f) return; const o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = type || 'square'; o.frequency.value = f; g.gain.setValueAtTime(vol || 1, t); g.gain.exponentialRampToValueAtTime(.001, t + d + .02);
@@ -52,6 +60,7 @@ const audio = G.audio = {
       if (this.muted) { st.forEach(s => s.t = Math.max(s.t, this.ctx.currentTime)); return; }
       ch.forEach((c, k) => {
         const s = st[k];
+        s.t = Math.max(s.t, this.ctx.currentTime - .05);   // never replay notes missed while backgrounded
         while (s.t < this.ctx.currentTime + .3) {
           const [n, b] = c[s.i]; this.tone(freq(n), s.t, b * spb * .9, k ? tu.wave === 'triangle' ? 'triangle' : 'triangle' : tu.wave, k ? .9 : .5);
           s.t += b * spb; s.done += b; s.i++;
@@ -95,8 +104,10 @@ G.start = function (canvas) {
   const dt = 1000 / 60;
   (function frame(now) {
     acc = Math.min(acc + now - last, dt * 2); last = now;
-    if (acc >= dt - 1) { acc = Math.max(0, acc - dt); try { tick(); } catch (e) { console.error(e); } }
-    try { draw(ctx); } catch (e) { console.error(e); }
+    if (acc >= dt - 1) {   // update and draw once per game tick, so 120Hz screens don't do double work
+      acc = Math.max(0, acc - dt); try { tick(); } catch (e) { console.error(e); }
+      try { draw(ctx); } catch (e) { console.error(e); }
+    }
     requestAnimationFrame(frame);
   })(last);
 };

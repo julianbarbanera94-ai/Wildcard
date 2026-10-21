@@ -156,8 +156,11 @@ G.creatureSprite = function (id, back) {
   const k = id + (back ? 'b' : 'f');
   return spriteCache[k] || (spriteCache[k] = genCreature(G.SPECIES[id], back));
 };
-G.tint = function (img, color) { // solid-colour silhouette of a sprite
-  const [c, x] = cv(img.width, img.height); x.drawImage(img, 0, 0); x.globalCompositeOperation = 'source-atop'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height); return c;
+const tints = new WeakMap();
+G.tint = function (img, color) { // solid-colour silhouette of a sprite (cached per sprite and colour)
+  let m = tints.get(img); if (!m) tints.set(img, m = {});
+  if (m[color]) return m[color];
+  const [c, x] = cv(img.width, img.height); x.drawImage(img, 0, 0); x.globalCompositeOperation = 'source-atop'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height); return m[color] = c;
 };
 
 // ---- Text & frames --------------------------------------------------------

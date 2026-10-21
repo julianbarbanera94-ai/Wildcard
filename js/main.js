@@ -35,6 +35,12 @@ async function begin(S, fresh) {
   G.world.busy = false;
 }
 
+// Called by the Android shell on the Back button: acts as B, or reports that the app should close from the title screen.
+G.androidBack = function () {
+  if (G.scene === title && !G.ui.layers.length) return 'exit';
+  G.press('b'); setTimeout(() => G.release('b'), 60); return 'handled';
+};
+
 async function main() {
   G.scene = title; G.audio.music('town');
   const save = G.loadGame();
@@ -62,6 +68,7 @@ addEventListener('DOMContentLoaded', () => {
     const down = e => { e.preventDefault(); b.classList.add('on'); G.press(k); };
     const up = e => { e.preventDefault(); b.classList.remove('on'); G.release(k); };
     b.addEventListener('pointerdown', down); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, up));
+    b.addEventListener('pointerup', () => G.audio.init());
   });
 });
 })();

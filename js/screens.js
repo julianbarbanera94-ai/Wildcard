@@ -265,7 +265,7 @@ G.startMenu = async function () {
         ctx.drawImage(G.charSprite(S.style)[0][0], 100, 112, 16, 20); } });
       await G.waitA(); pop(l);
     } else if (ch === 4) {
-      if (await (async () => { await G.say('Would you like to save the game?', { auto: 1 }); return G.yesNo(); })()) { G.saveGame(); G.audio.sfx('levelup'); await G.say(`${S.name} saved the game.`); }
+      if (await (async () => { await G.say('Would you like to save the game?', { auto: 1 }); return G.yesNo(); })()) { if (G.saveGame()) { G.audio.sfx('levelup'); await G.say(`${S.name} saved the game.`); } else await G.say('Saving failed! Storage may be full or disabled.'); }
       G.closeText();
     } else if (ch === 5) G.audio.toggle();
   }

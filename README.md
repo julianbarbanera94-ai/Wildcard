@@ -18,6 +18,23 @@ Open `index.html` in a browser, or serve the folder (`python3 -m http.server`) a
 
 On phones and tablets an on-screen D-pad and buttons appear.
 
+## Android APK
+
+A tiny native shell (`android/`) wraps the game in a full-screen WebView, locked to landscape, with the on-screen pad, Back button mapped to B, autosave when the app is backgrounded, and sound paused in the background. Requires Android 7.0+ (API 24).
+
+```
+sudo apt-get install -y aapt apksigner zipalign dalvik-exchange   # one-time; plus a JDK and zip
+android/build-apk.sh                                              # -> dist/wildcard.apk
+```
+
+No Gradle or Android SDK install is needed. The script compiles the activity, dexes it, links the manifest and icon with `aapt2`, aligns and signs the APK (v2/v3). To install, copy `dist/wildcard.apk` to the phone and open it (allow "install unknown apps"), or `adb install dist/wildcard.apk`.
+
+Notes:
+- A signing key is generated at `android/keystore/wildcard.p12` on first build (git-ignored). **Back it up**: updates must be signed with the same key. Override with `KS` / `KPASS`.
+- The compile-time `android.jar` is downloaded from a community build of AOSP android-14 (`Reginer/aosp-android-jar`). It is only used to compile and is not shipped in the APK. Set `ANDROID_JAR` to use Google's official platform jar instead.
+- This produces a sideloadable APK. Google Play needs an AAB, a newer target API and Play App Signing, which this script does not cover.
+- Saves live in the WebView's localStorage, so clearing the app's storage or uninstalling deletes them.
+
 ## The game
 
 1. Talk to Mom, then go next door and pick a starter from Prof. Quill's table.

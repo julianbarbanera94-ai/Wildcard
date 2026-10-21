@@ -162,6 +162,10 @@ G.saveGame = function () {
   const S = G.state, w = G.world; S.map = w.mapId; S.x = w.p.x; S.y = w.p.y; S.dir = w.p.dir;
   try { localStorage.setItem('wildcard-save-v1', JSON.stringify(S)); return true; } catch (e) { return false; }
 };
+// Saves quietly when the player leaves the app, but only while the overworld is idle (never mid-battle or mid-dialogue).
+G.autosave = function () {
+  if (G.state && G.world.map && G.scene === G.world.scene && !G.world.busy && !G.ui.layers.length && G.state.flags.starter) G.saveGame();
+};
 G.loadGame = function () {
   try { const s = JSON.parse(localStorage.getItem('wildcard-save-v1')); return s && s.v === 1 ? s : null; } catch (e) { return null; }
 };
