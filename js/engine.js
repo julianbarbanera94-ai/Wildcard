@@ -7,7 +7,7 @@ const G = globalThis.G;
 const input = G.input = { held: {}, pressed: {}, next: {} };
 const KEYS = {
   ArrowUp: 'up', w: 'up', W: 'up', ArrowDown: 'down', s: 'down', S: 'down', ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right',
-  z: 'a', Z: 'a', ' ': 'a', x: 'b', X: 'b', Backspace: 'b', Escape: 'b', Enter: 'start', m: 'mute', M: 'mute',
+  z: 'a', Z: 'a', ' ': 'a', x: 'b', X: 'b', Backspace: 'b', Escape: 'b', Enter: 'start', m: 'mute', M: 'mute', c: 'orb', C: 'orb',
 };
 G.press = k => { if (!input.held[k]) input.next[k] = true; input.held[k] = true; G.audio.init(); };
 G.release = k => { input.held[k] = false; };

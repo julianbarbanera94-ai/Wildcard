@@ -636,11 +636,15 @@ G.startBattle = async function (opts) {
     b.showFoe = true; mark(b.foe.c.id, Math.max(1, G.state.dex[b.foe.c.id] || 0)); await popIn(b.foe);
   }
   b.foe.participants.add(lead);
-  await msg(`Go! ${G.name(lead)}!`, 16);
-  await slide(b.tMe, 'ox', 0, -90, 16); b.tMe = null;
-  b.showMe = true; mark(lead.id, 2); await popIn(b.me);
-  // battle loop
   let result = null;
+  // An orb thrown at a roaming creature on the map opens the battle with that capture attempt.
+  if (opts.throwFirst && b.wild && G.state.bag[opts.throwFirst] > 0) { if (await throwOrb(opts.throwFirst) === 'caught') result = 'caught'; }
+  if (!result) {
+    await msg(opts.throwFirst ? `It broke free! Go! ${G.name(lead)}!` : `Go! ${G.name(lead)}!`, 16);
+    await slide(b.tMe, 'ox', 0, -90, 16); b.tMe = null;
+    b.showMe = true; mark(lead.id, 2); await popIn(b.me);
+  }
+  // battle loop
   while (!result) result = await turn();
   // wrap-up
   if (result === 'win' && !b.wild) {

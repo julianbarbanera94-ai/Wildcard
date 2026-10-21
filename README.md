@@ -13,10 +13,11 @@ Open `index.html` in a browser, or serve the folder (`python3 -m http.server`) a
 | Arrow keys / WASD | Move, navigate menus |
 | `Z` / Space | A: confirm, talk, read |
 | `X` / Esc / Backspace | B: cancel. Hold while walking to run |
+| `C` | Throw an orb at a nearby roaming creature |
 | Enter | Start menu |
 | `M` | Mute |
 
-On phones and tablets an on-screen D-pad and buttons appear.
+On phones and tablets a thumbstick (drag to walk) and A, B, MENU and ORB buttons appear, and the title says *Tap A to start*.
 
 ## Test Mode
 
@@ -49,7 +50,7 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
    - **East, Mirewood Marsh:** boardwalks and marsh grass with bug and poison creatures. Warden Bog holds the Marsh Ember Shard. Fisher Moll has a side quest.
    - **North, the Ridge and Glimmer Mine:** the hardest region. Warden Kade holds the Mine Ember Shard.
    - **South, Tidepool Shore:** optional, with hidden items, rare creatures in the dune grass, and Moll's lost lantern.
-3. Wild creatures roam the map. Bold ones notice you and give chase, shy ones scurry off, curious ones mill about. Bump into one (or press A on it) to battle; more hide in the tall grass. Weaken them and throw an orb from the BAG to catch them. Sleep and poison improve your odds. Trainers will spot you and walk up for a battle.
+3. Wild creatures roam the map. Bold ones notice you and give chase, shy ones scurry off, curious ones mill about. Bump into one (or press A on it) to battle, or get within a few steps and **throw an orb** at it (ORB button / `C`): the battle opens with that capture attempt, and if it breaks free you fight it. More hide in the tall grass. Weaken them and throw an orb from the BAG to catch them. Sleep and poison improve your odds. Trainers will spot you and walk up for a battle.
 4. **Build** (START → BUILD) on open grass or sand outdoors; each village and region has marked building plots. A **Base** you can walk into (bed to rest, PC), a **Healing Station** (heal any time), a **Nursery** (leave a creature; it earns EXP for every step you walk), and decorations (lamps, flowers, bushes, pines, fences). Press A on a structure to use it or take it down for half the cost back. Builds are saved.
 5. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
 6. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
@@ -91,6 +92,7 @@ npm i playwright && node tests/e2e-play.js     # headless playthrough: new game,
 node tests/e2e-extra.js                        # level-up, evolution, whiteout, boss, relight, follower, Joker capture, fuzz bot
 node tests/e2e-world.js                        # roaming creatures, building, healing station, nursery EXP, base, saved builds
 node tests/e2e-cheats.js                       # Settings, password prompt, Test Mode options
+node tests/e2e-controls.js                     # thumbstick, ORB button, touch title prompt, throwing orbs at roaming creatures
 ```
 
 The end-to-end tests drive the real game with keyboard input in headless Chromium. Set `PW` to the playwright module path, `CHROME` to a Chromium binary and `OUT` to a folder for screenshots if the defaults don't apply.

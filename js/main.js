@@ -84,7 +84,7 @@ const title = {
       const s = 1 + Math.sin(t / 10) * .04;
       ctx.save(); ctx.translate(120, 145); ctx.scale(s, s); ctx.globalAlpha = .9 + .1 * Math.sin(t / 10);
       K.blit(ctx, pill('go', 96, 15, '#fff8e8', '#ff9f43'), -48, -7.5);
-      G.text(ctx, 'PRESS Z OR ENTER', 0, -4.5, { align: 'center', color: '#f7783f', shadow: 'rgba(255,160,80,.3)', font: G.FONT_B });
+      G.text(ctx, G.touch ? 'TAP A TO START' : 'PRESS Z OR ENTER', 0, -4.5, { align: 'center', color: '#f7783f', shadow: 'rgba(255,160,80,.3)', font: G.FONT_B });
       ctx.restore();
     }
   },
@@ -136,6 +136,24 @@ addEventListener('DOMContentLoaded', () => {
   if (document.fonts) ['700', '800', '900'].forEach(w => document.fonts.load(w + ' 10px Nunito'));
   main();
   // Touch / mouse controls.
+  G.touch = matchMedia('(pointer: coarse)').matches;
+  addEventListener('pointerdown', e => { if (e.pointerType === 'touch') G.touch = true; }, { capture: true });
+  // Thumbstick: the knob follows the finger; the strongest axis past a small dead zone is held as a direction.
+  const stick = document.getElementById('stick');
+  if (stick) {
+    const knob = stick.querySelector('.knob'); let held = null, id = null;
+    const set = k => { if (k === held) return; if (held) G.release(held); held = k; if (k) G.press(k); };
+    const move = e => {
+      const r = stick.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+      const max = r.width / 2 - 20, d = Math.hypot(dx, dy), k = Math.min(1, max / (d || 1));
+      knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
+      set(d < 14 ? null : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+    };
+    const end = e => { if (e.pointerId !== id) return; id = null; stick.classList.remove('on'); knob.style.transform = ''; set(null); };
+    stick.addEventListener('pointerdown', e => { e.preventDefault(); id = e.pointerId; stick.setPointerCapture(id); stick.classList.add('on'); G.audio.init(); move(e); });
+    stick.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => stick.addEventListener(ev, end));
+  }
   document.querySelectorAll('[data-k]').forEach(b => {
     const k = b.dataset.k;
     const down = e => { e.preventDefault(); b.classList.add('on'); G.press(k); };

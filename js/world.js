@@ -93,6 +93,29 @@ function updateRoamers() {
     else { r.dir = d; if (r.chasing) { const alt = Math.abs(dx) > Math.abs(dy) ? (dy > 0 ? DOWN : dy < 0 ? UP : -1) : (dx > 0 ? RIGHT : dx < 0 ? LEFT : -1); if (alt >= 0 && roamFree(r, r.x + VEC[alt][0], r.y + VEC[alt][1])) stepEntity(r, alt, speed); } }
   }
 }
+const ORBS = ['Catch Orb', 'Super Orb', 'Ultra Orb'];
+// Throw an orb at the nearest roaming creature within 4 steps (one in front of you wins ties); the battle opens with the catch.
+async function throwOrbAt() {
+  const S = G.state, item = ORBS.find(k => S.bag[k] > 0), list = world.map.roamers || [];
+  if (!S.party.some(c => c.hp > 0)) { await says('Your team is too tired to battle. Rest first!'); return; }
+  if (!item) { await says("You don't have any orbs! The Trading Post sells them."); return; }
+  const [fx, fy] = VEC[p.dir]; let target = null, best = 1e9;
+  for (const r of list) {
+    const dx = r.x - p.x, dy = r.y - p.y, d = Math.abs(dx) + Math.abs(dy);
+    if (d > 4 || r.moving) continue;
+    const score = d + (dx * fx + dy * fy > 0 ? 0 : 3); if (score < best) { best = score; target = r; }
+  }
+  if (!target) { await says('No wild creature is close enough. Get within a few steps of one, then throw!'); return; }
+  const dx = target.x - p.x, dy = target.y - p.y;
+  p.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? RIGHT : LEFT) : (dy > 0 ? DOWN : UP);
+  target.timer = 99999; target.chasing = false;
+  G.audio.sfx('throw');
+  const T = 24; world.thrown = { x0: p.x * 16 + 8, y0: p.y * 16 + 2, x1: target.x * 16 + 8, y1: target.y * 16 + 8, t: 0, T };
+  for (let i = 0; i <= T; i++) { world.thrown.t = i; await G.nextFrame(); }
+  world.thrown = null; target.alert = 20; G.audio.sfx('wobble'); await G.wait(10);
+  const res = await runBattle({ wild: target.c, bg: world.map.bg, throwFirst: item });
+  if (res === 'win' || res === 'caught') list.splice(list.indexOf(target), 1); else { target.cool = 360; target.timer = 60; }
+}
 const roamBattle = (r, charged) => run(() => roamFight(r, charged));
 async function roamFight(r, charged) {
   {
@@ -327,6 +350,7 @@ function update() {
   } else {
     if (inp.pressed.start) { run(async () => { G.audio.sfx('select'); await G.startMenu(); }); return; }
     if (inp.pressed.a) { run(interact); return; }
+    if (inp.pressed.orb) { run(throwOrbAt); return; }
     const d = heldDir();
     if (d >= 0) {
       if (p.dir !== d) { p.dir = d; p.turn = 5; }
@@ -406,6 +430,10 @@ function draw(ctx) {
   items.sort((a, b) => a.y - b.y);
   for (const it of items) it.draw(ctx);
   G.terrain.drawOverlay(ctx, m, x0, y0, x1, y1, cx, cy, t);
+  if (world.thrown) {   // an orb arcing toward a roaming creature
+    const o = world.thrown, k = o.t / o.T, x = o.x0 + (o.x1 - o.x0) * k - cx, y = o.y0 + (o.y1 - o.y0) * k - Math.sin(k * Math.PI) * 26 - cy;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(k * 9); G.terrain.drawObject(ctx, 'ball', -8, -9, t, {}); ctx.restore();
+  }
   if (world.bubble) { const n = world.bubble.n; G.drawBubble(ctx, n.x * 16 + n.ox - cx, n.y * 16 + n.oy - cy, t); }
   if (world.banner) G.drawBanner(ctx, world.banner.text, world.banner.t);
 }
