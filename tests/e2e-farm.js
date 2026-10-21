@@ -142,7 +142,8 @@ fs.mkdirSync(OUT, { recursive: true });
   assert(await faceTile('u', 'sunmeadow'), 'sunmeadow bush'); await page.waitForTimeout(100);
   await key('z'); await idle();
   assert.equal(await ev(() => G.state.bag.Fiber), 1); assert.equal(await ev(() => G.state.bag['Turnip Seeds']), 1, 'sunmeadow bush: turnip seeds at 10% < 25%');
-  assert(await faceTile('j', 'lanternrest'), 'village crop bed'); await key('z'); await idle();
+  await ev(() => { G.loadMap('lanternrest'); G.placePlayer(14, 14, 1); }); assert.equal(await ev(() => G.worldApi.tileAt(14, 13)), 'j', 'village crop bed');
+  await key('z'); await advance(() => !G.world.busy, 5000); assert(/leave them be/.test(await lastText())); await idle();
   assert.equal(await ev(() => G.state.energy), 98, 'decorative beds: nothing, no energy');
   step('sunmeadow bush gives Fiber + Turnip Seeds; village crop beds give nothing');
 

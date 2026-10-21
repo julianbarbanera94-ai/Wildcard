@@ -64,8 +64,8 @@ const LANDING = {
 // ---- State --------------------------------------------------------------------------------------
 function st() {
   const S = G.state;
-  S.vehicles = Object.assign({ owned: [], riding: null, parked: null, paint: {}, tune: {}, heli: null }, S.vehicles || {});
-  const V = S.vehicles;
+  const V = S.vehicles = S.vehicles || {};   // fill defaults in place: callers keep references to this object
+  for (const [k, d] of [['owned', null], ['riding', null], ['parked', null], ['paint', null], ['tune', null], ['heli', null]]) if (V[k] === undefined) V[k] = d;
   if (!Array.isArray(V.owned)) V.owned = [];
   V.paint = V.paint || {}; V.tune = V.tune || {};
   if (V.riding && !G.VEHICLES[V.riding]) V.riding = null;
@@ -319,12 +319,10 @@ function fallback(c, id, dir, x, y, t, info) {
       ell(c, cx, gy - 1.5, side ? 7 : 4.6, 1.8, `rgba(120,240,255,${glow})`);
       if (mv) for (let k = 0; k < 3; k++) { const ph = (t / 3 + k * 7) % 12; circ(c, cx - (side ? s * (4 + ph) : (k - 1) * 3), gy - 2 - ph * .1 + (side ? 0 : ph * .3), Math.max(.1, .9 - ph * .07), `rgba(170,250,255,${.7 - ph * .05})`); }
     }
-    if (front || back) {
+    if (back) {
       const w = side ? 17 : 10.5, yy = gy - 5 - bob;
-      if ((back && side) || (front && !side) || (back && !side && dir === UP)) {
-        box(c, cx - w / 2, yy, w, 2.8, 1.4, col); box(c, cx - w / 2 + 1, yy + .2, w - 2, .9, .45, lite);
-        box(c, cx - w / 2 + 1.2, yy + 2.1, w - 2.4, .7, .35, '#7af0ff');
-      }
+      box(c, cx - w / 2, yy, w, 2.8, 1.4, col); box(c, cx - w / 2 + 1, yy + .2, w - 2, .9, .45, lite);
+      box(c, cx - w / 2 + 1.2, yy + 2.1, w - 2.4, .7, .35, '#7af0ff');
     }
   } else if (id === 'helicopter') {
     if (back) {
@@ -470,7 +468,7 @@ function rideWhy(id, o) {
   if (!garageB()) return `You need a Garage to keep your ${nameOf(id)} in. Build one on your homestead (BUILD > VEHICLES).`;
   const w = whereIs(id);
   if (w === 'lot') return `Your ${nameOf(id)} is waiting at the dealer lot: your Garage only has room for ${slots()}. Upgrade the Garage to make space.`;
-  if (w === 'parked' && !o.summon) {
+  if (w === 'parked') {
     const P = V.parked;
     return P.map === G.world.mapId ? `Your ${nameOf(id)} is parked nearby. Walk up to it and press A to ride it.` : `Your ${nameOf(id)} is parked in ${mapName(P.map)}. Use SEND ${NAME(id)} HOME first, or go and get it.`;
   }
@@ -876,10 +874,7 @@ async function flight(mode, carrier) {
       fly.cl = (fly.cl || 0) + vel * (drift || 1);
       for (let i = 0; i < 5; i++) { const e = cloudArt(i % 3), w = 34 + (i % 3) * 6, cx = ((i * 61 + fly.cl * .5) % 300 + 300) % 300 - 40, cy = 8 + i * 27;
         ctx.globalAlpha = .18; ctx.fillStyle = '#284060'; ctx.beginPath(); ctx.ellipse(cx + w / 2 + 6, cy + 18, w / 2.4, 3, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = .55; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * 18 / 40 + e.pad * 2); ctx.globalAlpha = 1; }
-      nodes.forEach((n, i) => {
-        if (phase === 'pick') G.tapZone(n.x - 12, n.y - 10, 24, 30, () => { tapped = i; });
-        drawNode(ctx, n, why(n), phase === 'pick' && i === sel, t);
-      });
+      nodes.forEach((n, i) => drawNode(ctx, n, why(n), phase === 'pick' && i === sel, t));
       if (phase === 'fly') {
         const gx = fly.from.x + (fly.to.x - fly.from.x) * fly.k, gy = fly.from.y + (fly.to.y - fly.from.y) * fly.k;
         ell(ctx, gx, gy + 2, 7 - Math.sin(fly.k * Math.PI) * 2.5, 2, 'rgba(30,30,60,.28)');
@@ -922,7 +917,7 @@ async function flight(mode, carrier) {
     }
     if (k.a) { if (!why(nodes[sel])) { target = nodes[sel]; break; } G.audio.sfx('bump'); }
   }
-  if (!target) { await G.fadeTo(1, 10, '#000'); G.scene = back; await G.fadeTo(0, 10); api._fly = null; return false; }
+  if (!target) { await G.fadeTo(1, 10, '#000'); G.scene = back || G.world.scene; await G.fadeTo(0, 10); api._fly = null; return false; }
   // Before taking off: a vehicle you're riding stays parked where you are.
   if (riding()) api.park();
   phase = 'fly'; fly.from = here; fly.to = target; fly.faceRight = target.x >= here.x;
@@ -945,8 +940,7 @@ async function flight(mode, carrier) {
     else { const hs = safeSpot(L); st().heli = { map: target.id, x: hs.x, y: hs.y }; spot = safeSpot({ x: hs.x, y: hs.y + 1 }, hs); }
   } else spot = safeSpot(L);
   G.placePlayer(spot.x, spot.y, DOWN);
-  G.scene = back === scene ? G.world.scene : (back || G.world.scene);
-  if (G.scene !== G.world.scene) G.scene = G.world.scene;
+  G.scene = G.world.scene;
   api._fly = null;
   await G.wait(4); await G.fadeTo(0, 18);
   G.audio.sfx('select');
@@ -973,12 +967,10 @@ async function pickVehicle(ids, label) {
   return i >= 0 && i < ids.length ? ids[i] : null;
 }
 async function rideFromMenu(id) {
-  const why = rideWhy(id, { summon: true }); if (why) { await says(why); return; }
-  const V = st(), from = whereIs(id);
-  if (from === 'parked') V.parked = null;
-  V.riding = id;
+  const why = rideWhy(id); if (why) { await says(why); return; }
+  st().riding = id;
   await G.fadeTo(.6, 6, '#ffffff'); G.audio.sfx('levelup'); await G.fadeTo(0, 8);
-  await says(from === 'parked' ? `You hopped on the ${nameOf(id)}.` : `Your ${nameOf(id)} was brought out of the Garage. Hop on!`);
+  await says(`Your ${nameOf(id)} was brought out of the Garage. Hop on!`);
 }
 G.travelMenu = async function () {
   st();

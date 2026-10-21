@@ -173,11 +173,11 @@ function tex(c, L, v, x0, y0) {
     }
     if (v === 2) { el(c, 7.8, 7.7, 1.1, .45, '#7fcc4e'); el(c, 8.4, 7.5, .5, .3, '#a6e274'); }
   } else if (L === TI) {   // glossy two-tone ceramic tiles with grout
-    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
       const wht = (i + j) % 2 === 0;
-      rf(c, i * 4 + .25, j * 4 + .25, 3.5, 3.5, .7, wht ? '#fbfdfb' : '#bfe7df');
-      c.fillStyle = wht ? 'rgba(200,225,220,.6)' : 'rgba(130,190,180,.6)'; c.fillRect(i * 4 + .4, j * 4 + 3.2, 3.2, .45);
-      el(c, i * 4 + 1.2, j * 4 + 1.1, .7, .35, 'rgba(255,255,255,.85)');
+      rf(c, i * 8 + .35, j * 8 + .35, 7.3, 7.3, 1.2, wht ? '#fbfdfb' : '#bfe7df');
+      c.fillStyle = wht ? 'rgba(200,225,220,.7)' : 'rgba(130,190,180,.6)'; c.fillRect(i * 8 + .8, j * 8 + 6.7, 6.4, .6);
+      el(c, i * 8 + 2.4, j * 8 + 1.9, 1.4, .55, 'rgba(255,255,255,.9)'); el(c, i * 8 + 4.4, j * 8 + 1.9, .4, .35, 'rgba(255,255,255,.7)');
     }
   }
 }
@@ -494,13 +494,15 @@ function paintGate(c, ms) {
     rf(c, px - 1.9, py - ht + .4, 3.8, ht + .2, 1.4, '#8a5a30'); rr(c, px - 1.8, py - ht, 3.6, ht, 1.4); c.fillStyle = lg(c, px - 1.8, 0, px + 1.8, 0, '#f0c48a', '#d39e64', '#b07a44'); c.fill();
     el(c, px, py - ht + .5, 2.2, 1, '#8a5a30'); el(c, px, py - ht + .2, 2, .85, '#f7d8a6');
   };
-  if (vert) {
-    post(8, 2.5, 8); 
-    wood(6.9, 3.6, 2.2, 10, .6, '#f7d6a4', '#dcaa70');
-    c.fillStyle = 'rgba(120,70,30,.35)'; for (const yy of [5.6, 8.4, 11.2]) c.fillRect(6.9, yy, 2.2, .4);
-    el(c, 8, 8, 1.6, .5, 'rgba(255,250,230,.4)');
-    rf(c, 6.4, 6.8, 3.2, 1, .4, '#8c8aa0');
-    post(8, 15.4, 8);
+  if (vert) {   // gate leaf seen edge-on from above: a framed board panel with rails sticking out either side
+    post(8, 2.2, 8);
+    rf(c, 4.6, 3.4, 6.8, 11.4, 1, '#8a5a30');
+    rr(c, 4.6, 2.8, 6.8, 11.4, 1); c.fillStyle = lg(c, 4.6, 0, 11.4, 0, '#f7d6a4', '#e2b073', '#c8945a'); c.fill();
+    c.fillStyle = 'rgba(120,70,30,.4)'; for (const xx of [6.3, 8, 9.7]) c.fillRect(xx, 3.4, .35, 10.4);
+    wood(4.2, 4.6, 7.6, 1.4, .5, '#fbe0b2', '#d7a368'); wood(4.2, 10.6, 7.6, 1.4, .5, '#fbe0b2', '#d7a368');
+    c.save(); c.beginPath(); c.moveTo(5.4, 10.6); c.lineTo(10.6, 6); c.lineWidth = 1; c.strokeStyle = '#b8844c'; c.stroke(); c.restore();
+    rf(c, 7, 13.2, 2, 1.2, .4, '#7c7a92');
+    post(8, 16.2, 7);
     return;
   }
   // horizontal: gate leaf between the posts
@@ -528,8 +530,8 @@ function paintThicket(c, v, stake) {
   for (let i = 0; i < 6; i++) { const a = 1 + R() * 14, b = -3 + R() * 14; c.strokeStyle = 'rgba(190,230,150,.32)'; c.lineWidth = .5; c.beginPath(); c.arc(a, b, 1.1, 1.1 * PI, 1.9 * PI); c.stroke(); }
   c.restore();
   // thorny bramble canes arching over the mound
-  for (let i = 0; i < 3; i++) {
-    const x0 = -1 + R() * 6 + i * 5, y0 = 12 + R() * 3, x1 = x0 + 4 + R() * 6, y1 = 11 + R() * 3, cxp = (x0 + x1) / 2 + (R() - .5) * 4, cyp = -6 + R() * 6;
+  for (let i = 0; i < 2; i++) {
+    const x0 = -1 + R() * 6 + i * 7, y0 = 12 + R() * 3, x1 = x0 + 4 + R() * 6, y1 = 11 + R() * 3, cxp = (x0 + x1) / 2 + (R() - .5) * 4, cyp = -6 + R() * 6;
     c.lineWidth = 1.1; c.strokeStyle = '#4a2a22'; c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo(cxp, cyp, x1, y1); c.stroke();
     c.lineWidth = .45; c.strokeStyle = '#9a5a44'; c.beginPath(); c.moveTo(x0, y0 - .3); c.quadraticCurveTo(cxp, cyp - .3, x1, y1 - .3); c.stroke();
     for (let k = 1; k < 6; k++) {
@@ -541,7 +543,7 @@ function paintThicket(c, v, stake) {
   c.strokeStyle = '#6a4a34'; c.lineWidth = .6;
   for (let i = 0; i < 2; i++) { const a = 4 + R() * 8, b = -1 + R() * 2; c.beginPath(); c.moveTo(a, b + 2); c.lineTo(a + (R() - .5) * 3, b - 3); c.lineTo(a + (R() - .5) * 4, b - 4.5); c.stroke(); }
   // dark berries
-  for (let i = 0; i < 4; i++) { const a = 2 + R() * 12, b = 1 + R() * 11; el(c, a, b + .3, .9, .8, '#1e1028'); el(c, a, b, .8, .8, '#5a2a6a'); el(c, a - .25, b - .3, .25, .2, 'rgba(255,255,255,.7)'); }
+  for (let i = 0; i < 2; i++) { const a = 2 + R() * 12, b = 1 + R() * 11; el(c, a, b + .3, .9, .8, '#1e1028'); el(c, a, b, .8, .8, '#5a2a6a'); el(c, a - .25, b - .3, .25, .2, 'rgba(255,255,255,.7)'); }
   if (stake) {   // survey stake with a red ribbon: land you can buy later
     c.fillStyle = lg(c, 10, 0, 12, 0, '#c89a62', '#a07040'); c.fillRect(10.4, -7, 1.4, 15);
     c.beginPath(); c.moveTo(10.4, 8); c.lineTo(11.1, 9.4); c.lineTo(11.8, 8); c.fill();
@@ -797,7 +799,7 @@ function propSpec(s, m, x, y) {
     case 's': return spec('sign', 0, -1.5, 16, 17.5, paintSign, { yb });
     case 'F': { const ms = sm(inSet('FY'), false); return spec('fence' + ms, 0, -6, 16, 22.6, c => paintFence(c, ms), { yb }); }
     case 'Y': { const ms = sm(inSet('FY'), false); return spec('gate' + ms, 0, -6, 16, 22.6, c => paintGate(c, ms), { yb }); }
-    case 'X': { const stake = hash(x, y, 7) < .07; return spec('thicket' + v + (+stake), -3.5, -10, 23, 26, c => paintThicket(c, v, stake), { yb, br: .008, ph }); }
+    case 'X': { const stake = hash(x, y, 7) < .04; return spec('thicket' + v + (+stake), -3.5, -10, 23, 26, c => paintThicket(c, v, stake), { yb, br: .008, ph }); }
     case 'j': return spec('crop' + v, 0, -5, 16, 20, (c, fi) => paintCrops(c, v, fi), { yb, n: 4, anim: (t, tx, ty) => ((t / 14 + tx * 1.3 + ty) | 0) & 3 });
     case 'G': case 'q': return spec('tuft' + ch + (v & 3), -4, -6, 24, 23, (c, fi) => paintTuft(c, ch, v & 3, fi, false), { yb: y * 16 + 15.9, n: 8, anim: tuftFrame });
     case 'R': case 'Q': case 'A': {

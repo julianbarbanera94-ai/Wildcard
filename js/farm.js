@@ -85,7 +85,9 @@ async function list(o) {
       const i = top + k, y = 29 + k * RH;
       G.tapZone(4, y - 3, LW - 4, RH, () => { tapped = i; });
       if (i === idx) hilite(ctx, 5, y - 2.5, LW - 6, 12);
-      G.text(ctx, r.text, 14, y, { color: r.dim ? '#a898b0' : r.col || '#4a3b58', shadow: r.dim ? false : undefined });
+      const tx = r.icon !== undefined ? 28 : 14;
+      if (r.icon !== undefined) G.icon(ctx, r.icon, 13, y - 3, 13);
+      G.text(ctx, r.text, tx, y, { color: r.dim ? '#a898b0' : r.col || '#4a3b58', shadow: r.dim ? false : undefined });
       if (r.swatch) { ctx.fillStyle = '#3d3352'; K.rr(ctx, LW - 20, y - .5, 14, 9, 3); ctx.fill(); ctx.fillStyle = r.swatch; K.rr(ctx, LW - 19.2, y + .3, 12.4, 7.4, 2.4); ctx.fill(); }
       else if (r.right) G.text(ctx, r.right, LW - 4, y + 1.5, { align: 'right', font: F6, color: r.rcol || '#7a6a88', shadow: false });
     });
@@ -361,7 +363,7 @@ async function barnAdd(b) {
     G.audio.sfx('select'); await says(`${G.name(c)} moved into the barn. It will make ${PRODUCE[typeOf(c)] || 'Fiber'} every day.`);
   } else if (src === 1) {
     if (!S.box.length) { await says('There are no creatures in the PC box.'); return; }
-    await list({ title: 'MOVE IN FROM THE BOX', rows: () => S.box.map(c => ({ text: `${G.name(c)}  Lv${c.lvl}`, right: PRODUCE[typeOf(c)] || 'Fiber', desc: `${typeOf(c)} type. Makes ${PRODUCE[typeOf(c)] || 'Fiber'} every day.` })),
+    await list({ title: 'MOVE IN FROM THE BOX', rows: () => S.box.map(c => ({ icon: c.id, text: `${G.name(c)}  Lv${c.lvl}`, right: PRODUCE[typeOf(c)] || 'Fiber', desc: `${typeOf(c)} type. Makes ${PRODUCE[typeOf(c)] || 'Fiber'} every day.` })),
       act: async i => { const [c] = S.box.splice(i, 1); b.animals.push(c); G.audio.sfx('select'); await says(`${G.name(c)} moved into the barn.`); return 'close'; } });
   }
 }
@@ -373,7 +375,7 @@ G.homeUse.barn = async function (b) {
       if (n) rows.push({ id: 'collect', text: `COLLECT ${n} ITEM${n > 1 ? 'S' : ''}`, col: '#2a7a4a', desc: Object.entries(b.store).map(([k, v]) => `${v} ${k}`).join(', ') });
       if (b.animals.length < per.slots) rows.push({ id: 'add', text: 'MOVE A CREATURE IN', desc: 'Creatures that live here make materials every day, by their first type.' });
       if (per.feedBonus) rows.push({ id: 'feed', text: b.fed === S.day ? 'FED TODAY' : 'FEED FERTILIZER', dim: b.fed === S.day, right: `x${inv.count('Fertilizer')}`, desc: 'Feed 1 Fertilizer: every creature makes 1 extra item tomorrow morning.' });
-      b.animals.forEach((c, i) => rows.push({ id: 'take', i, text: `${G.name(c)}  Lv${c.lvl}`, right: PRODUCE[typeOf(c)] || 'Fiber', desc: `Makes ${per.output} ${PRODUCE[typeOf(c)] || 'Fiber'} a day. Press A to take it back.` }));
+      b.animals.forEach((c, i) => rows.push({ id: 'take', i, icon: c.id, text: `${G.name(c)}  Lv${c.lvl}`, right: PRODUCE[typeOf(c)] || 'Fiber', desc: `Makes ${per.output} ${PRODUCE[typeOf(c)] || 'Fiber'} a day. Press A to take it back.` }));
       return rows;
     },
     empty: 'The barn is empty.',
@@ -431,9 +433,10 @@ G.hooks.draw.push((items, cx, cy, t) => {
   for (const b of S.builds) {
     if (b.type !== 'plot' || b.map !== m.id) continue;
     const x = b.x * 16 - cx, y = b.y * 16 - cy; if (x < -16 || y < -32 || x > G.W + 16 || y > G.H + 16) continue;
-    const c = b.crop, wet = !!(c && (c.wet || CROPS[c.id] && CROPS[c.id].noWater)) || (!c && false);
+    const c = b.crop, wet = !!(c && (c.wet || (CROPS[c.id] && CROPS[c.id].noWater)));
     items.push({ y: (b.y + 1) * 16 - .45, draw: ctx => {
-      if (G.homeArt && G.homeArt.soil) G.homeArt.soil(ctx, x, y, t, { wet, lvl: G.home.lvl(b) }); else fallbackSoil(ctx, x, y, wet);
+      // the plot structure art already draws its own soil (by level); soil is only needed without it
+      if (!(G.homeArt && G.homeArt.structure)) { if (G.homeArt && G.homeArt.soil) G.homeArt.soil(ctx, x, y, t, { wet }); else fallbackSoil(ctx, x, y, wet); }
       if (!c) return;
       const s = c.dead ? 2 : stage(c), info = { wet, withered: !!c.dead };
       if (G.homeArt && G.homeArt.crop) G.homeArt.crop(ctx, c.id, s, x, y, t, info); else fallbackCrop(ctx, c.id, s, x, y, t, info);

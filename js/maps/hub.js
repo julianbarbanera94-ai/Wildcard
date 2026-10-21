@@ -162,7 +162,7 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   rect(m, 2, 2, 5, 1, 'k'); set(m, 8, 1, 'P'); set(m, 1, 1, 'h'); rect(m, 7, 5, 2, 1, 'a');
   npc(m, 4, 1, DOWN, 'nurse', null, { still: true });
   npc(m, 2, 5, RIGHT, 'boy', ['Resting at the Lodge is free for any Warden. The PC in the corner stores spare Bondlings.']);
-  for (let x = 2; x <= 6; x++) m.objs.push({ x, y: 2, fn: () => G.story.nurse() });
+  for (let x = 2; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Heal', fn: () => G.story.nurse() });
   m.objs.push({ x: 8, y: 1, fn: () => G.pcMenu() });
   warp(m, 5, 7, 'lanternrest', 15, 8, DOWN);
 })();
@@ -171,7 +171,7 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   rect(m, 3, 3, 4, 1, 'k'); rect(m, 1, 1, 1, 3, 'S'); rect(m, 6, 1, 1, 1, 'S');
   npc(m, 4, 2, DOWN, 'clerk', null, { still: true });
   npc(m, 5, 5, LEFT, 'girl', ['Wardens who clear the Mine sometimes carry ULTRA ORBS. I could never afford one!']);
-  for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 3, fn: () => G.shopMenu() });
+  for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 3, prompt: 'Shop', fn: () => G.shopMenu() });
   warp(m, 3, 7, 'lanternrest', 43, 31, DOWN);
 })();
 (function () {

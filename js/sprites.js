@@ -1333,11 +1333,12 @@ G.charSprite = function (st) { const k = JSON.stringify(st); return charCache[k]
 
 // ---- Overworld drawing API used by world.js ----------------------------------------------
 // drawChar: a person whose tile's top-left is (x, y) in logical px; feet at (x+8, y+15).
-G.drawChar = function (ctx, style, dir, frame, x, y, t) {
+// noShadow: skip the foot shadow (a rider sitting on a vehicle).
+G.drawChar = function (ctx, style, dir, frame, x, y, t, noShadow) {
   let a = charBare.get(style); if (!a) charBare.set(style, a = []);
   const i = dir * 3 + frame, fr = a[i] || (a[i] = charFrame(style, dir, frame, false));
   const breathe = frame ? 0 : Math.sin((t || 0) / 26) * .35, bob = frame ? .8 : 0;
-  ctx.fillStyle = 'rgba(30,40,60,.2)'; ctx.beginPath(); ctx.ellipse(x + 8, y + 15, 6.2 - bob * .6, 1.9, 0, 0, TAU); ctx.fill();
+  if (!noShadow) { ctx.fillStyle = 'rgba(30,40,60,.2)'; ctx.beginPath(); ctx.ellipse(x + 8, y + 15, 6.2 - bob * .6, 1.9, 0, 0, TAU); ctx.fill(); }
   const w = 20, h = 25 + breathe; // 4:5, feet (design y 48 of 50) on y+15
   ctx.drawImage(fr, x + 8 - w / 2, y + 15 - h * .96 - bob, w, h);
 };

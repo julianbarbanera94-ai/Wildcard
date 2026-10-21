@@ -275,7 +275,7 @@ P.bookshelf = (c, W, H) => {
   }
 };
 P.cupboard = (c, W, H, col) => {
-  col = col || '#e0a868';
+  col = col || '#b8dcc4';
   dropShadow(c, .5, -6, W - 1, H + 6.3);
   block(c, .5, -14, W - 1, 3, H + 10.4, col, { r: 1.6 });
   const n = Math.max(1, Math.round(W / 8)), dw = (W - 3) / n;
@@ -593,9 +593,9 @@ function body(c, path, col, y0, y1, o) {   // painted bodywork: gradient, darker
 function headFig(c, x, y, st, back) {   // tiny driver / pilot head seen through glass
   st = st || G.PLAYER_STYLE || { hair: '#4a2f1a', skin: '#f8d0a8', hat: '#f8f8f8' };
   el(c, x, y + 3.6, 2.8, 1.8, st.shirt || '#e04848');
-  el(c, x, y, 2.6, 2.6, back ? (st.hair || '#4a2f1a') : (st.skin || '#f8d0a8'));
-  if (!back) { el(c, x, y - 1.6, 2.7, 1.4, st.hat || st.hair || '#4a2f1a'); el(c, x - .9, y + .2, .3, .4, '#2a2030'); el(c, x + .9, y + .2, .3, .4, '#2a2030'); }
-  else el(c, x, y - 1.2, 2.8, 1.8, st.hat || st.hair || '#4a2f1a');
+  el(c, x, y, 2.6, 2.6, st.hair || '#4a2f1a');
+  if (!back) { el(c, x, y + .5, 2.2, 2, st.skin || '#f8d0a8'); el(c, x - .8, y + .6, .3, .45, '#2a2030'); el(c, x + .8, y + .6, .3, .45, '#2a2030'); }
+  if (st.hat) { c.beginPath(); c.ellipse(x, y - .9, 2.8, 2.2, 0, PI, TAU); c.fillStyle = st.hat; c.fill(); c.strokeStyle = 'rgba(80,80,100,.5)'; c.lineWidth = .3; c.stroke(); if (!back) el(c, x, y - 2, .6, .45, st.shirt || '#e04848'); }
 }
 
 const V = {};
@@ -757,9 +757,9 @@ V.motorbike = { col: '#e84848', box: [-15, -20, 30, 27], paint(c, dir, layer, co
       tube(c, [-8.4, -4.1, -2, -6.4], DARK, 1.2);
       rr(c, -3, -7.8, 6.4, 4.8, 1.2); c.fillStyle = lg(c, 0, -7.8, 0, -3, '#c8ced8', '#7a8494'); c.fill(); c.strokeStyle = '#5a6070'; c.lineWidth = .45; c.stroke();
       c.fillStyle = 'rgba(60,64,80,.5)'; for (let i = 0; i < 3; i++) c.fillRect(-2.4 + i * 1.8, -7.2, .5, 3.6);
-      tube(c, [-1.6, -3.4, -6, -4.6, -11.2, -6.4], '#d8dee8', 1);
-      rf(c, -12.6, -7.6, 3.6, 2, .9, '#c8ced8');
-      body(c, () => { c.beginPath(); c.moveTo(-13, -11.2); c.lineTo(-4.6, -9.8); c.lineTo(-4.8, -7.8); c.lineTo(-11.4, -8.2); c.closePath(); }, col, -11.2, -7.8, { gloss: false });
+      tube(c, [-1.4, -3.2, -4.4, -5.2, -8.6, -8.4], '#d8dee8', .9);
+      rr(c, -12.8, -9.8, 5.4, 2.2, 1.1); c.fillStyle = lg(c, 0, -9.8, 0, -7.6, '#f2f4f8', '#9aa4b4'); c.fill(); c.strokeStyle = '#6a7484'; c.lineWidth = .4; c.stroke();
+      body(c, () => { c.beginPath(); c.moveTo(-13, -12); c.lineTo(-4.6, -10.4); c.lineTo(-4.8, -8.4); c.lineTo(-11.6, -9.4); c.closePath(); }, col, -12, -8.4, { gloss: false });
       rf(c, -8.4, -11.6, 8, 2, [1, 1, .5, .5], SEAT); c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(-7.6, -11.3, 4, .35);
       body(c, () => rr(c, -.6, -12.8, 6.4, 4.4, [2.4, 2.4, 1.2, 1.2]), col, -12.8, -8.4, { gx: 1.4, gw: 1.6 });
       c.fillStyle = '#ffffff'; c.fillRect(-.4, -10.8, 6, .7);
@@ -795,13 +795,13 @@ V.motorbike = { col: '#e84848', box: [-15, -20, 30, 27], paint(c, dir, layer, co
     body(c, () => { c.beginPath(); c.moveTo(-4.8, -13); c.lineTo(4.8, -13); c.quadraticCurveTo(5.4, -7, 2, -4); c.lineTo(-2, -4); c.quadraticCurveTo(-5.4, -7, -4.8, -13); c.closePath(); }, col, -13, -4, { gx: -2, gw: 1.6 });
     c.fillStyle = '#ffffff'; c.fillRect(-.5, -12.8, 1, 8.6);
     lampGlass(c, 0, -8.4, 2.4, 1.5, '#fff6c0');
-    rr(c, -3.6, -17, 7.2, 4.4, [2.6, 2.6, .6, .6]); c.fillStyle = 'rgba(150,210,240,.55)'; c.fill(); c.strokeStyle = 'rgba(80,120,150,.85)'; c.lineWidth = .4; c.stroke();
-    c.fillStyle = 'rgba(255,255,255,.7)'; c.fillRect(-2.4, -16.2, 1.4, .4);
+    rr(c, -3.4, -14.8, 6.8, 2.6, [2.2, 2.2, .4, .4]); c.fillStyle = 'rgba(150,210,240,.6)'; c.fill(); c.strokeStyle = 'rgba(80,120,150,.85)'; c.lineWidth = .4; c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.7)'; c.fillRect(-2.2, -14.2, 1.4, .4);
     line(c, [-6.6, -12, -4.6, -12.4], DARK, 1.5); line(c, [4.6, -12.4, 6.6, -12], DARK, 1.5);
     for (const s of [-1, 1]) { line(c, [s * 4.6, -13.4, s * 6, -15.2], DARK, .35); el(c, s * 6.3, -15.6, 1, .7, '#2a2a36'); }
   } else {
     wheelEnd(c, 0, 1, 3.4, 6, fr);
-    tube(c, [4.6, -5, 4.8, -1.6], '#d8dee8', 1.2); el(c, 4.8, -1.4, 1, .7, '#8a94a8');
+    rr(c, 3.6, -6.4, 2.6, 4.6, 1.2); c.fillStyle = lg(c, 3.6, 0, 6.2, 0, '#f2f4f8', '#9aa4b4'); c.fill(); c.strokeStyle = '#6a7484'; c.lineWidth = .4; c.stroke(); el(c, 4.9, -2, .8, .5, '#4a5060');
     body(c, () => { c.beginPath(); c.moveTo(-4, -11.4); c.lineTo(4, -11.4); c.quadraticCurveTo(4.4, -6.6, 2.2, -4.6); c.lineTo(-2.2, -4.6); c.quadraticCurveTo(-4.4, -6.6, -4, -11.4); c.closePath(); }, col, -11.4, -4.6, { gx: -1.8, gw: 1.4 });
     rf(c, -2.6, -7.4, 5.2, 1.3, .6, '#ff4a4a'); c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(-2.2, -7.2, 2.2, .35);
     rf(c, -1.6, -4.4, 3.2, 1.8, .3, '#fffbe8'); c.fillStyle = '#8a94a8'; c.fillRect(-1.1, -3.8, 2.2, .3);
@@ -823,15 +823,17 @@ V.car = { col: '#ffc83a', box: [-15, -26, 30, 37], hide: true, paint(c, dir, lay
     // side details: door seams, handle, sill, lamps
     c.fillStyle = rgba(shade(col, .5), .55); c.fillRect(-1.8, -3.6, .4, 5.4); c.fillRect(-9, -3.6, .35, 4.6);
     rf(c, -.4, -2.4, 2.2, .7, .35, shade(col, .55));
+    c.fillStyle = 'rgba(255,255,255,.75)'; c.fillRect(-14.2, -.6, 28.4, .8);
     rf(c, -13.8, 2.2, 27.6, 1.4, .6, shade(col, .55));
     lampGlass(c, 14.3, -1.8, .8, 1.3, '#fff6c0'); lampGlass(c, -14.4, -1.8, .7, 1.2, '#ff5a5a');
-    // cabin
-    rr(c, -8.6, -21.6, 14.8, 9.6, [3.6, 4.6, .5, .5]); c.fillStyle = shade(col, .7); c.fill();
-    c.beginPath(); c.moveTo(-8.4, -12); c.lineTo(-7.4, -19.6); c.lineTo(2.6, -19.6); c.lineTo(7.6, -12); c.closePath(); c.fillStyle = lg(c, 0, -20, 0, -12, ...GLASS); c.fill();
-    c.save(); c.clip(); headFig(c, -1.4, -15.6, null, false); c.fillStyle = 'rgba(150,210,240,.35)'; c.fillRect(-9, -21, 18, 10); c.restore();
-    c.fillStyle = shade(col, .8); c.fillRect(-2.6, -19.6, 1.2, 7.6);
-    c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = .5; c.beginPath(); c.moveTo(3.2, -18.4); c.lineTo(5.6, -14.4); c.moveTo(-6.6, -18.2); c.lineTo(-5.6, -15.8); c.stroke();
-    body(c, () => rr(c, -8, -23.4, 10.6, 4, [2.6, 3, .8, .8]), col, -23.4, -19.4, { gx: -4, gw: 3, lt: 1.45 });
+    // cabin: pillars + roof, side glass with the driver
+    body(c, () => { c.beginPath(); c.moveTo(-10, -12); c.lineTo(-7.8, -22.2); c.quadraticCurveTo(-7.5, -23.6, -6, -23.6); c.lineTo(2, -23.6); c.quadraticCurveTo(3.6, -23.6, 4.2, -22.2); c.lineTo(9.4, -12); c.closePath(); }, col, -23.6, -12, { gloss: false, lt: 1.2 });
+    c.beginPath(); c.moveTo(-8.4, -12.5); c.lineTo(-6.7, -20.6); c.lineTo(2.6, -20.6); c.lineTo(7.4, -12.5); c.closePath(); c.fillStyle = lg(c, 0, -20.6, 0, -12.5, ...GLASS); c.fill();
+    c.save(); c.clip(); headFig(c, 1.4, -16.4, null, false); c.fillStyle = 'rgba(150,210,240,.3)'; c.fillRect(-9, -21, 18, 9); c.restore();
+    rf(c, -2.4, -20.8, 1.3, 8.6, .3, shade(col, .85));
+    c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = .5; c.beginPath(); c.moveTo(3.6, -19.4); c.lineTo(5.6, -15.4); c.moveTo(-6.2, -19.4); c.lineTo(-5.4, -16.8); c.stroke();
+    rf(c, -7.2, -23.6, 10.6, 2.4, [1.4, 1.8, .4, .4], shade(col, 1.45)); c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(-5.6, -23.1, 5, .4);
+    rf(c, 7.6, -14.4, 2.2, 1.8, .7, col);   // mirror
     // wheels
     for (const wx of [-9.4, 9.4]) { el(c, wx, 2.4, 4.6, 4.6, shade(col, .45)); wheelSide(c, wx, 3, 3.8, fr, { rim: .55, rimCol: '#e8ecf2', rimIn: '#b4bccb' }); }
     return;
@@ -843,14 +845,14 @@ V.car = { col: '#ffc83a', box: [-15, -26, 30, 37], hide: true, paint(c, dir, lay
   rr(c, -10.4, top + .6, 20.8, bot - top - 6.4, [4.4, 4.4, 1.4, 1.4]); c.fillStyle = lg(c, -10, top, 10, bot, shade(col, 1.42), shade(col, 1.12)); c.fill();
   c.fillStyle = rgba(shade(col, .45), .45); c.fillRect(-10.4, bot - 6, 20.8, .5);
   // cabin
-  const ct = away ? -14.4 : -17.2, cb = away ? -1.2 : -4;
+  const ct = -17.6, cb = -3.2;
   rr(c, -8.6, ct, 17.2, cb - ct, 3); c.fillStyle = shade(col, .72); c.fill();
-  const gT = away ? ct + 8.6 : cb - 4.6, gB = away ? cb : cb + .8;   // glass facing the camera
+  const gT = -11.2, gB = -3;   // glass facing the camera
   c.beginPath(); c.moveTo(-7.6, gT); c.lineTo(7.6, gT); c.lineTo(9, gB); c.lineTo(-9, gB); c.closePath(); c.fillStyle = lg(c, 0, gT, 0, gB, ...GLASS); c.fill();
-  c.save(); c.clip(); headFig(c, -3.2, gT + 1.2, null, away); c.fillStyle = 'rgba(150,210,240,.3)'; c.fillRect(-10, gT, 20, gB - gT); c.restore();
+  c.save(); c.clip(); headFig(c, away ? 3.2 : -3.2, gT + 3.6, null, away); c.fillStyle = 'rgba(150,210,240,.3)'; c.fillRect(-10, gT, 20, gB - gT); c.restore();
   c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = .5; c.beginPath(); c.moveTo(3, gT + .8); c.lineTo(5.2, gB - .8); c.stroke();
   body(c, () => rr(c, -7.6, away ? ct : ct, 15.2, (away ? gT : gT) - ct + .2, 3), col, ct, gT, { gx: -3, gw: 3.6, lt: 1.5 });
-  for (const s of [-1, 1]) { rf(c, s * 10.6 - 1.2, (away ? -12 : -9) - 1, 2.4, 2, .8, col); }   // mirrors
+  for (const s of [-1, 1]) { rf(c, s * 10.8 - 1.2, away ? -13 : -5.6, 2.4, 2, .8, col); }   // mirrors
   // front / rear face
   const fy = bot - 5.6;
   if (!away) {
@@ -895,11 +897,12 @@ function hoverDeck(c, dir, col) {
     return;
   }
   const L = dir === 0 ? 1 : -1;   // the nose points toward the camera (down) for dir 0
-  rr(c, -4.6, -8, 9.2, 13.4, 4.4); c.fillStyle = shade(col, .55); c.fill();
-  body(c, () => rr(c, -4.6, -9.4, 9.2, 13.4, 4.4), col, -9.4, 4, { gx: -2, gw: 1.6 });
-  rf(c, -3, L > 0 ? 1.4 : -8.2, 6, 1.4, .7, rgba(shade(col, 1.6), .8));
-  rr(c, -4.6, -9.4, 9.2, 13.4, 4.4); c.strokeStyle = glowE; c.lineWidth = .35; c.stroke();
-  rf(c, -3.6, 4.4, 7.2, .8, .4, glowE);
+  const y0 = L > 0 ? -7 : -9;
+  rr(c, -5, y0 + 1.6, 10, 13.4, 4.6); c.fillStyle = shade(col, .55); c.fill();
+  body(c, () => rr(c, -5, y0, 10, 13.4, 4.6), col, y0, y0 + 13.4, { gx: -2, gw: 1.6 });
+  rf(c, -3.2, L > 0 ? y0 + 10.4 : y0 + 1.2, 6.4, 1.5, .75, rgba(shade(col, 1.6), .85));
+  rr(c, -5, y0, 10, 13.4, 4.6); c.strokeStyle = glowE; c.lineWidth = .4; c.stroke();
+  rf(c, -3.8, y0 + 14.2, 7.6, .9, .45, glowE);
 }
 function hoverboard(ctx, dir, x, y, t, info) {
   if (info.layer !== 'back') return;
@@ -926,9 +929,9 @@ function heliBody(c, dir, col) {
     // far skid, struts
     line(c, [-6, -3.4, 10, -3.4], shade(skid, 1.3), 1); line(c, [-3, -3.4, -2, -7], shade(skid, 1.3), .8); line(c, [6, -3.4, 5, -7], shade(skid, 1.3), .8);
     // tail boom + fin + tail rotor hub
-    body(c, () => { c.beginPath(); c.moveTo(-4, -12.6); c.lineTo(-21, -11.2); c.lineTo(-21, -9.4); c.lineTo(-4, -8); c.closePath(); }, col, -12.6, -8, { gloss: false });
-    body(c, () => { c.beginPath(); c.moveTo(-18, -11); c.lineTo(-21.4, -17.6); c.lineTo(-23.6, -17.6); c.lineTo(-22.6, -9.4); c.closePath(); }, shade(col, .9), -17.6, -9.4, { gloss: false });
-    c.fillStyle = '#ffffff'; c.fillRect(-16, -11.2, 6, .8);
+    body(c, () => { c.beginPath(); c.moveTo(-4, -12.6); c.lineTo(-17.6, -11.4); c.lineTo(-17.6, -9.6); c.lineTo(-4, -8); c.closePath(); }, col, -12.6, -8, { gloss: false });
+    body(c, () => { c.beginPath(); c.moveTo(-15, -11); c.lineTo(-18, -17); c.lineTo(-20.2, -17); c.lineTo(-19.4, -9.6); c.closePath(); }, shade(col, .9), -17, -9.6, { gloss: false });
+    c.fillStyle = '#ffffff'; c.fillRect(-13.4, -11.2, 5, .8);
     // cabin
     body(c, () => { c.beginPath(); c.ellipse(2.6, -10, 9.4, 7.4, 0, 0, TAU); }, col, -17.4, -2.6, { gx: -1, gw: 4 });
     c.save(); c.beginPath(); c.moveTo(4, -16.6); c.quadraticCurveTo(12.6, -15, 11.8, -8.4); c.lineTo(4, -8.6); c.closePath(); c.fillStyle = lg(c, 4, -16, 12, -8, ...GLASS); c.fill(); c.clip(); headFig(c, 6.4, -12, null, false); c.fillStyle = 'rgba(150,210,240,.35)'; c.fillRect(3, -17, 10, 9); c.restore();
@@ -947,9 +950,9 @@ function heliBody(c, dir, col) {
   // skids
   for (const s of [-1, 1]) { line(c, [s * 9, -14, s * 9, 3], skid, 1.3); line(c, [s * 9, -10, s * 6.4, -9], skid, .9); line(c, [s * 9, -1, s * 6.4, -2], skid, .9); }
   if (!away) {   // tail goes up, behind the cabin
-    body(c, () => rr(c, -1.8, -30, 3.6, 18, 1.4), col, -30, -12, { gloss: false });
-    body(c, () => rr(c, -.9, -34, 1.8, 7, .8), shade(col, .9), -34, -27, { gloss: false });
-    c.fillStyle = '#ffffff'; c.fillRect(-1.8, -24, 3.6, .8);
+    body(c, () => rr(c, -1.8, -26, 3.6, 14, 1.4), col, -26, -12, { gloss: false });
+    body(c, () => rr(c, -.9, -29.4, 1.8, 6.4, .8), shade(col, .9), -29.4, -23, { gloss: false });
+    c.fillStyle = '#ffffff'; c.fillRect(-1.8, -21, 3.6, .8);
   }
   body(c, () => { c.beginPath(); c.ellipse(0, -8.6, 9.6, 8.6, 0, 0, TAU); }, col, -17.2, 0, { gx: -3, gw: 3.6 });
   c.fillStyle = '#ffffff'; c.fillRect(-9.4, -6.6, 18.8, .9);
@@ -958,9 +961,9 @@ function heliBody(c, dir, col) {
     c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = .55; c.beginPath(); c.ellipse(0, -7, 6.2, 4.6, 0, PI * 1.1, PI * 1.45); c.stroke();
     c.strokeStyle = shade(col, .55); c.lineWidth = .45; c.beginPath(); c.moveTo(0, -12.8); c.lineTo(0, -1.4); c.stroke();
   } else {
-    rf(c, -4.4, -12.6, 8.8, 3.6, 1.4, rgba(GLASS[1], .85)); c.save(); rr(c, -4.4, -12.6, 8.8, 3.6, 1.4); c.clip(); headFig(c, -2, -10.4, null, true); c.restore();
-    body(c, () => rr(c, -1.8, -6, 3.6, 15, 1.4), col, -6, 9, { gloss: false });   // tail toward the camera
-    body(c, () => rr(c, -.9, 4, 1.8, 7, .8), shade(col, .9), 4, 11, { gloss: false });
+    rf(c, -4.6, -14, 9.2, 5, 1.8, rgba(GLASS[1], .85)); c.save(); rr(c, -4.6, -14, 9.2, 5, 1.8); c.clip(); headFig(c, -2, -11.4, null, true); c.fillStyle = 'rgba(150,210,240,.3)'; c.fillRect(-5, -14, 10, 5); c.restore();
+    body(c, () => rr(c, -1.8, -6, 3.6, 12.6, 1.4), col, -6, 6.6, { gloss: false });   // tail toward the camera
+    body(c, () => rr(c, -.9, 2.6, 1.8, 6.4, .8), shade(col, .9), 2.6, 9, { gloss: false });
     c.fillStyle = '#ffffff'; c.fillRect(-1.8, 1, 3.6, .8);
   }
   rf(c, -4, -19, 8, 3.6, [1.6, 1.6, .4, .4], '#8a94a8'); c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(-3, -18.6, 4, .4);
@@ -970,27 +973,27 @@ function helicopter(ctx, dir, x, y, t, info) {
   if (info.layer === 'front') return;
   const ax = x + 8, ay = y + 15, col = info.color || HELI_COL, moving = !!info.moving;
   const lift = moving ? 4 + Math.sin(t / 10) * 1 : 0;
-  const sh = make('hlsh', -18, -10, 36, 20, c => { rf(c, -13, -6, 26, 12, 6, 'rgba(40,40,60,.12)'); ovalShadow(c, 0, 0, 16, 7, .3); });
+  const sh = make('hlsh', -18, -10, 36, 20, c => ovalShadow(c, 0, 0, 14, 6, .3));
   const k = 1 - lift * .04; ctx.drawImage(sh.cv, ax - 18 * k + (dir === 3 ? -2 : dir === 2 ? 2 : 0), ay - 7 - 10 * k + 4, 36 * k, 20 * k);
   const b = make('hl:' + dir + ':' + col, -26, -36, 52, 50, c => { if (dir === 2) c.scale(-1, 1); heliBody(c, dir === 2 ? 3 : dir, col); });
   ctx.drawImage(b.cv, ax + b.x0, ay + b.y0 - lift, b.w, b.h);
   // tail rotor (side views) and main rotor
   const side = dir > 1, sgn = dir === 2 ? -1 : 1, hubX = ax + (side ? 3.4 * sgn : 0) - (side ? 2.6 * sgn : 0), hubY = ay - 21.4 - lift;
   if (side) {
-    const tx = ax - 22.6 * sgn, ty = ay - 13.4 - lift;
+    const tx = ax - 19.4 * sgn, ty = ay - 13.2 - lift;
     if (moving) { ctx.fillStyle = 'rgba(230,240,250,.45)'; ctx.beginPath(); ctx.arc(tx, ty, 3.6, 0, TAU); ctx.fill(); }
     else { ctx.strokeStyle = '#5a6070'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(tx - 2.6, ty - 2.6); ctx.lineTo(tx + 2.6, ty + 2.6); ctx.moveTo(tx - 2.6, ty + 2.6); ctx.lineTo(tx + 2.6, ty - 2.6); ctx.stroke(); }
   } else if (dir === 0) {
-    const tx = ax + 1.8, ty = ay - 31 - lift;
+    const tx = ax + 1.8, ty = ay - 26.6 - lift;
     if (moving) { ctx.fillStyle = 'rgba(230,240,250,.45)'; ctx.beginPath(); ctx.ellipse(tx, ty, 1, 3.4, 0, 0, TAU); ctx.fill(); } else { ctx.fillStyle = '#5a6070'; ctx.fillRect(tx - .4, ty - 3, .8, 6); }
   } else {
-    const tx = ax + 1.8, ty = ay + 7.6 - lift;
+    const tx = ax + 1.8, ty = ay + 5.6 - lift;
     if (moving) { ctx.fillStyle = 'rgba(230,240,250,.45)'; ctx.beginPath(); ctx.ellipse(tx, ty, 1, 3.4, 0, 0, TAU); ctx.fill(); } else { ctx.fillStyle = '#5a6070'; ctx.fillRect(tx - .4, ty - 3, .8, 6); }
   }
   const blade = make('hlblade', -22, -1.4, 44, 2.8, c => { rf(c, -21.6, -1, 43.2, 2, 1, '#3e4452'); rf(c, -21, -.8, 42, .7, .35, '#8a94a8'); });
   ctx.save(); ctx.translate(hubX, hubY); ctx.scale(1, .42);
   if (moving) {
-    const disc = make('hldisc', -24, -24, 48, 48, c => { c.fillStyle = rg(c, 0, 0, 24, 'rgba(70,80,100,.12)', 'rgba(70,80,100,.2)', 'rgba(70,80,100,.28)', 'rgba(70,80,100,0)'); c.beginPath(); c.arc(0, 0, 24, 0, TAU); c.fill(); });
+    const disc = make('hldisc', -24, -24, 48, 48, c => { c.fillStyle = rg(c, 0, 0, 23, 'rgba(255,255,255,.06)', 'rgba(240,248,255,.16)', 'rgba(240,248,255,.32)', 'rgba(240,248,255,.08)'); c.beginPath(); c.arc(0, 0, 22.5, 0, TAU); c.fill(); c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = .8; c.stroke(); });
     ctx.drawImage(disc.cv, -24, -24, 48, 48);
     const a = t * .9; ctx.globalAlpha = .35;
     for (let i = 0; i < 2; i++) { ctx.save(); ctx.rotate(a + i * PI / 2); ctx.drawImage(blade.cv, blade.x0, blade.y0, blade.w, blade.h); ctx.restore(); }
