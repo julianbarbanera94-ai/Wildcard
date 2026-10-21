@@ -5,3 +5,4 @@ android/.cache/
 android/keystore/
 *.idsig
 Wildcard-1.0.0.apk
+Wildcard-*.apk

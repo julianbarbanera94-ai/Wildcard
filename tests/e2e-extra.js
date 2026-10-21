@@ -106,7 +106,7 @@ const OUT = process.env.OUT || '/tmp';
     G.ui.layers.length = 0; G.closeText(); G.world.busy = false; G.scene = G.world.scene; G.ui.fade.a = 0;
     for (let n = 0; n < 8; n++) {
       const S = G.state; S.party.length = 0; S.bag = { 'Catch Orb': 5, Potion: 5, Revive: 2, 'Full Heal': 2 };
-      [[1, 18], [4, 16], [7, 17]].forEach(([id, l]) => S.party.push(G.makeCreature(id, l)));
+      [[1, 24], [4, 22], [7, 23]].forEach(([id, l]) => S.party.push(G.makeCreature(id, l)));
       S.party[0].moves = [['Sleep Powder', 'Thunder Wave', 'Poison Powder', 'Growl'][n % 4], 'Ember', 'Lullaby', 'Harden'].map(id => ({ id, pp: G.MOVES[id].pp }));
       const wild = n % 2 === 0, foe = G.makeCreature([22, 23, 24, 20, 21, 12, 14, 16][n], 8 + (n >> 1));
       let res; const opts = wild ? { wild: foe } : { trainer: { name: 'BOT', cls: 'TESTER', style: G.PLAYER_STYLE, prize: 5, team: [foe, G.makeCreature(10, 7)] } };
