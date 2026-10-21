@@ -121,11 +121,70 @@ function sparkle(x, cx, cy, r, col) {
   x.fillStyle = col; x.beginPath();
   x.moveTo(cx, cy - r); x.quadraticCurveTo(cx, cy, cx + r, cy); x.quadraticCurveTo(cx, cy, cx, cy + r); x.quadraticCurveTo(cx, cy, cx - r, cy); x.quadraticCurveTo(cx, cy, cx, cy - r); x.fill();
 }
+// Cubic Bezier sampled into points (for tubes: tails, tentacles, necks, antlers).
+function bezPts(p0, p1, p2, p3, n = 20) {
+  const o = [];
+  for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t; o.push([a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0], a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1]]); }
+  return o;
+}
+// Closed outline of a tube along pts, width tapering w0 -> w1, rounded tip.
+function tubeP(pts, w0, w1) {
+  const n = pts.length, L = [], Rt = [];
+  for (let i = 0; i < n; i++) {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+    let dx = b[0] - a[0], dy = b[1] - a[1]; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+    const w = (w0 + (w1 - w0) * i / (n - 1)) / 2;
+    L.push([pts[i][0] - dy * w, pts[i][1] + dx * w]); Rt.push([pts[i][0] + dy * w, pts[i][1] - dx * w]);
+  }
+  return p => {
+    p.moveTo(L[0][0], L[0][1]); for (let i = 1; i < n; i++) p.lineTo(L[i][0], L[i][1]);
+    const e = pts[n - 1], aL = Math.atan2(L[n - 1][1] - e[1], L[n - 1][0] - e[0]);
+    p.arc(e[0], e[1], Math.max(.2, w1 / 2), aL, aL - Math.PI, true);
+    for (let i = n - 1; i >= 0; i--) p.lineTo(Rt[i][0], Rt[i][1]);
+    p.closePath();
+  };
+}
+function tube(x, pts, w0, w1, col, o) { const m = pts[pts.length >> 1]; paint(x, tubeP(pts, w0, w1), col, m[0], m[1], Math.max(w0, 6), o); }
+// Spiral points around (cx, cy) from radius r0 to r1 over `turns`, starting at angle a0, direction dir (+1/-1).
+function spiralPts(cx, cy, r0, r1, a0, turns, dir, n = 28) {
+  const o = []; for (let i = 0; i <= n; i++) { const t = i / n, r = r0 + (r1 - r0) * t, a = a0 + dir * t * turns * TAU; o.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } return o;
+}
+function polyP(pts) { return p => { pts.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])); p.closePath(); }; }
+function cogP(cx, cy, r, n) {
+  return p => {
+    const s = Math.PI / n;
+    for (let i = 0; i < n; i++) {
+      const a = i * 2 * s, pts = [[a - s * .55, r * .78], [a - s * .32, r], [a + s * .32, r], [a + s * .55, r * .78]];
+      pts.forEach(([aa, rr], j) => { const px = cx + Math.cos(aa) * rr, py = cy + Math.sin(aa) * rr; i || j ? p.lineTo(px, py) : p.moveTo(px, py); });
+    }
+    p.closePath();
+  };
+}
+function bubble(x, cx, cy, r, col) {
+  const g = x.createRadialGradient(cx - r * .3, cy - r * .3, r * .1, cx, cy, r);
+  g.addColorStop(0, 'rgba(255,255,255,.08)'); g.addColorStop(.75, rgba(col, .22)); g.addColorStop(1, rgba(col, .55));
+  x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
+  x.lineWidth = Math.max(.7, r * .12); x.strokeStyle = rgba(lineOf(col), .55); x.stroke();
+  shine(x, cx - r * .38, cy - r * .4, r * .32, r * .24, .95);
+}
+function gemShape(x, cx, cy, r, col) {
+  const pts = [[cx, cy - r], [cx + r * .85, cy - r * .25], [cx + r * .55, cy + r * .8], [cx - r * .55, cy + r * .8], [cx - r * .85, cy - r * .25]];
+  paint(x, polyP(pts), col, cx, cy, r, { hi: .3, lw: LW * .8 });
+  x.fillStyle = rgba('#ffffff', .45); x.beginPath(); x.moveTo(cx, cy - r); x.lineTo(cx - r * .85, cy - r * .25); x.lineTo(cx - r * .2, cy - r * .05); x.closePath(); x.fill();
+  stroke(x, polyP([[cx - r * .45, cy - r * .1], [cx + r * .45, cy - r * .1], [cx + r * .2, cy + r * .5], [cx - r * .2, cy + r * .5]]), rgba('#ffffff', .5), LW * .5);
+}
+function flower5(x, cx, cy, r, col, mid) {
+  for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * TAU / 5; E(x, cx + Math.cos(a) * r * .55, cy + Math.sin(a) * r * .55, r * .48, r * .48, col, { lw: LW * .6, hi: .12 }); }
+  E(x, cx, cy, r * .36, r * .36, mid || '#ffd84a', { lw: LW * .55 });
+}
 
 // ---- Faces -------------------------------------------------------------------
 const INK = '#2a2036';
+const EAR_ANG = { frill: 1.05, nub: .78, bunny: .3, bear: .72, fin: 1.3, leaf: .8, droopy: 1.0 };
+const MOUTHS = new Set(['smile', 'cat', 'cheeky', 'open', 'fang', 'beak', 'grin', 'wisp', 'teeth', 'none']);
 function eye(x, ex, ey, rx, ry, side, o) {
   const style = o.eye || 'normal';
+  if (style === 'happy') { stroke(x, p => { p.moveTo(ex - rx * 1.05, ey + ry * .3); p.quadraticCurveTo(ex, ey - ry * .85, ex + rx * 1.05, ey + ry * .3); }, INK, rx * .55); return; }
   if (o.closed) { stroke(x, p => { p.moveTo(ex - rx * 1.05, ey + ry * .05); p.quadraticCurveTo(ex, ey + ry * .75, ex + rx * 1.05, ey + ry * .05); }, INK, rx * .55); return; }
   x.save();
   if (style === 'fierce' || style === 'sleepy') {
@@ -138,20 +197,29 @@ function eye(x, ex, ey, rx, ry, side, o) {
   else { g.addColorStop(0, '#1b1426'); g.addColorStop(.5, '#2a2140'); g.addColorStop(1, o.iris || '#6a5aa8'); }
   x.fillStyle = g; x.beginPath(); x.ellipse(ex, ey, rx, ry, 0, 0, TAU); x.fill();
   if (style === 'glow') { x.fillStyle = rgba('#3a1a5a', .9); x.beginPath(); x.ellipse(ex + side * rx * .1, ey + ry * .1, rx * .35, ry * .55, 0, 0, TAU); x.fill(); }
+  if (style === 'star') {
+    x.fillStyle = rgba(o.iris || '#6a5aa8', .55); x.beginPath(); x.ellipse(ex, ey + ry * .15, rx * .72, ry * .62, 0, 0, TAU); x.fill();
+    star(x, ex, ey + ry * .05, rx * .62, '#ffffff', { flat: true, line: false });
+    sparkle(x, ex - rx * .42, ey - ry * .52, rx * .3, '#ffffff');
+    x.restore(); return;
+  }
   x.fillStyle = '#fff';
   x.beginPath(); x.ellipse(ex - rx * .3, ey - ry * .36, rx * .42, ry * .32, -.3, 0, TAU); x.fill();
   x.beginPath(); x.arc(ex + rx * .32, ey + ry * .42, rx * .19, 0, TAU); x.fill();
+  if (style === 'round') { x.beginPath(); x.arc(ex + rx * .05, ey - ry * .05, rx * .1, 0, TAU); x.fill(); }
   x.restore();
   if (style === 'fierce') stroke(x, p => { p.moveTo(ex + side * rx * 1.35, ey - ry * 1.1); p.lineTo(ex - side * rx * 1.2, ey - ry * .38); }, o.brow || INK, rx * .5);
   if (style === 'sleepy') stroke(x, p => { p.moveTo(ex - rx * 1.1, ey - ry * .02); p.quadraticCurveTo(ex, ey + ry * .2, ex + rx * 1.1, ey - ry * .02); }, INK, rx * .4);
 }
 function face(x, h, o) {
-  const ey = h.cy + h.ry * (o.eyeY || .08), sp = h.rx * (o.eyeSp || .42), rx = h.rx * (o.eyeR || .155), ry = rx * (o.eyeAsp || 1.38);
+  const rnd = o.eye === 'round';
+  const ey = h.cy + h.ry * (o.eyeY || .08), sp = h.rx * (o.eyeSp || .42), rx = h.rx * (o.eyeR || (rnd ? .175 : .155)), ry = rx * (o.eyeAsp || (rnd ? 1.08 : 1.38));
   if (o.cheeks !== false) for (const s of [-1, 1]) E(x, h.cx + s * (sp + rx * .7), ey + ry * 1.25, rx * .95, ry * .4, o.cheek || '#ff8ab0', { flat: true, line: false });
   x.globalAlpha = 1;
   for (const s of [-1, 1]) eye(x, h.cx + s * sp, ey, rx, ry, s, o);
   const my = ey + ry * 1.45 + h.ry * (o.mouthY || 0), m = h.rx * .1, mc = o.mouthCol || lineOf(o.skin || '#c08060');
-  const mouth = o.mouth || 'smile';
+  let mouth = o.mouth || 'smile';
+  if (!MOUTHS.has(mouth)) mouth = 'smile'; // unknown values fall back gracefully ('none' draws nothing)
   if (mouth === 'smile') stroke(x, p => { p.moveTo(h.cx - m, my); p.quadraticCurveTo(h.cx, my + m * 1.1, h.cx + m, my); }, mc, LW * .95);
   else if (mouth === 'cat') stroke(x, p => { p.moveTo(h.cx - m * 1.3, my); p.quadraticCurveTo(h.cx - m * .65, my + m * .9, h.cx, my); p.quadraticCurveTo(h.cx + m * .65, my + m * .9, h.cx + m * 1.3, my); }, mc, LW * .9);
   else if (mouth === 'cheeky') {
@@ -212,7 +280,8 @@ const C = {
 
 // ---- Body plan -----------------------------------------------------------------
 function plan(sp, c) {
-  const L = sp.look, f = n => L.feat.includes(n), st = L.stage || 1, form = L.form;
+  const L = sp.look || {}, feat = Array.isArray(L.feat) ? L.feat : [], f = n => feat.includes(n), st = Math.max(1, Math.min(3, L.stage | 0 || 1)), form = L.form || 'round';
+  if (NEWB.has(c.body)) return planNew(c, f, st, form);
   const legs = f('legs'), lift = legs ? (c.legLift === undefined ? 6 : c.legLift) : 0;
   let body, head, merged = false;
   if ((form === 'round' && st === 1) || c.body === 'rock' && st === 1 || c.body === 'drop') {
@@ -227,16 +296,88 @@ function plan(sp, c) {
   body.cx = 50; head.cx = 50;
   return { body, head, merged, st, f, legs, lift, form };
 }
+// Body plans for the newer body shapes. k grows the creature with its stage.
+const NEWB = new Set(['fish', 'serpent', 'jelly', 'golem', 'shroom', 'crystal', 'dragon', 'blob', 'bird', 'flower', 'cloud', 'shell']);
+const LEGLESS = new Set(['fish', 'serpent', 'jelly', 'blob', 'cloud', 'shell']);
+function planNew(c, f, st, form) {
+  const k = st >= 3 ? 1.16 : st === 2 ? 1.07 : 1, t = c.body;
+  let legs = !LEGLESS.has(t) && (f('legs') || t === 'golem' || t === 'dragon');
+  let lift = legs ? (c.legLift === undefined ? (t === 'golem' ? 7 : 6) : c.legLift) : 0;
+  let body, head, merged = true, coil = null;
+  const M = (rx, ry, gap) => { body = { rx: rx * k, ry: ry * k }; body.cy = 92 - body.ry - lift - (gap || 0); head = body; };
+  if (t === 'fish') M(27, 21, 6);
+  else if (t === 'jelly') { body = { rx: 27 * k, ry: 21 * k }; body.cy = 89 - 22 * k - body.ry * .45; head = body; }
+  else if (t === 'shroom') M(21, 20);
+  else if (t === 'crystal') M(24, 27);
+  else if (t === 'blob') M(30, 22);
+  else if (t === 'bird') M(25, 26, legs ? 0 : 3);
+  else if (t === 'cloud') M(31, 20, 8);
+  else {
+    merged = false;
+    if (t === 'serpent') {
+      coil = { cx: 50, rx: 30 * k, ry: 10.5 * k }; coil.cy = 92 - coil.ry;
+      body = { rx: 22 * k, ry: 9.5 * k }; body.cy = coil.cy - coil.ry * 1.1;
+      head = { rx: 22 * k, ry: 19.5 * k }; head.cy = body.cy - body.ry - head.ry * .8 - 5 * k;
+    } else if (t === 'shell') {
+      body = { rx: 31 * k, ry: 8.5 * k }; body.cy = 92 - body.ry;
+      head = { rx: 21 * k, ry: 19 * k }; head.cy = body.cy - head.ry * .9;
+    } else if (t === 'golem') {
+      body = { rx: 27 * k, ry: 20 * k }; body.cy = 92 - body.ry - lift;
+      head = { rx: 19 * k, ry: 16 * k }; head.cy = body.cy - body.ry - head.ry * .3;
+    } else if (t === 'flower') {
+      body = { rx: 15 * k, ry: 15 * k }; body.cy = 92 - body.ry - lift;
+      head = { rx: 22 * k, ry: 20 * k }; head.cy = body.cy - body.ry - head.ry * .45;
+    } else { // dragon: always a separate head (with a snout) and legs
+      if (form === 'wide') { body = { rx: 31 * k, ry: 17 * k }; body.cy = 92 - body.ry - lift; head = { rx: 20 * k, ry: 18 * k }; head.cy = body.cy - body.ry * .5 - head.ry * .7; }
+      else if (form === 'tall') { body = { rx: 16 * k, ry: 20 * k }; body.cy = 92 - body.ry - lift; head = { rx: 21 * k, ry: 19 * k }; head.cy = body.cy - body.ry - head.ry * .42; }
+      else { body = { rx: 19 * k, ry: 16 * k }; body.cy = 92 - body.ry - lift; head = { rx: 23 * k, ry: 21 * k }; head.cy = body.cy - body.ry - head.ry * .42; }
+    }
+  }
+  body.cx = 50; head.cx = 50;
+  return { body, head, merged, st, f, legs, lift, form, k, coil, nb: t };
+}
+// Defaults implied by a body shape (only for keys the config leaves unset).
+const BODY_DEF = {
+  fish: { tail: 'fish', float: true }, serpent: { float: true }, jelly: { float: true, tentacles: true, tail: 'none' }, golem: { fists: true },
+  shroom: { mushroomSpots: true }, crystal: {}, dragon: { tail: 'lizard', claws: true }, blob: { float: true, tail: 'none' },
+  bird: { mouth: 'beak', wing: 'bird', tail: 'feather', birdFeet: true }, flower: { petals: true }, cloud: { float: true, tail: 'none' }, shell: { float: true, tail: 'none' },
+};
+// Pleasant fallback art for a species with no config at all, derived from its types and look.
+const TYPE_ART = {
+  Normal: { ear: 'bear', tail: 'puff' }, Fire: { ear: 'fox', tail: 'flame' }, Water: { body: 'fish' }, Grass: { leaf: 'sprout', ear: 'leaf' },
+  Electric: { ear: 'spark', tail: 'bolt' }, Bug: { antenna: 'ball', bugStripes: true }, Flying: { body: 'bird' }, Rock: { body: 'rock' },
+  Ground: { ear: 'nub', tail: 'club' }, Poison: { body: 'blob', bubbles: true }, Ghost: { body: 'cloud', eye: 'glow', mouth: 'wisp' },
+  Psychic: { gem: true, eye: 'star', float: true, ear: 'cat' }, Dark: { eye: 'fierce', ear: 'cat', mouth: 'fang', tail: 'spade' },
+  Ice: { snowcap: true, icicles: true, ear: 'bear' }, Fighting: { fists: true, eye: 'fierce', scarf: true, ear: 'nub' },
+  Steel: { body: 'golem', gears: true }, Dragon: { body: 'dragon', horn: 'twin' }, Fairy: { wing: 'fairy', bow: true, eye: 'round', ear: 'bunny' },
+};
+function defaultArt(sp) {
+  const types = Array.isArray(sp.types) && sp.types.length ? sp.types : ['Normal'], st = (sp.look && sp.look.stage) || 1;
+  const c = Object.assign({}, TYPE_ART[types[0]] || TYPE_ART.Normal);
+  const R = G.mulberry((sp.id | 0) * 92821 + 3);
+  if (types[1] === 'Flying' && !c.wing && c.body !== 'bird') c.wing = 'bird';
+  if (types[1] === 'Fire' && !c.tail) c.tail = 'flame';
+  if (types[1] === 'Ice') c.snowcap = true;
+  if (types[1] === 'Fairy') c.sparkles = true;
+  if (types[1] === 'Steel') c.armor = true;
+  if (!c.mouth) c.mouth = ['smile', 'cat', 'open', 'cheeky'][Math.floor(R() * 4)];
+  if (st >= 3) { c.sparkles = true; if (!c.eye) c.eye = 'fierce'; }
+  return c;
+}
 
 // ---- Creature generator -------------------------------------------------------
 function buildParts(sp) {
-  const c = C[sp.id] || G.CREATURE_ART[sp.id] || {}, B = plan(sp, c), { body, head, f, st } = B;
-  const R = G.mulberry(sp.id * 7919 + 13);
-  const tc = sp.types.map(t => vivid(G.TYPE_COL[t] || '#c8a878'));
+  let c = C[sp.id] || (G.CREATURE_ART || {})[sp.id];
+  if (!c || typeof c !== 'object') c = defaultArt(sp);
+  if (NEWB.has(c.body)) { const d = BODY_DEF[c.body], o = Object.assign({}, c); for (const kk in d) if (o[kk] === undefined) o[kk] = d[kk]; c = o; }
+  const B = plan(sp, c), { body, head, f, st } = B, nb = B.nb || null;
+  const R = G.mulberry(sp.id * 7919 + 13), R2 = G.mulberry((sp.id | 0) * 104729 + 71);
+  const tc = (Array.isArray(sp.types) && sp.types.length ? sp.types : ['Normal']).map(t => vivid(G.TYPE_COL[t] || '#c8a878'));
   const main = c.main || tc[0], acc = c.acc || (tc[1] || adj(main, -.12)), belly = c.belly === undefined ? adj(main, .25, .7) : c.belly;
-  const skin = c.face || main;
+  const skin = c.face || main, belly2 = belly || adj(main, .25, .7), leafG = c.leafCol || '#6cc850';
+  const SC = st >= 3 ? 1.25 : st === 2 ? 1.1 : 1;
   const parts = [], add = (z, zb, fn) => parts.push({ z, zb, fn });
-  const fierce = c.eye === 'fierce';
+  let headPath = null; // set by new head shapes so the back-view shading clips to them
 
   // Body shapes ----------------------------------------------------------------
   let bodyFn;
@@ -262,8 +403,172 @@ function buildParts(sp) {
     };
   } else if (c.body === 'fluff') {
     bodyFn = x => { paint(x, fluffPath(body.cx, body.cy, body.rx, body.ry, 14, 2.6), main, body.cx, body.cy, Math.max(body.rx, body.ry)); shine(x, body.cx - body.rx * .4, body.cy - body.ry * .45, body.rx * .3, body.ry * .3, .55); };
+  } else if (nb) {
+    bodyFn = newBody(nb);
   } else {
     bodyFn = x => { E(x, body.cx, body.cy, body.rx, body.ry, main); shine(x, body.cx - body.rx * .42, body.cy - body.ry * .45, body.rx * .3, body.ry * .3, .6); };
+  }
+  // The newer body shapes: each returns the body painter and adds its own extra parts (fins, cap, coils...).
+  function newBody(t) {
+    const { cx, cy, rx, ry } = body, k = B.k;
+    if (t === 'fish') {
+      headPath = ellP(cx, cy, rx, ry);
+      // dorsal fin behind, pectoral fins in front, then the body with a pale belly and soft scales
+      add(-.2, -.2, x => { paint(x, p => { p.moveTo(cx - rx * .45, cy - ry * .78); p.quadraticCurveTo(cx - rx * .1, cy - ry * 1.55 * (st >= 2 ? 1.12 : 1), cx + rx * .5, cy - ry * 1.42 * (st >= 2 ? 1.12 : 1)); p.quadraticCurveTo(cx + rx * .2, cy - ry * 1.05, cx + rx * .45, cy - ry * .72); p.closePath(); }, acc, cx, cy - ry, rx * .5); stroke(x, p => { p.moveTo(cx - rx * .2, cy - ry * .85); p.quadraticCurveTo(cx, cy - ry * 1.2, cx + rx * .3, cy - ry * 1.3); }, rgba('#ffffff', .45), 1.3); });
+      const pect = x => { for (const s of [-1, 1]) { const bx = cx + s * rx * .72, by = cy + ry * .38; paint(x, p => { p.moveTo(bx, by - 5 * k); p.quadraticCurveTo(bx + s * 12 * k, by - 3 * k, bx + s * 14 * k, by + 7 * k); p.quadraticCurveTo(bx + s * 6 * k, by + 4 * k, bx, by + 4 * k); p.closePath(); }, acc, bx + s * 5, by, 8 * k); } };
+      add(.6, .6, pect);
+      return x => {
+        E(x, cx, cy, rx, ry, main);
+        x.save(); x.beginPath(); ellP(cx, cy, rx, ry)(x); x.clip();
+        if (belly) E(x, cx, cy + ry * .75, rx * .9, ry * .55, belly, { line: false, lo: .04 });
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) stroke(x, p => { const px = cx + rx * (.25 + i * .22), py = cy - ry * (.35 - j * .38); p.arc(px, py, 4 * k, Math.PI * .6, Math.PI * 1.4); }, rgba(lineOf(main), .35), 1.1);
+        x.restore();
+        x.beginPath(); ellP(cx, cy, rx, ry)(x); x.lineWidth = LW; x.strokeStyle = lineOf(main); x.stroke();
+        shine(x, cx - rx * .42, cy - ry * .48, rx * .28, ry * .26, .7);
+      };
+    }
+    if (t === 'jelly') {
+      const rim = cy + ry * .45, n = 6 + st;
+      const bell = p => { p.moveTo(cx - rx, rim); p.bezierCurveTo(cx - rx * 1.02, cy - ry * 1.35, cx + rx * 1.02, cy - ry * 1.35, cx + rx, rim); for (let i = 0; i < n; i++) { const x0 = cx + rx - i * 2 * rx / n, x1 = cx + rx - (i + 1) * 2 * rx / n; p.quadraticCurveTo((x0 + x1) / 2, rim + 6 * k, x1, rim); } p.closePath(); };
+      headPath = bell;
+      return x => {
+        const g = x.createRadialGradient(cx, cy - ry * .2, 2, cx, cy, rx * 1.6); g.addColorStop(0, rgba(main, .35)); g.addColorStop(1, rgba(main, 0)); x.fillStyle = g; x.beginPath(); x.arc(cx, cy, rx * 1.6, 0, TAU); x.fill();
+        x.globalAlpha = .93; paint(x, bell, main, cx, cy - ry * .3, rx * 1.05, { hi: .22 }); x.globalAlpha = 1;
+        x.save(); x.beginPath(); bell(x); x.clip();
+        E(x, cx, rim + 1, rx * .92, ry * .32, belly2, { line: false, lo: .02 });
+        E(x, cx, cy - ry * .45, rx * .55, ry * .38, adj(main, .18), { line: false, flat: true });
+        x.restore();
+        shine(x, cx - rx * .45, cy - ry * .55, rx * .26, ry * .2, .85); shine(x, cx + rx * .3, cy - ry * .7, rx * .1, ry * .08, .6);
+      };
+    }
+    if (t === 'golem') {
+      const bp = p => p.roundRect(cx - rx, cy - ry, 2 * rx, 2 * ry, rx * .42);
+      return x => {
+        paint(x, bp, main, cx, cy, Math.max(rx, ry));
+        x.save(); x.beginPath(); bp(x); x.clip();
+        x.fillStyle = rgba(adj(main, .16), .5); x.fillRect(cx - rx, cy - ry, rx * .55, ry * 2);
+        x.fillStyle = rgba(adj(main, -.16), .35); x.fillRect(cx + rx * .55, cy - ry, rx * .5, ry * 2);
+        if (belly) paint(x, p => p.roundRect(cx - rx * .5, cy - ry * .35, rx, ry * 1.1, rx * .3), belly, cx, cy + ry * .2, rx * .6, { line: rgba(lineOf(main), .5), lw: 1.1 });
+        x.restore();
+        stroke(x, p => { p.moveTo(cx - rx * .7, cy - ry * .7); p.lineTo(cx - rx * .55, cy - ry * .4); p.lineTo(cx - rx * .7, cy - ry * .15); }, lineOf(main), LW * .8);
+        // glowing rune in the accent colour
+        stroke(x, p => { p.moveTo(cx + rx * .62, cy - ry * .55); p.lineTo(cx + rx * .62, cy - ry * .05); p.moveTo(cx + rx * .48, cy - ry * .32); p.lineTo(cx + rx * .76, cy - ry * .32); }, rgba(adj(acc, .2), .9), 2.2);
+        shine(x, cx - rx * .55, cy - ry * .55, rx * .22, ry * .2, .55);
+      };
+    }
+    if (t === 'shroom') {
+      const capY = cy - ry * .3, CR = rx * 1.6 * (st >= 3 ? 1.08 : 1), capH = ry * 1.25 * (st >= 2 ? 1.08 : 1);
+      const cap = p => { p.moveTo(cx - CR, capY); p.bezierCurveTo(cx - CR * 1.02, capY - capH * 1.33, cx + CR * 1.02, capY - capH * 1.33, cx + CR, capY); p.quadraticCurveTo(cx + CR * .55, capY + 9 * k, cx, capY + 6 * k); p.quadraticCurveTo(cx - CR * .55, capY + 9 * k, cx - CR, capY); p.closePath(); };
+      B.cap = { cx, cy: capY - capH * .5, rx: CR, ry: capH * .75, top: capY - capH, path: cap };
+      const capFn = x => {
+        paint(x, cap, main, cx, capY - capH * .5, CR, { hi: .2 });
+        x.save(); x.beginPath(); cap(x); x.clip();
+        if (c.mushroomSpots) { const sc = c.spots || '#fff6e8'; for (const [u, v, r] of [[-.62, -.35, .2], [0, -.75, .24], [.6, -.4, .18], [-.25, -.15, .12], [.3, -.05, .11], [-.9, .02, .1], [.88, .0, .1]]) E(x, cx + u * CR, capY + v * capH, r * CR * .9, r * CR * .78, sc, { line: false, hi: .05 }); }
+        E(x, cx, capY + 7 * k, CR * .9, 4.5 * k, adj(belly2, -.06), { line: false, flat: true });
+        x.restore();
+        x.beginPath(); cap(x); x.lineWidth = LW; x.strokeStyle = lineOf(main); x.stroke();
+        shine(x, cx - CR * .45, capY - capH * .6, CR * .2, capH * .16, .75);
+      };
+      add(2.5, 2.5, capFn);
+      return x => { paint(x, p => { p.moveTo(cx - rx * .78, capY); p.bezierCurveTo(cx - rx * 1.1, cy + ry * .2, cx - rx * 1.05, cy + ry, cx, cy + ry); p.bezierCurveTo(cx + rx * 1.05, cy + ry, cx + rx * 1.1, cy + ry * .2, cx + rx * .78, capY); p.closePath(); }, skin === main ? belly2 : skin, cx, cy + ry * .2, rx); shine(x, cx - rx * .5, cy + ry * .05, rx * .2, ry * .2, .5); };
+    }
+    if (t === 'crystal') {
+      const pts = [[cx, cy - ry * 1.08], [cx + rx * .95, cy - ry * .45], [cx + rx * .88, cy + ry * .6], [cx + rx * .4, cy + ry], [cx - rx * .4, cy + ry], [cx - rx * .88, cy + ry * .6], [cx - rx * .95, cy - ry * .45]];
+      headPath = polyP(pts);
+      add(-.4, 3.3, x => { for (const [s, a, l] of [[-1, -2.3, 15], [1, -.75, 18], [1, -.35, 11]]) { const bx = cx + s * rx * .7, by = cy - ry * .2; cone(x, bx, by, l * k, 8 * k, a, adj(main, .12), 0, { hi: .3 }); } });
+      return x => {
+        paint(x, polyP(pts), main, cx, cy, Math.max(rx, ry), { hi: .22 });
+        x.save(); x.beginPath(); polyP(pts)(x); x.clip();
+        x.fillStyle = rgba('#ffffff', .28); x.beginPath(); x.moveTo(cx, cy - ry * 1.08); x.lineTo(cx - rx * .95, cy - ry * .45); x.lineTo(cx - rx * .88, cy + ry * .6); x.lineTo(cx - rx * .45, cy + ry * .1); x.closePath(); x.fill();
+        x.fillStyle = rgba(adj(main, -.2), .3); x.beginPath(); x.moveTo(cx, cy - ry * 1.08); x.lineTo(cx + rx * .95, cy - ry * .45); x.lineTo(cx + rx * .88, cy + ry * .6); x.lineTo(cx + rx * .45, cy + ry * .1); x.closePath(); x.fill();
+        if (belly) E(x, cx, cy + ry * .62, rx * .5, ry * .3, belly, { line: false, lo: .04 });
+        x.restore();
+        stroke(x, polyP([[cx - rx * .45, cy + ry * .1], [cx, cy - ry * 1.08], [cx + rx * .45, cy + ry * .1]]), rgba('#ffffff', .4), 1.1);
+        shine(x, cx - rx * .5, cy - ry * .45, rx * .16, ry * .2, .8); sparkle(x, cx + rx * .5, cy - ry * .55, 2.8 * k, '#ffffff');
+      };
+    }
+    if (t === 'blob') {
+      const by = cy + ry;
+      const bp = p => { p.moveTo(cx - rx, by); p.bezierCurveTo(cx - rx * 1.12, cy - ry * .2, cx - rx * .7, cy - ry * 1.15, cx, cy - ry * 1.1); p.bezierCurveTo(cx + rx * .7, cy - ry * 1.15, cx + rx * 1.12, cy - ry * .2, cx + rx, by); p.quadraticCurveTo(cx + rx * .5, by + 2.5, cx, by); p.quadraticCurveTo(cx - rx * .5, by + 2.5, cx - rx, by); p.closePath(); };
+      headPath = bp;
+      return x => {
+        E(x, cx, by - 1, rx * 1.12, 4 * k, adj(main, -.06), { lo: .05 });
+        paint(x, bp, main, cx, cy, Math.max(rx, ry), { hi: .2 });
+        for (const [u, v, r] of [[-.82, .3, 3.2], [.86, .45, 2.6], [.5, .82, 2.2]]) { paint(x, p => { const px = cx + u * rx, py = cy + v * ry; p.moveTo(px - r, py); p.quadraticCurveTo(px - r, py + r * 2.4, px, py + r * 2.6); p.quadraticCurveTo(px + r, py + r * 2.4, px + r, py); p.closePath(); }, main, cx + u * rx, cy + v * ry, r * 2, { lw: 1.1 }); }
+        x.save(); x.beginPath(); bp(x); x.clip();
+        if (belly) E(x, cx, by, rx * .7, ry * .45, belly, { line: false, lo: .03 });
+        for (const [u, v, r] of [[.45, -.2, 2.4], [.62, .2, 1.6], [-.55, .45, 1.8]]) E(x, cx + u * rx, cy + v * ry, r * k, r * k, adj(main, .2), { line: rgba('#ffffff', .4), lw: .7, flat: true });
+        x.restore();
+        shine(x, cx - rx * .45, cy - ry * .6, rx * .28, ry * .25, .85); shine(x, cx - rx * .12, cy - ry * .9, rx * .08, ry * .07, .8);
+      };
+    }
+    if (t === 'bird') {
+      headPath = ellP(cx, cy, rx, ry);
+      return x => {
+        E(x, cx, cy, rx, ry, main);
+        x.save(); x.beginPath(); ellP(cx, cy, rx, ry)(x); x.clip();
+        if (belly) E(x, cx, cy + ry * .55, rx * .66, ry * .55, belly, { line: false, lo: .04 });
+        for (const s of [-1, 1]) leaf(x, cx + s * rx * .1, cy - ry * 1.02, 8 * k, 2.6, -Math.PI / 2 + s * .9, adj(main, .1));
+        x.restore();
+        x.beginPath(); ellP(cx, cy, rx, ry)(x); x.lineWidth = LW; x.strokeStyle = lineOf(main); x.stroke();
+        shine(x, cx - rx * .42, cy - ry * .5, rx * .28, ry * .25, .65);
+      };
+    }
+    if (t === 'cloud') {
+      const cp = fluffPath(cx, cy, rx, ry, 12, 4.2 * k);
+      headPath = cp;
+      add(-.3, -.3, x => { for (const s of [-1, 1]) { paint(x, fluffPath(cx + s * rx * .95, cy + ry * .55, 10 * k, 7 * k, 7, 2.4), adj(main, -.04), cx + s * rx, cy + ry * .5, 10 * k, { hi: .08 }); } });
+      return x => {
+        paint(x, cp, main, cx, cy, Math.max(rx, ry), { hi: .1, lo: .12 });
+        x.save(); x.beginPath(); cp(x); x.clip(); E(x, cx, cy + ry * 1.05, rx * 1.1, ry * .55, adj(belly2, -.04), { line: false, flat: true }); x.restore();
+        shine(x, cx - rx * .4, cy - ry * .55, rx * .28, ry * .28, .7);
+      };
+    }
+    if (t === 'serpent') {
+      const cl = B.coil, hh = head;
+      const coils = back => x => {
+        // tail tip peeking out of the lower coil
+        if (!tailStyle || tailStyle === 'none') tube(x, bezPts([cl.cx + cl.rx * (back ? -.7 : .7), cl.cy + 2], [cl.cx + cl.rx * (back ? -1.15 : 1.15), cl.cy + 4], [cl.cx + cl.rx * (back ? -1.3 : 1.3), cl.cy - 6 * k], [cl.cx + cl.rx * (back ? -1.12 : 1.12), cl.cy - 12 * k]), 9 * k, 2, adj(main, -.04));
+        E(x, cl.cx, cl.cy, cl.rx, cl.ry, adj(main, -.05));
+        stroke(x, p => p.ellipse(cl.cx, cl.cy - cl.ry * .3, cl.rx * .7, cl.ry * .45, 0, Math.PI * 1.1, Math.PI * 1.9), rgba(lineOf(main), .6), 1.2);
+        if (!back && belly) { x.save(); x.beginPath(); ellP(cl.cx, cl.cy, cl.rx, cl.ry)(x); x.clip(); E(x, cl.cx, cl.cy + cl.ry * .9, cl.rx * .8, cl.ry * .5, belly, { line: false }); x.restore(); }
+        const nk = bezPts([50, body.cy], [50 + 5 * k, body.cy - 8 * k], [50 - 4 * k, hh.cy + hh.ry * .6], [50, hh.cy]);
+        tube(x, nk, 15 * k, 13 * k, main);
+        if (!back && belly) tube(x, nk.slice(0, 16), 8 * k, 7 * k, belly, { line: false, lo: .05 });
+        E(x, body.cx, body.cy, body.rx, body.ry, main);
+        stroke(x, p => p.ellipse(body.cx, body.cy - body.ry * .3, body.rx * .65, body.ry * .45, 0, Math.PI * 1.1, Math.PI * 1.9), rgba(lineOf(main), .6), 1.2);
+        if (!back && belly) { x.save(); x.beginPath(); ellP(body.cx, body.cy, body.rx, body.ry)(x); x.clip(); E(x, body.cx, body.cy + body.ry * .9, body.rx * .7, body.ry * .5, belly, { line: false }); x.restore(); }
+        shine(x, cl.cx - cl.rx * .5, cl.cy - cl.ry * .4, cl.rx * .18, cl.ry * .2, .5); shine(x, body.cx - body.rx * .5, body.cy - body.ry * .4, body.rx * .18, body.ry * .22, .55);
+      };
+      add(0, 0, null); parts[parts.length - 1].fn = coils(false); parts[parts.length - 1].fnb = coils(true);
+      return null;
+    }
+    if (t === 'shell') {
+      const R0 = 24 * k, scx = cx + 9 * k, scy = head.cy - 8 * k;
+      const shellFn = x => {
+        E(x, scx, scy, R0, R0 * .96, acc, { hi: .2 });
+        const sp = spiralPts(scx + 1, scy + 1, R0 * .82, 1.5, Math.PI * .1, 2.1, -1);
+        stroke(x, p => sp.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])), lineOf(acc), 3.2);
+        stroke(x, p => sp.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])), adj(acc, .2), 1.4);
+        shine(x, scx - R0 * .45, scy - R0 * .5, R0 * .22, R0 * .18, .7);
+      };
+      add(-.5, 2.6, shellFn);
+      return x => {
+        paint(x, p => { p.moveTo(cx - rx, cy + ry * .6); p.bezierCurveTo(cx - rx * 1.05, cy - ry * 1.1, cx + rx * .6, cy - ry * 1.3, cx + rx * 1.05, cy + ry * .1); p.quadraticCurveTo(cx + rx * .9, cy + ry, cx, cy + ry); p.quadraticCurveTo(cx - rx * .8, cy + ry, cx - rx, cy + ry * .6); p.closePath(); }, adj(main, -.04), cx, cy, rx);
+        if (belly) E(x, cx, cy + ry * .55, rx * .8, ry * .35, belly, { line: false, flat: true });
+        shine(x, cx - rx * .55, cy - ry * .2, rx * .15, ry * .3, .5);
+      };
+    }
+    if (t === 'flower') {
+      if (!B.f('arms')) add(-.1, -.1, x => { for (const s of [-1, 1]) leaf(x, cx + s * rx * .7, cy + ry * .1, 15 * k, 6 * k, Math.PI / 2 + s * -1.15, leafG); });
+      return x => { E(x, cx, cy, rx, ry, main); if (belly) { x.save(); x.beginPath(); ellP(cx, cy, rx, ry)(x); x.clip(); E(x, cx, cy + ry * .5, rx * .7, ry * .6, belly, { line: false }); x.restore(); } shine(x, cx - rx * .42, cy - ry * .45, rx * .3, ry * .3, .6); };
+    }
+    // dragon (and anything else): rounded body with belly scales
+    return x => {
+      E(x, cx, cy, rx, ry, main);
+      if (belly) { x.save(); x.beginPath(); ellP(cx, cy + ry * .22, rx * .62, ry * .7)(x); x.clip(); E(x, cx, cy + ry * .22, rx * .62, ry * .7, belly, { lo: .06, line: false }); for (let i = 0; i < 4; i++) stroke(x, p => { const yy = cy - ry * .25 + i * ry * .3; p.moveTo(cx - rx * .6, yy); p.quadraticCurveTo(cx, yy + 3, cx + rx * .6, yy); }, rgba(lineOf(belly), .45), 1); x.restore(); E(x, cx, cy + ry * .22, rx * .62, ry * .7, 'rgba(0,0,0,0)', { flat: true, line: rgba(lineOf(main), .5), lw: 1.1 }); }
+      shine(x, cx - rx * .42, cy - ry * .45, rx * .3, ry * .3, .6);
+    };
   }
 
   // Ground contact: legs or little feet ------------------------------------------
@@ -276,11 +581,20 @@ function buildParts(sp) {
         const [sx, sy, r] = segs[i];
         E(x, sx - 4, sy + r * .85, 3.5, 2.6, adj(main, -.15));
         E(x, sx, sy, r, r * .95, main); shine(x, sx - r * .4, sy - r * .45, r * .3, r * .26, .55);
-        E(x, sx + r * .1, sy - r * .15, r * .28, r * .26, c.spots, { line: false });
+        E(x, sx + r * .1, sy - r * .15, r * .28, r * .26, c.spots || acc, { line: false });
       }
       E(x, 40, 88, 4, 3, adj(main, -.15)); E(x, 52, 89, 4, 3, adj(main, -.15));
     });
     bodyFn = null;
+  } else if (B.legs && nb === 'golem') {
+    add(-1, -1, x => {
+      for (const s of [-1, 1]) {
+        const lx = body.cx + s * body.rx * .52, w = 8 * B.k, col = adj(main, -.08);
+        paint(x, p => p.roundRect(lx - w, body.cy + body.ry * .4, 2 * w, 91 - body.cy - body.ry * .4, [3, 3, 4, 4]), col, lx, 84, w * 1.4);
+        E(x, lx, 89.5, w * 1.15, 3.2, adj(main, -.14), { lo: .08 });
+        shine(x, lx - w * .45, body.cy + body.ry * .7, w * .25, 3, .4);
+      }
+    });
   } else if (B.legs) {
     const d = (B.form === 'wide' ? body.rx * .56 : body.rx * .5);
     add(-1, -1, x => {
@@ -305,9 +619,9 @@ function buildParts(sp) {
   // Body ---------------------------------------------------------------------------
   if (c.body === 'wisp') bodyFn = null;
   if (bodyFn) add(0, 0, bodyFn);
-  if (belly && !B.merged && bodyFn && c.body !== 'rock')
+  if (belly && !B.merged && bodyFn && c.body !== 'rock' && !nb)
     add(.5, null, x => { E(x, body.cx, body.cy + body.ry * .22, body.rx * .6, body.ry * .66, belly, { lo: .06, line: rgba(lineOf(main), .5), lw: 1.1 }); });
-  if (belly && B.merged && c.body !== 'rock' && c.body !== 'drop')
+  if (belly && B.merged && c.body !== 'rock' && c.body !== 'drop' && !nb)
     add(.5, null, x => { E(x, body.cx, body.cy + body.ry * .5, body.rx * .55, body.ry * .4, belly, { lo: .05, line: false }); });
   if (belly && c.body === 'drop') add(.5, null, x => E(x, body.cx, body.cy + body.ry * .52, body.rx * .5, body.ry * .36, belly, { lo: .04, line: false }));
   if (c.stripes) add(.4, .4, x => { x.save(); x.beginPath(); ellP(body.cx, body.cy, body.rx, body.ry)(x); x.clip(); for (const s of [-1, 1]) for (let i = 0; i < 3; i++) { x.fillStyle = acc; x.beginPath(); x.ellipse(body.cx + s * body.rx * 1.02, body.cy - body.ry * .45 + i * body.ry * .42, body.rx * .32, 2.2, 0, 0, TAU); x.fill(); } x.restore(); });
@@ -356,7 +670,7 @@ function buildParts(sp) {
   }
 
   // Arms -------------------------------------------------------------------------------
-  if (f('arms') && c.body !== 'beetle') {
+  if ((f('arms') || nb === 'golem') && c.body !== 'beetle' && nb !== 'fish' && nb !== 'jelly' && nb !== 'shell') {
     const armFn = x => {
       for (const s of [-1, 1]) {
         const ax = body.cx + s * body.rx * .9, ay = body.cy - body.ry * .15;
@@ -371,13 +685,16 @@ function buildParts(sp) {
     };
     add(1, 1, armFn);
   }
-  if (c.ruff) add(1.6, 1.6, x => paint(x, fluffPath(50, body.cy - body.ry * .72, body.rx * 1.02, 7, 10, 2.6), c.belly, 50, body.cy - body.ry * .8, body.rx, { hi: .05, lo: .1 }));
-  if (c.collar) add(1.6, 1.6, x => paint(x, fluffPath(50, head.cy + head.ry * .82, head.rx * .85, 7, 11, 2.8), c.belly, 50, head.cy + head.ry * .8, head.rx, { hi: .04, lo: .12 }));
+  if (c.ruff) add(1.6, 1.6, x => paint(x, fluffPath(50, body.cy - body.ry * .72, body.rx * 1.02, 7, 10, 2.6), belly2, 50, body.cy - body.ry * .8, body.rx, { hi: .05, lo: .1 }));
+  if (c.collar) add(1.6, 1.6, x => paint(x, fluffPath(50, head.cy + head.ry * .82, head.rx * .85, 7, 11, 2.8), belly2, 50, head.cy + head.ry * .8, head.rx, { hi: .04, lo: .12 }));
   if (c.thorns) add(1.6, 1.6, x => { const y0 = body.cy - body.ry * .75; stroke(x, p => { p.moveTo(50 - body.rx, y0 + 2); p.quadraticCurveTo(50, y0 + 8, 50 + body.rx, y0 + 2); }, lineOf('#2f8a3a'), 6); stroke(x, p => { p.moveTo(50 - body.rx, y0 + 2); p.quadraticCurveTo(50, y0 + 8, 50 + body.rx, y0 + 2); }, '#3e9a44', 4); for (let i = -2; i <= 2; i++) cone(x, 50 + i * body.rx * .42, y0 + 4.5 - Math.abs(i) * .8 + 1.5, 5, 3.2, Math.PI / 2 + i * .2, '#e8f0a0', 0, { lw: 1 }); });
 
   // Tail -------------------------------------------------------------------------------
   const tailStyle = c.tail || (f('tail') ? 'lizard' : f('bolt') ? 'bolt' : null);
   const tb = B.merged ? { x: body.cx + body.rx * .8, y: body.cy + body.ry * .45 } : { x: body.cx + body.rx * .75, y: body.cy + body.ry * .4 };
+  if (nb === 'fish') { tb.x = body.cx + body.rx * .86; tb.y = body.cy + body.ry * .08; }
+  else if (nb === 'serpent') { tb.x = 50 + B.coil.rx * .82; tb.y = B.coil.cy + 1; }
+  else if (nb === 'shell') { tb.x = body.cx + body.rx * .8; tb.y = body.cy; }
   const tailFn = back => x => {
     const fl = back ? -1 : 1, bx = 50 + (tb.x - 50) * fl, sc = st >= 3 ? 1.25 : st === 2 ? 1.1 : 1;
     if (tailStyle === 'lizard') {
@@ -389,7 +706,7 @@ function buildParts(sp) {
       x.save(); x.translate(tx, ty); x.rotate(fl * .55);
       const tp = fluffPath(0, 0, 9.5 * big, 17 * big, 12, 2.4);
       paint(x, tp, main, 0, 0, 17 * big);
-      x.save(); x.beginPath(); tp(x); x.clip(); E(x, 0, -15 * big, 13 * big, 8.5 * big, c.belly, { line: false }); x.restore();
+      x.save(); x.beginPath(); tp(x); x.clip(); E(x, 0, -15 * big, 13 * big, 8.5 * big, belly2, { line: false }); x.restore();
       x.beginPath(); tp(x); x.lineWidth = LW; x.strokeStyle = lineOf(main); x.stroke();
       shine(x, -3, -4, 3 * big, 6 * big, .45); x.restore();
     } else if (tailStyle === 'bolt') {
@@ -401,12 +718,42 @@ function buildParts(sp) {
       for (let i = 0; i < 4; i++) { const a = -.3 - i * .45; px += fl * Math.cos(a) * 7; py += Math.sin(a) * 7; E(x, px, py, 5 - i * .4, 5 - i * .4, i % 2 ? acc : main); }
       cone(x, px + fl * 1, py - 3, 10, 6, -Math.PI / 2 - fl * .5, acc, 0); E(x, px + fl * 3, py - 12, 1.6, 2.2, '#d8f070', { line: false });
     } else if (tailStyle === 'puff') {
-      paint(x, fluffPath(bx + fl * 6, tb.y - 3, 7, 7, 8, 2), c.belly, bx + fl * 6, tb.y - 3, 8);
+      paint(x, fluffPath(bx + fl * 6, tb.y - 3, 7, 7, 8, 2), belly2, bx + fl * 6, tb.y - 3, 8);
     } else if (tailStyle === 'spade') {
       const ex = bx + fl * 22, ey = tb.y - 26;
       stroke(x, p => { p.moveTo(bx - fl * 4, tb.y + 2); p.bezierCurveTo(bx + fl * 24, tb.y + 8, bx + fl * 8, tb.y - 22, ex, ey); }, lineOf(main), 5.2);
       stroke(x, p => { p.moveTo(bx - fl * 4, tb.y + 2); p.bezierCurveTo(bx + fl * 24, tb.y + 8, bx + fl * 8, tb.y - 22, ex, ey); }, main, 3.2);
       paint(x, p => { p.moveTo(ex, ey - 9); p.bezierCurveTo(ex + 9, ey - 2, ex + 7, ey + 5, ex + 1.5, ey + 3); p.lineTo(ex + 2.5, ey + 7); p.lineTo(ex - 2.5, ey + 7); p.lineTo(ex - 1.5, ey + 3); p.bezierCurveTo(ex - 7, ey + 5, ex - 9, ey - 2, ex, ey - 9); p.closePath(); }, '#ffd24a', ex, ey, 8);
+    }
+    else if (tailStyle === 'fish') {
+      const L = 19 * sc, ty = tb.y;
+      paint(x, p => { p.moveTo(bx - fl * 3, ty - 5 * sc); p.quadraticCurveTo(bx + fl * L * .55, ty - 3, bx + fl * L, ty - L * .8); p.quadraticCurveTo(bx + fl * L * .62, ty, bx + fl * L * 1.02, ty + L * .62); p.quadraticCurveTo(bx + fl * L * .5, ty + 4, bx - fl * 3, ty + 5 * sc); p.closePath(); }, acc, bx + fl * L * .5, ty, L * .6);
+      for (const v of [-.45, 0, .38]) stroke(x, p => { p.moveTo(bx + fl * 3, ty + v * 3); p.lineTo(bx + fl * L * .78, ty + v * L * .8); }, rgba('#ffffff', .42), 1.1);
+    } else if (tailStyle === 'ringed') {
+      const pts = bezPts([bx - fl * 3, tb.y], [bx + fl * 22 * sc, tb.y + 6], [bx + fl * 28 * sc, tb.y - 16 * sc], [bx + fl * 15 * sc, tb.y - 30 * sc]);
+      tube(x, pts, 11 * sc, 6 * sc, main);
+      x.save(); x.beginPath(); tubeP(pts, 11 * sc, 6 * sc)(x); x.clip();
+      for (const i of [5, 9, 13, 17, 20]) { const a = pts[i - 1], b = pts[i + 1 > 20 ? 20 : i + 1], q = pts[i], dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 1; stroke(x, p => { p.moveTo(q[0] - dy / d * 9, q[1] + dx / d * 9); p.lineTo(q[0] + dy / d * 9, q[1] - dx / d * 9); }, acc, 3.4 * sc); }
+      x.restore();
+      x.beginPath(); tubeP(pts, 11 * sc, 6 * sc)(x); x.lineWidth = LW; x.strokeStyle = lineOf(main); x.stroke();
+    } else if (tailStyle === 'leaf') {
+      const ex = bx + fl * 14 * sc, ey = tb.y - 12 * sc;
+      stroke(x, p => { p.moveTo(bx - fl * 2, tb.y + 2); p.quadraticCurveTo(bx + fl * 13 * sc, tb.y + 2, ex, ey); }, lineOf('#4aa83a'), 4.2); stroke(x, p => { p.moveTo(bx - fl * 2, tb.y + 2); p.quadraticCurveTo(bx + fl * 13 * sc, tb.y + 2, ex, ey); }, '#58b844', 2.4);
+      leaf(x, ex, ey, 20 * sc, 8 * sc, back ? -Math.PI / 2 - .7 : -Math.PI / 2 + .7, leafG);
+      if (st >= 2) leaf(x, bx + fl * 8 * sc, tb.y - 1, 11 * sc, 4.5 * sc, back ? Math.PI + .3 : -.3, adj(leafG, -.06));
+    } else if (tailStyle === 'curl') {
+      const cxs = bx + fl * 13 * sc, cys = tb.y - 10 * sc;
+      const sp2 = spiralPts(cxs, cys, 11 * sc, 3.5 * sc, fl > 0 ? Math.PI * .75 : Math.PI * .25, 1.1, fl > 0 ? -1 : 1, 30);
+      tube(x, [[bx - fl * 3, tb.y + 1]].concat(sp2), 8 * sc, 4 * sc, main);
+    } else if (tailStyle === 'club') {
+      const ex = bx + fl * 24 * sc, ey = tb.y - 9 * sc;
+      tube(x, bezPts([bx - fl * 3, tb.y], [bx + fl * 12 * sc, tb.y + 5], [bx + fl * 18 * sc, ey + 2], [ex, ey]), 10 * sc, 5 * sc, adj(main, -.03));
+      for (let i = 0; i < 6; i++) { const a = i * TAU / 6 + .3; cone(x, ex + Math.cos(a) * 6 * sc, ey + Math.sin(a) * 6 * sc, 5 * sc, 4.4 * sc, a, adj(acc, .2), 0, { lw: 1.1 }); }
+      E(x, ex, ey, 8 * sc, 7.2 * sc, acc, { hi: .2 }); shine(x, ex - 3 * sc, ey - 3 * sc, 2.4 * sc, 1.8 * sc, .6);
+    } else if (tailStyle === 'flame') {
+      const fc = c.flameCol;
+      stroke(x, p => { p.moveTo(bx - fl * 3, tb.y + 2); p.quadraticCurveTo(bx + fl * 10 * sc, tb.y + 3, bx + fl * 12 * sc, tb.y - 4); }, lineOf(main), 6.4); stroke(x, p => { p.moveTo(bx - fl * 3, tb.y + 2); p.quadraticCurveTo(bx + fl * 10 * sc, tb.y + 3, bx + fl * 12 * sc, tb.y - 4); }, main, 4.2);
+      flame(x, bx + fl * 13 * sc, tb.y - 1, 13 * sc, 25 * sc, fl * 6, fc ? { cols: [adj(fc, -.1), fc, adj(fc, .3)] } : {});
     }
     if (c.stubTail) paint(x, p => { p.moveTo(bx - fl * 2, tb.y - 4); p.quadraticCurveTo(bx + fl * 12, tb.y, bx + fl * 15, tb.y - 8); p.quadraticCurveTo(bx + fl * 11, tb.y + 6, bx - fl * 2, tb.y + 5); p.closePath(); }, adj(main, -.04), bx + fl * 6, tb.y, 9);
   };
@@ -426,18 +773,46 @@ function buildParts(sp) {
           const wx = 50 + s * body.rx * .6, wy = body.cy - body.ry * .6;
           paint(x, p => { p.moveTo(wx, wy + 6); p.quadraticCurveTo(wx + s * 18, wy - 30, wx + s * 44, wy - 22); p.quadraticCurveTo(wx + s * 40, wy - 12, wx + s * 44, wy - 6); p.quadraticCurveTo(wx + s * 36, wy - 2, wx + s * 38, wy + 6); p.quadraticCurveTo(wx + s * 28, wy + 6, wx + s * 28, wy + 14); p.quadraticCurveTo(wx + s * 14, wy + 12, wx, wy + 16); p.closePath(); }, adj(main, back ? .02 : -.04), wx + s * 18, wy - 6, 26);
           stroke(x, p => { p.moveTo(wx + s * 4, wy + 8); p.quadraticCurveTo(wx + s * 20, wy - 16, wx + s * 40, wy - 18); }, rgba(adj(main, .3), .8), 2);
-          E(x, wx + s * 26, wy + 8, 6, 3, c.acc, { rot: s * -.3, line: rgba(lineOf(main), .8), lw: 1.1 });
+          E(x, wx + s * 26, wy + 8, 6, 3, c.acc || acc, { rot: s * -.3, line: rgba(lineOf(main), .8), lw: 1.1 });
         } else if (wingStyle === 'moth') {
           const wx = 50, wy = head.cy + head.ry * .7;
           E(x, wx + s * 26, wy - 16, 22, 19, main, { rot: s * .35 });
           E(x, wx + s * 22, wy + 14, 14, 12, adj(main, -.05), { rot: s * -.3 });
-          E(x, wx + s * 30, wy - 20, 8, 7, c.acc, { line: rgba(lineOf(c.acc), .9) }); E(x, wx + s * 30, wy - 20, 4, 3.6, back ? '#fff6c0' : '#3a2a4a', { line: false });
+          E(x, wx + s * 30, wy - 20, 8, 7, c.acc || acc, { line: rgba(lineOf(c.acc || acc), .9) }); E(x, wx + s * 30, wy - 20, 4, 3.6, back ? '#fff6c0' : '#3a2a4a', { line: false });
           E(x, wx + s * 24, wy + 16, 4.5, 4, '#f4ead0', { line: false });
           shine(x, wx + s * 20 - 6, wy - 26, 6, 4, .35);
         } else if (wingStyle === 'bat') {
           const wx = 50 + s * body.rx * .5, wy = body.cy - body.ry * .9;
           paint(x, p => { p.moveTo(wx, wy); p.quadraticCurveTo(wx + s * 18, wy - 24, wx + s * 38, wy - 18); p.quadraticCurveTo(wx + s * 34, wy - 8, wx + s * 37, wy + 2); p.quadraticCurveTo(wx + s * 28, wy - 2, wx + s * 26, wy + 8); p.quadraticCurveTo(wx + s * 18, wy + 2, wx + s * 13, wy + 12); p.quadraticCurveTo(wx + s * 8, wy + 6, wx, wy + 12); p.closePath(); }, s < 0 ? '#5a2f9a' : '#c23a86', wx + s * 16, wy - 4, 22, { hi: .12 });
           stroke(x, p => { p.moveTo(wx + s * 2, wy + 2); p.quadraticCurveTo(wx + s * 18, wy - 18, wx + s * 36, wy - 16); }, rgba('#ffffff', .35), 1.6);
+        } else if (wingStyle === 'fairy') {
+          const wx = 50 + s * body.rx * .45, wy = body.cy - body.ry * .55, k = SC, wc = c.wingCol || adj(acc, .3, .8);
+          x.globalAlpha = .82;
+          E(x, wx + s * 15 * k, wy - 12 * k, 15 * k, 10 * k, wc, { rot: s * -.55, hi: .25, line: rgba(lineOf(wc), .8), lw: 1.2 });
+          E(x, wx + s * 12 * k, wy + 7 * k, 10 * k, 6.5 * k, adj(wc, .05), { rot: s * .5, hi: .25, line: rgba(lineOf(wc), .8), lw: 1.2 });
+          x.globalAlpha = 1;
+          stroke(x, p => { p.moveTo(wx, wy); p.quadraticCurveTo(wx + s * 12 * k, wy - 8 * k, wx + s * 25 * k, wy - 17 * k); p.moveTo(wx, wy + 1); p.quadraticCurveTo(wx + s * 9 * k, wy + 5 * k, wx + s * 18 * k, wy + 9 * k); }, rgba('#ffffff', .65), 1.1);
+          sparkle(x, wx + s * 20 * k, wy - 15 * k, 2.6 * k, '#ffffff');
+        } else if (wingStyle === 'dragon') {
+          const wx = 50 + s * body.rx * .55, wy = body.cy - body.ry * .8, k = SC, mc = c.wingCol || adj(main, -.1), tips = [[40, -26], [44, -6], [34, 8], [22, 14]];
+          paint(x, p => { p.moveTo(wx, wy + 4); p.quadraticCurveTo(wx + s * 14 * k, wy - 30 * k, wx + s * 40 * k, wy - 26 * k); for (let i = 1; i < tips.length; i++) { const [u0, v0] = tips[i - 1], [u1, v1] = tips[i]; p.quadraticCurveTo(wx + s * (u0 + u1) / 2 * k * .82, wy + (v0 + v1) / 2 * k * .7, wx + s * u1 * k, wy + v1 * k); } p.quadraticCurveTo(wx + s * 10 * k, wy + 10 * k, wx, wy + 12); p.closePath(); }, mc, wx + s * 20 * k, wy - 6 * k, 26 * k, { hi: .1 });
+          for (const [u, v] of tips) stroke(x, p => { p.moveTo(wx + s * 3, wy + 1); p.quadraticCurveTo(wx + s * u * k * .45, wy + v * k * .2 - 8 * k, wx + s * u * k, wy + v * k); }, lineOf(mc), 2);
+          cone(x, wx + s * 40 * k, wy - 26 * k, 5 * k, 3.4, -Math.PI / 2 + s * .4, '#fff4dc', 0, { lw: 1 });
+        } else if (wingStyle === 'leaf') {
+          const wx = 50 + s * body.rx * .5, wy = body.cy - body.ry * .55, k = SC;
+          leaf(x, wx, wy + 2, 30 * k, 10 * k, s > 0 ? -.7 : Math.PI + .7, adj(leafG, -.04));
+          leaf(x, wx, wy + 5, 22 * k, 7.5 * k, s > 0 ? -.05 : Math.PI + .05, leafG);
+        } else if (wingStyle === 'ice') {
+          const wx = 50 + s * body.rx * .5, wy = body.cy - body.ry * .6, k = SC, ic = c.wingCol || '#bfeeff';
+          x.globalAlpha = .9;
+          for (const [len, ang, w] of [[34, -.75, 11], [27, -.25, 9], [19, .2, 7]]) {
+            const a = s > 0 ? ang : Math.PI - ang, cs = Math.cos(a), sn = Math.sin(a), T = (u, v) => [wx + cs * u * k - sn * v * k, wy + sn * u * k + cs * v * k];
+            const q = [T(0, -w * .3), T(len * .55, -w * .5), T(len, 0), T(len * .55, w * .5), T(0, w * .3)];
+            paint(x, polyP(q), ic, (q[0][0] + q[2][0]) / 2, (q[0][1] + q[2][1]) / 2, len * k * .5, { hi: .3, line: '#7ab8d8', lw: 1.2 });
+            stroke(x, p => { p.moveTo(q[0][0], q[0][1]); p.lineTo(q[2][0], q[2][1]); }, rgba('#ffffff', .7), 1);
+          }
+          x.globalAlpha = 1;
+          sparkle(x, wx + s * 26 * k, wy - 22 * k, 2.8 * k, '#ffffff');
         }
       }
     };
@@ -462,10 +837,18 @@ function buildParts(sp) {
       const h = head;
       if (c.body === 'fluff') paint(x, fluffPath(h.cx, h.cy, h.rx, h.ry, 16, 2.2, 0, TAU), skin, h.cx, h.cy, Math.max(h.rx, h.ry));
       else if (c.body === 'rock') paint(x, smoothPath([[h.cx - h.rx, h.cy + 2], [h.cx - h.rx * .8, h.cy - h.ry * .9], [h.cx + h.rx * .1, h.cy - h.ry * 1.08], [h.cx + h.rx * .95, h.cy - h.ry * .7], [h.cx + h.rx * 1.02, h.cy + h.ry * .5], [h.cx + h.rx * .3, h.cy + h.ry * 1.02], [h.cx - h.rx * .6, h.cy + h.ry * .95]]), skin, h.cx, h.cy, Math.max(h.rx, h.ry));
+      else if (nb === 'golem') { paint(x, headPath, skin, h.cx, h.cy, Math.max(h.rx, h.ry)); x.save(); x.beginPath(); headPath(x); x.clip(); x.fillStyle = rgba(adj(skin, -.16), .3); x.fillRect(h.cx + h.rx * .55, h.cy - h.ry, h.rx, h.ry * 2); x.restore(); }
       else E(x, h.cx, h.cy, h.rx, h.ry, skin);
       shine(x, h.cx - h.rx * .42, h.cy - h.ry * .48, h.rx * .3, h.ry * .26, .7);
     };
+    if (nb === 'golem') headPath = p => p.roundRect(head.cx - head.rx, head.cy - head.ry, head.rx * 2, head.ry * 2, head.rx * .45);
     add(2, 2, headFn);
+    if (nb === 'dragon') {
+      const h = head;
+      add(2.2, null, x => { const sy = h.cy + h.ry * .42; E(x, h.cx, sy, h.rx * .56, h.ry * .4, belly ? belly : adj(skin, .12), { lo: .08 }); for (const s of [-1, 1]) E(x, h.cx + s * h.rx * .17, sy - h.ry * .16, 1.3, 1, lineOf(skin), { flat: true, line: false }); shine(x, h.cx - h.rx * .25, sy - h.ry * .18, h.rx * .12, h.ry * .07, .6); });
+      // back view: a ridge of spines down the head and back
+      add(null, 2.45, x => { for (let i = 0; i < 5; i++) { const y = h.cy - h.ry * .7 + i * (body.cy - h.cy + h.ry * .5) / 4; cone(x, 50, y, 8 * B.k, 7 * B.k, -Math.PI / 2, adj(acc, .05), 0); } });
+    }
   }
   // Joker: two-tone harlequin body and a pale mask face
   if (c.joker) {
@@ -478,7 +861,7 @@ function buildParts(sp) {
   if (earStyle) {
     const earFn = back => x => {
       for (const s of [-1, 1]) {
-        const a = -Math.PI / 2 + s * (earStyle === 'frill' ? 1.05 : earStyle === 'nub' ? .78 : .62);
+        const a = -Math.PI / 2 + s * (EAR_ANG[earStyle] || .62);
         const [bx, by] = onEll(hd, a, .86), out = a + s * (earStyle === 'fox' ? -.05 : 0);
         if (earStyle === 'fox') { cone(x, bx, by, 21 * (st >= 2 ? 1.12 : 1), 17, out, skin, -s * .06); if (!back) { cone(x, bx, by + 1, 14, 9, out, '#ffc4c4', -s * .06, { line: false, hi: .08 }); } cone(x, ...tipOf(bx, by, 21 * (st >= 2 ? 1.12 : 1), out, .72), 6, 6, out, adj(main, -.3), 0, { line: false }); }
         else if (earStyle === 'mouse') { E(x, bx + s * 2, by - 6, 11, 11, skin); if (!back) E(x, bx + s * 2, by - 5, 6.5, 6.5, '#ffb070', { line: false, lo: .05 }); }
@@ -486,10 +869,15 @@ function buildParts(sp) {
         else if (earStyle === 'cat') { cone(x, bx, by, 16, 15, out, skin, -s * .05); if (!back) cone(x, bx, by + 1, 10, 8, out, '#ffd0e4', -s * .05, { line: false }); }
         else if (earStyle === 'frill') { for (let k = 0; k < (st >= 2 ? 3 : 2); k++) cone(x, bx - s * k * 1.5, by + k * 5.5, 10 - k * 1.8, 6.5, a + s * (.2 + k * .25), k ? adj(main, .05) : c.belly || main); }
         else if (earStyle === 'nub') { E(x, bx, by + 2, 5.4, 4.6, adj(main, -.08)); if (!back) E(x, bx, by + 2.4, 2.6, 2.2, '#e8a888', { line: false }); }
+        else if (earStyle === 'bunny') { const L = 27 * SC, ang = out - s * .12, ccx = bx + Math.cos(ang) * L * .45, ccy = by + Math.sin(ang) * L * .45; E(x, ccx, ccy, L * .55, 6.8 * SC, skin, { rot: ang }); if (!back) E(x, ccx + Math.cos(ang) * 1.5, ccy + Math.sin(ang) * 1.5, L * .4, 3.6 * SC, '#ffc4d6', { rot: ang, line: false, hi: .08 }); }
+        else if (earStyle === 'bear') { const r = 8.5 * (st >= 2 ? 1.1 : 1); E(x, bx, by, r, r * .94, skin); if (!back) E(x, bx + s * .5, by + .5, r * .55, r * .5, c.belly || '#f4c0b0', { line: false, lo: .05 }); }
+        else if (earStyle === 'fin') { const fc = c.finCol || acc, ang = a + s * .45, cs = Math.cos(ang), sn = Math.sin(ang), T = (u, v) => [bx + cs * u - sn * v, by + sn * u + cs * v], L = 18 * SC; paint(x, p => { const q0 = T(0, -6), q1 = T(L, -s * 9), q2 = T(L * .8, 0), q3 = T(L * .95, s * 6), q4 = T(0, 6); p.moveTo(q0[0], q0[1]); p.quadraticCurveTo(T(L * .5, -s * 8)[0], T(L * .5, -s * 8)[1], q1[0], q1[1]); p.quadraticCurveTo(q2[0], q2[1], q3[0], q3[1]); p.quadraticCurveTo(T(L * .5, s * 6)[0], T(L * .5, s * 6)[1], q4[0], q4[1]); p.closePath(); }, fc, bx, by, L * .6); for (const v of [-4, 0, 3.5]) stroke(x, p => { const u0 = T(2, v * .4), u1 = T(L * .75, v); p.moveTo(u0[0], u0[1]); p.lineTo(u1[0], u1[1]); }, rgba('#ffffff', .45), 1); }
+        else if (earStyle === 'leaf') leaf(x, bx, by + 1, 20 * SC, 7.5 * SC, out, leafG);
+        else if (earStyle === 'droopy') { const L = 22 * SC, ec = c.earCol || adj(skin, -.1); tube(x, bezPts([bx, by], [bx + s * 9 * SC, by - 2], [bx + s * 12 * SC, by + L * .5], [bx + s * 8 * SC, by + L]), 12 * SC, 10 * SC, ec); }
         else { cone(x, bx, by, 16, 12, out, skin); if (!back) cone(x, bx, by + 1, 10, 6, out, adj(main, .22), 0, { line: false }); }
       }
     };
-    parts.push({ z: 1.8, zb: 2.5, fn: earFn(false), fnb: earFn(true) });
+    parts.push({ z: earStyle === 'droopy' ? 2.1 : 1.8, zb: 2.5, fn: earFn(false), fnb: earFn(true) });
   }
   const hornStyle = c.horn || (f('horns') ? 'curl' : null);
   if (hornStyle === 'curl' || hornStyle === 'dark' || hornStyle === 'rock' || hornStyle === 'rhino' || hornStyle === 'crest') {
@@ -518,6 +906,49 @@ function buildParts(sp) {
       paint(x, p => { p.ellipse(50, hy + 2.5, w, 5.5, 0, Math.PI, TAU); p.ellipse(50, hy + 2.5, w, 2.6, 0, 0, Math.PI); }, '#2e1f5a', 50, hy + 2, w);
       for (let i = -2; i <= 2; i++) E(x, 50 + i * w * .4, hy + 1.8, 1.7, 1.7, '#ffd24a', { line: false });
     });
+  }
+  if (hornStyle === 'unicorn' || hornStyle === 'antler' || hornStyle === 'crystal' || hornStyle === 'ram' || hornStyle === 'twin') {
+    const hornFn = back => x => {
+      const hc = c.hornCol;
+      if (hornStyle === 'unicorn') {
+        const [bx, by] = onEll(hd, -Math.PI / 2, .86), L = 22 * SC, col = hc || '#ffe9a8';
+        cone(x, bx, by, L, 8.5 * SC, -Math.PI / 2, col, 0, { hi: .25 });
+        for (let i = 1; i <= 3; i++) { const y = by - L * i * .22, w = 4.2 * SC * (1 - i * .22); stroke(x, p => { p.moveTo(bx - w, y + 1.4); p.quadraticCurveTo(bx, y - .6, bx + w, y - 1.6); }, lineOf(col), 1.1); }
+        if (!back) sparkle(x, bx + 6 * SC, by - L * .85, 2.6, '#ffffff');
+        return;
+      }
+      if (hornStyle === 'crystal') {
+        const col = hc || c.acc || '#b8e8f8';
+        for (const [a, l, w] of [[-.42, 12, 6.5], [0, 19, 8], [.42, 13, 6.5]].concat(st >= 3 ? [[-.8, 9, 5], [.8, 9, 5]] : [])) {
+          const [px, py] = onEll(hd, -Math.PI / 2 + a, .84);
+          cone(x, px, py, l * SC, w * SC, -Math.PI / 2 + a * 1.3, col, 0, { hi: .3 });
+          stroke(x, p => { p.moveTo(px, py); p.lineTo(px + Math.cos(-Math.PI / 2 + a * 1.3) * l * SC * .8, py + Math.sin(-Math.PI / 2 + a * 1.3) * l * SC * .8); }, rgba('#ffffff', .6), 1);
+        }
+        return;
+      }
+      for (const s of [-1, 1]) {
+        if (hornStyle === 'antler') {
+          const [bx, by] = onEll(hd, -Math.PI / 2 + s * .48, .88), col = hc || '#b88a5c', L = 20 * SC;
+          const beam = bezPts([bx, by], [bx + s * 4 * SC, by - L * .5], [bx + s * L * .7, by - L * .8], [bx + s * L * .85, by - L * 1.1], 14);
+          const tines = [[.45, -.5, 9], [.75, -.1, 8]].concat(st >= 2 ? [[.3, .55, 7]] : []).concat(st >= 3 ? [[.92, .5, 6]] : []);
+          const draw = (col2, w) => { stroke(x, p => beam.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])), col2, w); for (const [t, d, l] of tines) { const q = beam[Math.round(t * 14)]; stroke(x, p => { p.moveTo(q[0], q[1]); p.lineTo(q[0] + s * d * l * SC, q[1] - l * SC * .9); }, col2, w * .85); } };
+          draw(lineOf(col), 5.4); draw(col, 3.4);
+          continue;
+        }
+        if (hornStyle === 'ram') {
+          const [bx, by] = onEll(hd, -Math.PI / 2 + s * 1.0, .8), col = hc || '#eadcb4', r = 9 * SC, ccx = bx + s * 6 * SC, ccy = by + 2;
+          const pts = [[bx - s * 2, by - 3]].concat(spiralPts(ccx, ccy, r, 2.8 * SC, s > 0 ? -Math.PI * .85 : -Math.PI * .15, 1.05, s, 26));
+          tube(x, pts, 9 * SC, 4 * SC, col, { hi: .2 });
+          for (let i = 4; i < 22; i += 4) { const q = pts[i]; E(x, q[0], q[1], .9, .9, rgba(lineOf(col), .6), { flat: true, line: false }); }
+          continue;
+        }
+        // twin: two long, slightly swept horns
+        const a = -Math.PI / 2 + s * .32, [bx, by] = onEll(hd, a, .9), col = hc || '#fff0cc';
+        cone(x, bx, by, 21 * SC, 8.5 * SC, a + s * .12, col, -s * .18, { hi: .2 });
+        stroke(x, p => { p.moveTo(bx + Math.cos(a) * 6, by + Math.sin(a) * 6 - 1); p.lineTo(bx + Math.cos(a + s * .1) * 9 - s, by + Math.sin(a + s * .1) * 9 - 1); }, rgba(lineOf(col), .6), 1.1);
+      }
+    };
+    parts.push({ z: 1.7, zb: 2.4, fn: hornFn(false), fnb: hornFn(true) });
   }
   if (c.spikes === 'collar') add(1.7, 1.7, x => { const y0 = hd.cy + hd.ry * .78; for (let i = -4; i <= 4; i++) { const a = Math.PI / 2 + i * .32; cone(x, 50 + i * 3.4, y0, 11, 7.5, a, i & 1 ? '#ffffff' : '#ff4fa6', 0); } });
   else if (f('spikes') && !c.shell && !c.rockBack && !c.thorns && !c.crystals) {
@@ -548,7 +979,7 @@ function buildParts(sp) {
   if (antStyle) add(1.75, 2.4, x => {
     for (const s of [-1, 1]) {
       const [bx, by] = onEll(hd, -Math.PI / 2 + s * .35, .9), tx = bx + s * 10, ty = by - 18;
-      if (antStyle === 'feather') { stroke(x, p => { p.moveTo(bx, by); p.quadraticCurveTo(bx + s * 2, ty + 6, tx, ty); }, lineOf(main), 2.2); for (let k = 1; k <= 4; k++) { const px = bx + (tx - bx) * k / 4.5, py = by + (ty - by) * k / 4.5; leaf(x, px, py, 7, 2.2, -Math.PI / 2 + s * 1.2, c.acc); } continue; }
+      if (antStyle === 'feather') { stroke(x, p => { p.moveTo(bx, by); p.quadraticCurveTo(bx + s * 2, ty + 6, tx, ty); }, lineOf(main), 2.2); for (let k = 1; k <= 4; k++) { const px = bx + (tx - bx) * k / 4.5, py = by + (ty - by) * k / 4.5; leaf(x, px, py, 7, 2.2, -Math.PI / 2 + s * 1.2, c.acc || acc); } continue; }
       stroke(x, p => { p.moveTo(bx, by); p.quadraticCurveTo(bx + s * 1, ty + 4, tx, ty); }, lineOf(main), 3.4); stroke(x, p => { p.moveTo(bx, by); p.quadraticCurveTo(bx + s * 1, ty + 4, tx, ty); }, adj(main, -.05), 1.8);
       E(x, tx, ty, 4, 4, sp.id === 20 ? acc : '#ffe04a');
     }
