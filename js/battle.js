@@ -317,7 +317,7 @@ async function drain(f) {
   while (Math.abs(f.dispHp - target) > .01) { f.dispHp += Math.sign(target - f.dispHp) * Math.min(step, Math.abs(target - f.dispHp)); await G.nextFrame(); }
   f.dispHp = target;
 }
-async function shake(f) { for (let i = 0; i < 8; i++) { f.ox = (i % 2 ? 3 : -3); await G.nextFrame(); await G.nextFrame(); } f.ox = 0; }
+async function shake(f) { f.flash = 8; for (let i = 0; i < 8; i++) { f.ox = (i % 2 ? 3 : -3) * (1 - i / 10); await G.nextFrame(); await G.nextFrame(); } f.ox = 0; }
 async function animExp(f, to, frames) {
   let from = f.dispExp === null ? expRatio(f.c) : f.dispExp; f.dispExp = from;
   for (let i = 1; i <= frames; i++) { f.dispExp = from + (to - from) * i / frames; await G.nextFrame(); }
@@ -410,7 +410,7 @@ async function awardExp(foe) {
     while (c.lvl < 100 && c.exp >= G.expFor(c.lvl + 1)) {
       if (active) await animExp(b.me, 1, 14);
       const gains = G.levelUp(c); G.audio.sfx('levelup');
-      if (active) { b.me.dispHp = c.hp; b.me.dispExp = 0; }
+      if (active) { b.me.dispHp = c.hp; b.me.dispExp = 0; b.me.glow = 90; b.me.flash = 8; const [lx, ly] = center(b.me); burst('Sparkle', lx, ly, 18, { speed: 2, life: 34 }); }
       await msg(`${G.name(c)} grew to LV. ${c.lvl}!`, 0);
       await showGains(c, gains);
       await learnMoves(c, c.lvl);
@@ -421,7 +421,10 @@ async function awardExp(foe) {
 }
 async function faint(f) {
   G.audio.sfx('faint');
-  for (let i = 0; i < 20; i++) { f.oy += 3; f.alpha = 1 - i / 20; await G.nextFrame(); }
+  const [fx, fy] = center(f); f.flash = 8;
+  for (let i = 0; i < 6; i++) { f.oy = -Math.sin(i / 6 * Math.PI) * 3; await G.nextFrame(); }
+  burst('Dust', fx, fy + 22, 14, { speed: 1.2, life: 28, spread: 30, size: 3 });
+  for (let i = 0; i < 20; i++) { f.oy += 3 + i * .15; f.alpha = 1 - i / 20; await G.nextFrame(); }
   f.hidden = true; f.oy = 0; f.alpha = 1;
   await msg(`${nm(f)} fainted!`);
 }
@@ -506,11 +509,13 @@ async function throwOrb(item) {
   G.audio.sfx('throw');
   b.orb = { x: 40, y: 70, rot: 0, s: 1 };
   for (let i = 0; i <= 26; i++) { const t = i / 26; b.orb.x = 40 + (fx - 40) * t; b.orb.y = 70 + (fy - 70) * t - Math.sin(t * Math.PI) * 50; b.orb.rot = t * 12; await G.nextFrame(); }
-  b.foe.tint = '#ffffff';
-  for (let i = 10; i >= 0; i--) { b.foe.scale = Math.max(.04, i / 10); await G.nextFrame(); }
+  b.foe.tint = '#ffffff'; b.beam = { x: b.orb.x, y: b.orb.y, t: 0 }; burst('Sparkle', b.orb.x, b.orb.y, 14, { speed: 2.2, life: 24 }); b.shake = 4;
+  for (let i = 10; i >= 0; i--) { b.foe.scale = Math.max(.04, i / 10); b.beam.t++; if (i % 2) burst('Psychic', fx, fy, 1, { speed: .5, life: 12 }); await G.nextFrame(); }
+  b.beam = null;
   b.foe.hidden = true; b.foe.scale = 1; b.foe.tint = null;
   const ground = fy + 24;
-  for (let i = 0; i <= 18; i++) { b.orb.y = fy + (ground - fy) * (i / 18); b.orb.rot = 0; await G.nextFrame(); }
+  for (let i = 0; i <= 18; i++) { const k = i / 18; b.orb.y = fy + (ground - fy) * (k < .7 ? Math.pow(k / .7, 2) : 1 - Math.sin((k - .7) / .3 * Math.PI) * .18); b.orb.rot = 0; await G.nextFrame(); }
+  b.orb.y = ground;
   for (let k = 0; k < 3; k++) {
     if (k > res.shakes) break;
     await G.wait(20); G.audio.sfx('wobble');
@@ -521,7 +526,9 @@ async function throwOrb(item) {
   await G.wait(20);
   if (res.caught) {
     G.audio.sfx('caught');
-    for (let i = 0; i < 12; i++) { b.orb.s = 1 + (i % 4 < 2 ? .15 : 0); await G.nextFrame(); }
+    burst('Sparkle', b.orb.x, b.orb.y - 4, 22, { speed: 2.2, life: 40, up: true, size: 3 });
+    for (let i = 0; i < 12; i++) { b.orb.s = 1 + Math.sin(i / 12 * Math.PI) * .25; await G.nextFrame(); }
+    b.orb.s = 1.08;
     await msg(`Gotcha! ${G.name(b.foe.c)} was caught!`, 50);
     b.orb = null; b.showFoe = false;
     mark(b.foe.c.id, 2);
@@ -659,9 +666,17 @@ G.runEvolutions = async function () {
     const prev = G.scene, from = c.id, to = evo[1];
     let t = 0, show = from, flash = 0;
     G.scene = { update() { t++; }, draw(ctx) {
-      ctx.fillStyle = flash ? '#fff' : '#101820'; ctx.fillRect(0, 0, G.W, G.H);
-      const img = G.creatureSprite(show), im = flash ? G.tint(img, '#ffffff') : img;
-      ctx.drawImage(im, 88, 20, 64, 64);
+      K.blit(ctx, K.cache('evo-bg', 240, 160, x => {
+        const g = x.createRadialGradient(120, 52, 4, 120, 60, 170); g.addColorStop(0, '#5a4aa8'); g.addColorStop(.45, '#2a2460'); g.addColorStop(1, '#120f2e');
+        x.fillStyle = g; x.fillRect(0, 0, 240, 160);
+        for (let i = 0; i < 16; i++) { x.fillStyle = 'rgba(255,255,255,.05)'; x.beginPath(); x.moveTo(120, 52); const a0 = i / 16 * Math.PI * 2; x.arc(120, 52, 220, a0, a0 + .14); x.fill(); }
+      }, { pad: 0, qmax: 6 }), 0, 0);
+      ctx.globalCompositeOperation = 'lighter';
+      K.drawGlow(ctx, flash ? '#ffffff' : '#ffe066', 120, 52, 46 + Math.sin(t / 6) * 6, flash ? 1 : .55);
+      for (let i = 0; i < 14; i++) { const a = i / 14 * 6.28 + t / 40, r = 34 + Math.sin(t / 10 + i) * 8; K.drawGlow(ctx, i % 2 ? '#ffe066' : '#8ff5ea', 120 + Math.cos(a) * r, 52 + Math.sin(a) * r * .8, 3, .9); }
+      ctx.globalCompositeOperation = 'source-over';
+      const img = G.creatureSprite(show), im = flash ? G.tint(img, '#ffffff') : img, bob = Math.sin(t / 14) * 1.5;
+      ctx.drawImage(im, 88, 20 + bob, 64, 64);
     } };
     G.ui.style = 'dark'; G.audio.music(null);
     await G.fadeTo(0, 14, '#000');
