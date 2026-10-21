@@ -1,13 +1,66 @@
 // Menu screens: party, summary, bag, dex, PC, shop and the start menu.
 (function () {
 const G = globalThis.G;
-const F6 = 'bold 6px "Courier New", monospace';
+const F6 = '800 6px ' + G.FONT_FAM;
+const K = G.kit;
 const push = l => { G.ui.layers.push(l); return l; };
 const pop = l => G.ui.layers.splice(G.ui.layers.indexOf(l), 1);
 
+// Soft pastel backdrop (cached) with slowly drifting polka dots (one cached overlay, scrolled).
 function bg(ctx, c1, c2) {
-  ctx.fillStyle = c1; ctx.fillRect(0, 0, G.W, G.H); ctx.fillStyle = c2;
-  for (let i = -G.H; i < G.W; i += 16) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 8, 0); ctx.lineTo(i + 8 + G.H, G.H); ctx.lineTo(i + G.H, G.H); ctx.fill(); }
+  K.blit(ctx, K.cache('sbg' + c1, 240, 160, x => {
+    x.fillStyle = K.lin(x, 0, 0, 0, 160, [G.shade(c1, 1.25), c1, G.shade(c1, .9)]); x.fillRect(0, 0, 240, 160);
+    const g = x.createRadialGradient(60, 30, 0, 60, 30, 160); g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 240, 160);
+  }, { pad: 0, qmax: 4 }), 0, 0);
+  const dots = K.cache('sdots' + c2, 272, 192, x => {
+    x.fillStyle = c2;
+    for (let yy = 0; yy < 192; yy += 16) for (let xx = (yy / 16 % 2) * 16; xx < 272; xx += 32) { x.beginPath(); x.arc(xx + 8, yy + 8, 3.2, 0, 7); x.fill(); }
+  }, { pad: 0, qmax: 4 });
+  const o = (G.frameNo * .2) % 32;
+  ctx.drawImage(dots.c, o - 32, o - 32, 272, 192);
+}
+// Rounded title ribbon along the top of a full-screen screen.
+function header(ctx, text, col, right) {
+  K.blit(ctx, K.cache('shdr' + col, 236, 14, x => {
+    x.save(); x.shadowColor = 'rgba(40,20,30,.3)'; x.shadowBlur = 2 * x.getTransform().a; x.shadowOffsetY = 1 * x.getTransform().a;
+    K.rr(x, 0, 0, 236, 14, 7); x.fillStyle = '#ffffff'; x.fill(); x.restore();
+    K.rr(x, 1.4, 1.4, 233.2, 11.2, 5.6); x.fillStyle = K.lin(x, 0, 1, 0, 13, [G.shade(col, 1.25), col, G.shade(col, .85)]); x.fill();
+    x.fillStyle = 'rgba(255,255,255,.3)'; K.rr(x, 6, 2.4, 224, 3, 1.5); x.fill();
+  }), 2, 1);
+  K.star(ctx, 10, 8, 3, '#fff6a8');
+  G.text(ctx, text, 16, 4, { color: '#fff', shadow: G.shade(col, .55) });
+  if (right) G.text(ctx, right, G.W - 9, 4, { align: 'right', color: '#fff', shadow: G.shade(col, .55) });
+}
+// List highlight pill + bobbing cursor (same look as G.drawMenu's).
+function hilite(ctx, x, y, w, h) {
+  K.rr(ctx, x, y, w, h, h / 2); ctx.fillStyle = `rgba(255,190,90,${.3 + .1 * Math.sin(G.frameNo / 10)})`; ctx.fill();
+  ctx.strokeStyle = 'rgba(247,152,63,.75)'; ctx.lineWidth = .8; ctx.stroke();
+  const bx = x + 2 + Math.sin(G.frameNo / 5), cy = y + h / 2;
+  ctx.fillStyle = '#ff6b5a'; ctx.beginPath(); ctx.moveTo(bx, cy - 3); ctx.lineTo(bx + 5, cy); ctx.lineTo(bx, cy + 3); ctx.closePath(); ctx.lineJoin = 'round'; ctx.lineWidth = 1.6; ctx.strokeStyle = '#ff6b5a'; ctx.stroke(); ctx.fill();
+}
+function miniOrb(ctx, x, y, r) {
+  ctx.fillStyle = '#3d3352'; ctx.beginPath(); ctx.arc(x, y, r + .6, 0, 7); ctx.fill();
+  ctx.fillStyle = '#ff4d5e'; ctx.beginPath(); ctx.arc(x, y, r, Math.PI, 0); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI); ctx.fill();
+  ctx.fillStyle = '#3d3352'; ctx.fillRect(x - r, y - .3, r * 2, .6); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r * .35, 0, 7); ctx.fill();
+}
+// Soft spotlight disc behind a creature portrait.
+function spot(ctx, cx, cy, r, col) {
+  const e = K.cache('sspot' + col, 64, 64, x => {
+    const g = x.createRadialGradient(32, 30, 2, 32, 34, 32); g.addColorStop(0, '#ffffff'); g.addColorStop(.6, G.shade(col, 1.6)); g.addColorStop(1, G.shade(col, 1.25)); x.fillStyle = g; x.beginPath(); x.arc(32, 32, 32, 0, 7); x.fill();
+    x.fillStyle = 'rgba(0,0,0,.12)'; x.beginPath(); x.ellipse(32, 54, 18, 4, 0, 0, 7); x.fill();
+  }, { pad: 0, qmax: 4 });
+  ctx.drawImage(e.c, cx - r, cy - r, r * 2, r * 2);
+}
+function cardArt(kind) {   // party slot card, 116x39
+  const P = { norm: ['#ffffff', '#eef7ff', '#8fc9ee'], sel: ['#fffbe8', '#fff0c4', '#ffb83a'], swap: ['#f0ffe8', '#d4f5c4', '#5ccf6a'], fnt: ['#fff0f0', '#ffd8d8', '#ff8a8a'] }[kind];
+  return K.cache('scard' + kind, 116, 39, x => {
+    x.save(); x.shadowColor = 'rgba(20,40,70,.35)'; x.shadowBlur = 2.5 * x.getTransform().a; x.shadowOffsetY = 1.4 * x.getTransform().a;
+    K.rr(x, 0, 0, 116, 39, 9); x.fillStyle = P[2]; x.fill(); x.restore();
+    K.rr(x, 0, 0, 116, 39, 9); x.fillStyle = K.lin(x, 0, 0, 0, 39, [G.shade(P[2], 1.2), P[2], G.shade(P[2], .85)]); x.fill();
+    K.rr(x, kind === 'sel' ? 2.4 : 1.8, kind === 'sel' ? 2.4 : 1.8, kind === 'sel' ? 111.2 : 112.4, kind === 'sel' ? 34.2 : 35.4, 7.5); x.fillStyle = K.lin(x, 0, 2, 0, 37, [P[0], P[1]]); x.fill();
+    x.fillStyle = G.shade(P[2], 1.55); x.beginPath(); x.arc(17, 19.5, 14, 0, 7); x.fill();   // icon disc
+    x.fillStyle = 'rgba(255,255,255,.7)'; K.rr(x, 10, .7, 26, 1, .5); x.fill();
+  });
 }
 
 // ---- Items ----------------------------------------------------------------
@@ -31,14 +84,15 @@ G.summaryScreen = async function (start) {
   const party = G.state.party; let i = start;
   const layer = push({ draw(ctx) {
     const c = party[i], sp = G.SPECIES[c.id];
-    bg(ctx, '#e8d8a8', '#e0cc98');
-    ctx.fillStyle = '#d04848'; ctx.fillRect(0, 0, G.W, 14); G.text(ctx, `${G.name(c)}  Lv${c.lvl}`, 6, 3, { color: '#fff', shadow: '#802020' });
-    G.text(ctx, `${i + 1}/${party.length}`, G.W - 6, 3, { align: 'right', color: '#fff', shadow: '#802020' });
+    bg(ctx, '#bfeedd', 'rgba(255,255,255,.35)');
+    header(ctx, `${G.name(c)}  Lv${c.lvl}`, '#3cc0a8', `${i + 1}/${party.length}`);
     G.frame(ctx, 4, 18, 80, 78, 'light');
-    ctx.drawImage(G.creatureSprite(c.id), 12, 22, 64, 64);
+    spot(ctx, 44, 52, 30, G.TYPE_COL[sp.types[0]]);
+    ctx.drawImage(G.creatureSprite(c.id), 12, 22 + Math.sin(G.frameNo / 16) * 1.2, 64, 64);
     sp.types.forEach((t, k) => G.typeBadge(ctx, t, 6 + k * 38, 84));
     G.frame(ctx, 88, 18, 148, 78, 'light');
     G.STATS.forEach((s, k) => {
+      if (k % 2 === 0) { K.rr(ctx, 94, 24 + k * 10, 136, 10, 5); ctx.fillStyle = 'rgba(255,190,90,.16)'; ctx.fill(); }
       G.text(ctx, G.STAT_NAME[s], 98, 25 + k * 10); G.text(ctx, s === 'hp' ? `${c.hp}/${c.stats.hp}` : String(c.stats[s]), 226, 25 + k * 10, { align: 'right' });
     });
     G.text(ctx, c.status ? 'Status: ' + G.STATUS_NAME[c.status] : 'Status: OK', 98, 84, { font: F6 });
@@ -64,19 +118,19 @@ G.partyScreen = async function (o) {
   o = o || {}; const party = G.state.party;
   let idx = o.start !== undefined ? o.start : o.current >= 0 ? o.current : 0, swap = -1, hint = o.mode === 'use' ? 'Use on which creature?' : o.mode === 'switch' ? 'Choose a creature.' : 'Choose a creature.';
   const layer = push({ draw(ctx) {
-    bg(ctx, '#486888', '#42607f');
+    bg(ctx, '#8fd3f0', 'rgba(255,255,255,.28)');
     party.forEach((c, i) => {
-      const x = 3 + (i % 2) * 119, y = 4 + Math.floor(i / 2) * 42, sel = i === idx;
-      ctx.fillStyle = sel ? '#f8c030' : '#385068'; ctx.fillRect(x - 1, y - 1, 118, 41);
-      ctx.fillStyle = i === swap ? '#b8e8b8' : c.hp <= 0 ? '#f8d0d0' : '#e8f0f8'; ctx.fillRect(x, y, 116, 39);
-      G.icon(ctx, c.id, x + 3, y + 5, 28);
+      const sel = i === idx, x = 3 + (i % 2) * 119, y = 4 + Math.floor(i / 2) * 42 - (sel ? 1 + Math.abs(Math.sin(G.frameNo / 12)) * .8 : 0);
+      K.blit(ctx, cardArt(i === swap ? 'swap' : sel ? 'sel' : c.hp <= 0 ? 'fnt' : 'norm'), x, y);
+      const hop = sel && c.hp > 0 ? Math.abs(Math.sin(G.frameNo / 7)) * 2.5 : 0;
+      G.icon(ctx, c.id, x + 3, y + 5 - hop, 28);
       G.text(ctx, G.name(c), x + 34, y + 4, { shadow: false });
       G.text(ctx, 'Lv' + c.lvl, x + 112, y + 4, { align: 'right', shadow: false });
       G.hpBar(ctx, x + 50, y + 17, 62, c.hp / c.stats.hp);
-      G.text(ctx, 'HP', x + 34, y + 15, { font: F6, color: '#e08828', shadow: false });
+      K.pill(ctx, x + 34, y + 15.5, 13, 7, '#ff9f43', 'HP');
       G.text(ctx, `${c.hp}/${c.stats.hp}`, x + 112, y + 26, { align: 'right', shadow: false });
-      if (c.status) { ctx.fillStyle = { slp: '#8890a8', par: '#d8b020', psn: '#a050c0', brn: '#e05028' }[c.status]; ctx.fillRect(x + 34, y + 27, 16, 7); G.text(ctx, G.STATUS_NAME[c.status], x + 42, y + 27, { align: 'center', font: F6, color: '#fff', shadow: false }); }
-      else if (c.hp <= 0) G.text(ctx, 'FNT', x + 34, y + 27, { font: F6, color: '#d04838', shadow: false });
+      if (c.status) K.pill(ctx, x + 34, y + 27, 17, 7, K.STATUS_COL[c.status], G.STATUS_NAME[c.status]);
+      else if (c.hp <= 0) K.pill(ctx, x + 34, y + 27, 17, 7, '#ff5a5a', 'FNT');
     });
     G.frame(ctx, 2, 134, 236, 24, 'dark'); G.text(ctx, hint, 10, 141, { color: '#fff', shadow: '#102030' });
   } });
@@ -107,25 +161,39 @@ G.partyScreen = async function (o) {
 };
 
 // ---- Bag ------------------------------------------------------------------
+const bagArt = () => K.cache('sbag', 56, 66, x => {
+  x.save(); x.shadowColor = 'rgba(90,40,10,.35)'; x.shadowBlur = 3 * x.getTransform().a; x.shadowOffsetY = 2 * x.getTransform().a;
+  K.rr(x, 4, 14, 48, 50, 14); x.fillStyle = '#c2582f'; x.fill(); x.restore();
+  x.strokeStyle = '#9a4422'; x.lineWidth = 4; x.beginPath(); x.moveTo(18, 16); x.quadraticCurveTo(28, 0, 38, 16); x.stroke();     // handle
+  x.strokeStyle = '#ff9a5a'; x.lineWidth = 1.6; x.beginPath(); x.moveTo(18.5, 15); x.quadraticCurveTo(28, 1.5, 37.5, 15); x.stroke();
+  K.rr(x, 4, 14, 48, 50, 14); x.fillStyle = K.lin(x, 0, 14, 0, 64, ['#ff9a5a', '#f2733c', '#d65a2c']); x.fill();
+  K.rr(x, 4, 14, 48, 22, 12); x.fillStyle = K.lin(x, 0, 14, 0, 36, ['#ffd25a', '#ffb43a']); x.fill();                                // flap
+  x.fillStyle = 'rgba(160,70,20,.25)'; x.fillRect(6, 35, 44, 1.5);
+  K.rr(x, 14, 42, 28, 16, 6); x.fillStyle = '#e0602f'; x.fill(); x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = .8; x.setLineDash([1.6, 1.4]); K.rr(x, 15.5, 43.5, 25, 13, 5); x.stroke(); x.setLineDash([]);
+  K.rr(x, 24, 31, 8, 9, 3); x.fillStyle = '#fff3c4'; x.fill(); x.fillStyle = '#ffb43a'; x.beginPath(); x.arc(28, 36, 1.6, 0, 7); x.fill();   // buckle
+  x.fillStyle = 'rgba(255,255,255,.45)'; K.rr(x, 9, 17, 14, 3, 1.5); x.fill();
+});
 // ctx 'battle' -> returns { item, idx? } or null. ctx 'field' applies items itself.
 G.bagScreen = async function (where) {
   let idx = 0, top = 0;
   const names = () => Object.keys(G.state.bag).filter(k => G.state.bag[k] > 0);
   const layer = push({ draw(ctx) {
-    const list = names(); bg(ctx, '#d8a868', '#d09c5c');
-    ctx.fillStyle = '#a04838'; ctx.fillRect(0, 0, G.W, 14); G.text(ctx, 'BAG', 6, 3, { color: '#fff', shadow: '#601810' });
+    const list = names(); bg(ctx, '#ffd3a1', 'rgba(255,255,255,.3)');
+    header(ctx, 'BAG', '#ff8a5a');
     G.frame(ctx, 90, 18, 148, 94, 'light');
     const rows = list.concat('CLOSE');
     rows.slice(top, top + 6).forEach((n, k) => {
       const y = 24 + k * 14, i = top + k;
+      if (i === idx) hilite(ctx, 95, y - 2.5, 139, 12);
+      else if (n !== 'CLOSE') miniOrb(ctx, 100, y + 4, 2);
       G.text(ctx, n === 'CLOSE' ? 'CLOSE' : n, 108, y);
       if (n !== 'CLOSE') G.text(ctx, 'x' + G.state.bag[n], 230, y, { align: 'right' });
-      if (i === idx) { ctx.fillStyle = '#d04848'; ctx.beginPath(); ctx.moveTo(97, y + 1); ctx.lineTo(103, y + 4.5); ctx.lineTo(97, y + 8); ctx.fill(); }
     });
-    if (top > 0) G.text(ctx, '^', 164, 17, { font: F6 }); if (top + 6 < rows.length) G.text(ctx, 'v', 164, 106, { font: F6 });
-    // bag art
-    ctx.fillStyle = '#7a4a28'; ctx.fillRect(20, 40, 52, 56); ctx.fillStyle = '#a06a3c'; ctx.fillRect(22, 42, 48, 52); ctx.fillStyle = '#d04848'; ctx.fillRect(30, 30, 32, 16); ctx.fillStyle = '#f8d048'; ctx.fillRect(42, 52, 8, 10);
-    G.text(ctx, '$' + G.state.money, 46, 100, { align: 'center', font: F6 });
+    const ab = Math.sin(G.frameNo / 8) * 1;
+    if (top > 0) G.text(ctx, '\u25B2', 164, 17 - ab, { font: F6, color: '#f7983f' }); if (top + 6 < rows.length) G.text(ctx, '\u25BC', 164, 105 + ab, { font: F6, color: '#f7983f' });
+    // bag art: a chunky toy backpack that wiggles a little
+    ctx.save(); ctx.translate(46, 94); ctx.rotate(Math.sin(G.frameNo / 30) * .04); K.blit(ctx, bagArt(), -28, -66); ctx.restore();
+    K.pill(ctx, 22, 99, 48, 10, '#ffc43a'); G.text(ctx, '$' + G.state.money, 46, 100.5, { align: 'center', color: '#6a4210', shadow: 'rgba(255,255,255,.5)' });
     G.frame(ctx, 2, 116, 236, 42, 'light');
     const cur = rows[idx]; G.text(ctx, cur === 'CLOSE' ? 'Close the bag.' : G.ITEMS[cur].desc, 12, 128);
   } });
@@ -160,24 +228,25 @@ G.bagScreen = async function (where) {
 G.dexScreen = async function () {
   const ids = Object.keys(G.SPECIES).map(Number); let idx = 0, top = 0;
   const layer = push({ draw(ctx) {
-    bg(ctx, '#d86858', '#d0605a');
+    bg(ctx, '#ffb3b8', 'rgba(255,255,255,.3)');
     G.frame(ctx, 2, 2, 116, 156, 'light');
     ids.slice(top, top + 9).forEach((id, k) => {
       const y = 9 + k * 16, d = G.state.dex[id] || 0, i = top + k;
-      G.text(ctx, String(id).padStart(2, '0') + ' ' + (d ? G.SPECIES[id].name.toUpperCase() : '-----'), 18, y);
-      if (d > 1) { ctx.fillStyle = '#d04848'; ctx.beginPath(); ctx.arc(10, y + 4, 3, 0, 7); ctx.fill(); }
-      if (i === idx) { ctx.fillStyle = 'rgba(208,72,72,.16)'; ctx.fillRect(6, y - 2, 108, 14); ctx.fillStyle = '#d04848'; ctx.fillRect(6, y - 2, 2, 14); }
+      if (i === idx) { K.rr(ctx, 5, y - 2.5, 110, 13, 6.5); ctx.fillStyle = `rgba(255,190,90,${.3 + .1 * Math.sin(G.frameNo / 10)})`; ctx.fill(); ctx.strokeStyle = 'rgba(247,152,63,.75)'; ctx.lineWidth = .8; ctx.stroke(); }
+      G.text(ctx, String(id).padStart(2, '0') + ' ' + (d ? G.SPECIES[id].name.toUpperCase() : '-----'), 18, y, d ? {} : { color: '#a898b0' });
+      if (d > 1) miniOrb(ctx, 11, y + 4, 2.6); else if (d) { ctx.fillStyle = '#c8b8d0'; ctx.beginPath(); ctx.arc(11, y + 4, 2, 0, 7); ctx.fill(); }
     });
     const id = ids[idx], d = G.state.dex[id] || 0, sp = G.SPECIES[id];
     G.frame(ctx, 122, 2, 116, 156, 'light');
     if (d) {
-      ctx.drawImage(G.creatureSprite(id), 148, 8, 64, 64); G.text(ctx, sp.name.toUpperCase(), 180, 76, { align: 'center' });
+      spot(ctx, 180, 42, 32, G.TYPE_COL[sp.types[0]]);
+      ctx.drawImage(G.creatureSprite(id), 148, 8 + Math.sin(G.frameNo / 16) * 1.2, 64, 64); G.text(ctx, sp.name.toUpperCase(), 180, 76, { align: 'center', font: G.FONT_B });
       sp.types.forEach((t, k) => G.typeBadge(ctx, t, 128 + (sp.types.length === 1 ? 40 : k * 38 + 2), 88));
       if (d > 1) G.wrap(sp.desc, 100).forEach((l, k) => G.text(ctx, l, 130, 104 + k * 10, { font: F6 }));
       else G.text(ctx, 'Not yet caught.', 130, 108, { font: F6 });
-    } else G.text(ctx, 'Unknown', 180, 40, { align: 'center' });
+    } else { spot(ctx, 180, 42, 32, '#b8a8c8'); G.text(ctx, '?', 180, 28, { align: 'center', color: '#fff', shadow: '#8a7a98', font: '900 24px ' + G.FONT_FAM }); G.text(ctx, 'Unknown', 180, 80, { align: 'center', color: '#8a7a98' }); }
     const seen = Object.keys(G.state.dex).length, caught = Object.values(G.state.dex).filter(v => v > 1).length;
-    G.text(ctx, `SEEN ${seen}  CAUGHT ${caught}`, 180, 146, { align: 'center', font: F6 });
+    K.pill(ctx, 134, 143, 92, 10, '#ff8a9a'); G.text(ctx, `SEEN ${seen}  CAUGHT ${caught}`, 180, 145, { align: 'center', font: F6, color: '#fff', shadow: '#c04a5a' });
   } });
   for (;;) {
     await G.nextFrame(); const p = G.input.pressed;
@@ -212,9 +281,13 @@ G.pcMenu = async function () {
 };
 
 // ---- Shop -----------------------------------------------------------------
+function coin(ctx, x, y) {
+  ctx.fillStyle = '#d98a14'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#ffd23a'; ctx.beginPath(); ctx.arc(x, y - .3, 4.2, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff2a8'; ctx.beginPath(); ctx.arc(x - 1.4, y - 1.6, 1.3, 0, 7); ctx.fill(); G.text(ctx, '$', x, y - 3.4, { align: 'center', color: '#b86a08', shadow: false, font: '900 6px ' + G.FONT_FAM });
+}
 G.shopMenu = async function () {
   const S = G.state;
-  const money = push({ draw(ctx) { G.frame(ctx, 150, 4, 88, 20, 'light'); G.text(ctx, '$' + S.money, 232, 10, { align: 'right' }); } });
+  const money = push({ draw(ctx) { G.frame(ctx, 150, 4, 88, 20, 'light'); coin(ctx, 162, 14); G.text(ctx, '$' + S.money, 230, 10, { align: 'right' }); } });
   await G.say('Welcome! How may I help you?');
   for (;;) {
     const ch = await G.choose(['BUY', 'SELL', 'QUIT'], { x: 4, y: 4 });
@@ -261,8 +334,12 @@ G.startMenu = async function () {
     else if (ch === 2) await G.bagScreen('field');
     else if (ch === 3) {
       const t = Math.floor(S.frames / 3600), caught = Object.values(S.dex).filter(v => v > 1).length;
-      const l = push({ draw(ctx) { G.frame(ctx, 20, 12, 200, 124, 'light'); G.text(ctx, 'WARDEN CARD', 120, 20, { align: 'center' });
-        [['NAME', S.name], ['MONEY', '$' + S.money], ['DEX', `${caught} caught / ${Object.keys(S.dex).length} seen`], ['SHARDS', `${['meadow', 'marsh', 'mine'].filter(k => S.flags['shard_' + k]).length} / 3`], ['TIME', `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`]].forEach(([k, v], i) => { G.text(ctx, k, 34, 38 + i * 15); G.text(ctx, String(v), 206, 38 + i * 15, { align: 'right' }); });
+      const l = push({ draw(ctx) { G.frame(ctx, 20, 12, 200, 124, 'light');
+        K.pill(ctx, 70, 16, 100, 13, '#41c7b4'); G.text(ctx, 'WARDEN CARD', 120, 18.5, { align: 'center', color: '#fff', shadow: '#1f8a7a', font: G.FONT_B });
+        [['NAME', S.name], ['MONEY', '$' + S.money], ['DEX', `${caught} caught / ${Object.keys(S.dex).length} seen`], ['SHARDS', `${['meadow', 'marsh', 'mine'].filter(k => S.flags['shard_' + k]).length} / 3`], ['TIME', `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`]].forEach(([k, v], i) => {
+          if (i % 2 === 0) { K.rr(ctx, 28, 35.5 + i * 15, 184, 13, 6.5); ctx.fillStyle = 'rgba(255,190,90,.18)'; ctx.fill(); }
+          G.text(ctx, k, 34, 38 + i * 15, { color: '#f7843f', shadow: false, font: G.FONT_B }); G.text(ctx, String(v), 206, 38 + i * 15, { align: 'right' }); });
+        spot(ctx, 120, 121, 13, '#41c7b4');
         ctx.drawImage(G.charSprite(S.style)[0][0], 112, 112, 16, 20); } });
       await G.waitA(); pop(l);
     } else if (ch === 4) {
