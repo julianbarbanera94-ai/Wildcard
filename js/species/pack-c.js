@@ -276,5 +276,5 @@ D(156, 'Starveil', ['Ghost', 'Fairy'], [85, 70, 90, 130, 120, 95], 20, 262, {
   look: { stage: 3, form: 'tall', feat: ['wings', 'horns', 'tail'] }, desc: 'A starlit spirit draped in night. It drifts above the marsh on moonless nights.',
   habitat: [['mirewood', 15, 16, 1]],
 });
-ART[156] = { main: '#4a3f8a', belly: '#9a8ae8', acc: '#ffe27a', body: 'cloud', wing: 'fairy', horn: 'moon', tail: 'feather', stars: true, halo: true, sparkles: true, scarf: true, mouth: 'wisp', eye: 'star', float: true, iris: '#ffe27a' };
+ART[156] = { main: '#4a3f8a', belly: '#9a8ae8', acc: '#ffe27a', body: 'wisp', wing: 'fairy', horn: 'moon', tail: 'feather', stars: true, halo: true, sparkles: true, scarf: true, mouth: 'wisp', eye: 'star', float: true, iris: '#ffe27a' };
 })();
