@@ -53,6 +53,7 @@ const pill = (key, w, h, fill, line) => K.cache('t-p' + key, w, h, x => {
 const title = {
   t: 0, prompt: true, ids: [1, 4, 7, 12, 10, 25],
   update() { this.t++; },
+  tap() { if (this.prompt) G.tapKey('a'); },
   draw(ctx) {
     const t = this.t;
     K.blit(ctx, sky(), 0, 0);

@@ -31,7 +31,7 @@ ART[72] = { main: '#44b890', belly: '#fff2c4', acc: '#ff8ac0', mouth: 'smile', e
 // ---- Bog lantern ghosts: Wickle, Bogwick, Wispwarden --------------------------
 D(73, 'Wickle', ['Ghost'], [38, 40, 42, 60, 48, 62], 225, 55, {
   evo: [18, 74], learn: [[1, 'Lick'], [1, 'Growl'], [5, 'Hex Glow'], [9, 'Confusion'], [13, 'Shadow Claw']],
-  look: { stage: 1, form: 'round', feat: ['flame'] }, desc: 'A little marsh-light with a candle wick for a hat.',
+  look: { stage: 1, form: 'tall', feat: ['flame'] }, desc: 'A little marsh-light with a candle wick for a hat.',
   habitat: [['mirewood', 6, 9, 8], ['mine', 10, 12, 4]] });
 ART[73] = { main: '#8fe0b0', belly: null, acc: '#ffd24a', body: 'wisp', mouth: 'wisp', eye: 'glow', float: true, tail: 'none', iris: '#ffe66a', cheeks: false };
 D(74, 'Bogwick', ['Ghost', 'Grass'], [58, 60, 62, 90, 72, 74], 100, 138, {

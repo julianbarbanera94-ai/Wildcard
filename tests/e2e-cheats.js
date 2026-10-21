@@ -1,4 +1,4 @@
-// Settings + Test Mode (password Julian1) through the real menus: node tests/e2e-cheats.js
+// Settings + Test Mode (password abc610) through the real menus: node tests/e2e-cheats.js
 const { chromium } = require(process.env.PW || 'playwright');
 const path = require('path'), assert = require('assert');
 const OUT = process.env.OUT || '/tmp';
@@ -40,12 +40,12 @@ const OUT = process.env.OUT || '/tmp';
     for (let i = 0; i < 8 && (await probe()).row !== r; i++) await key('ArrowDown', 30);
     for (let i = 0; i < 12 && (await probe()).col !== c; i++) await key('ArrowRight', 30);
   };
-  for (const ch of 'Julian1') {
+  for (const ch of 'abc610') {
     const [pi, r, c] = await pick(ch);
     if ((await probe()).page !== pi) { await goto(4, 0); await key('z'); }
     await goto(r, c); await key('z');
   }
-  assert.equal((await probe()).text, 'Julian1', 'on-screen keyboard typed the password');
+  assert.equal((await probe()).text, 'abc610', 'on-screen keyboard typed the password');
   await goto(4, 2); await key('z');   // OK
   await advance(() => G.state.cheats && G.state.cheats.unlocked && G.ui.layers.length > 0 && !G.ui.text, 10000);
   await shot('test-menu'); step('the right password (typed on the on-screen keyboard) unlocks Test Mode');
@@ -53,7 +53,7 @@ const OUT = process.env.OUT || '/tmp';
   // UNLOCK EVERYTHING
   await key('z'); await advance(() => G.state.flags.lanternLit && !G.ui.text, 10000);
   const st = await ev(() => ({ dex: Object.values(G.state.dex).filter(v => v > 1).length, shards: ['meadow', 'marsh', 'mine'].every(k => G.state.flags['shard_' + k] && G.state.flags['placed_' + k]), money: G.state.money, orbs: G.state.bag['Catch Orb'], lit: G.state.flags.lanternLit, on: G.state.cheats }));
-  assert.equal(st.dex, 25); assert(st.shards && st.lit); assert.equal(st.orbs, 99); assert(st.money >= 9999999); assert(st.on.god && st.on.catch && st.on.pp && st.on.items && st.on.money);
+  assert.equal(st.dex, await ev(() => Object.keys(G.SPECIES).length)); assert(st.shards && st.lit); assert.equal(st.orbs, 99); assert(st.money >= 9999999); assert(st.on.god && st.on.catch && st.on.pp && st.on.items && st.on.money);
   step('UNLOCK EVERYTHING: full Dex, shards placed, Lantern lit, items x99, money, all infinite options on');
 
   // ADD CREATURE

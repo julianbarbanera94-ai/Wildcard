@@ -9,6 +9,10 @@ const KEYS = {
   ArrowUp: 'up', w: 'up', W: 'up', ArrowDown: 'down', s: 'down', S: 'down', ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right',
   z: 'a', Z: 'a', ' ': 'a', x: 'b', X: 'b', Backspace: 'b', Escape: 'b', Enter: 'start', m: 'mute', M: 'mute', c: 'orb', C: 'orb',
 };
+G.tapKey = k => { G.press(k); G.release(k); };
+// Tap zones: screens register rectangles (in the 240x160 UI space) each frame they draw; a tap on the canvas runs the topmost one.
+G.zones = [];
+G.tapZone = (x, y, w, h, fn) => { G.zones.push({ x, y, w, h, fn }); };
 G.press = k => { if (!input.held[k]) input.next[k] = true; input.held[k] = true; G.audio.init(); };
 G.release = k => { input.held[k] = false; };
 addEventListener('keydown', e => { if (G.keyHook && G.keyHook(e)) { e.preventDefault(); return; } const k = KEYS[e.key]; if (k) { e.preventDefault(); if (!e.repeat) G.press(k); } });
@@ -95,6 +99,7 @@ function centred(ctx, ox, fn) {
   try { fn(); } finally { G.W = fw; G.H = fh; ctx.restore(); }
 }
 function draw(ctx) {
+  G.zones.length = 0;
   const ox = G.uiX = (G.W - BASE_W) / 2, oy = G.uiY = G.H - BASE_H;
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, G.W, G.H);
   const sc = G.scene;
@@ -118,6 +123,14 @@ function draw(ctx) {
   if (audio.muted) G.text(ctx, 'MUTE', G.W - 4, 2, { align: 'right', color: '#fff', shadow: '#000' });
 }
 G.start = function (canvas) {
+  canvas.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1, r = canvas.getBoundingClientRect();
+    const x = (e.clientX - r.left - canvas.clientLeft) / w * G.W - (G.uiX || 0), y = (e.clientY - r.top - canvas.clientTop) / h * G.H - (G.uiY || 0);
+    G.audio.init();
+    for (let i = G.zones.length - 1; i >= 0; i--) { const z = G.zones[i]; if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h) { z.fn(x, y); return; } }
+    if (G.ui.text) G.tapKey('a'); else if (G.scene && G.scene.tap) G.scene.tap(x, y);
+  });
   const ctx = canvas.getContext('2d', { alpha: false });
   // The game is laid out in 240x160 logical units; the backing store is sized to the real screen so art stays sharp.
   const fit = () => {
@@ -189,7 +202,9 @@ G.choose = async function (items, o) {
   let x = o.x === undefined ? 4 : o.x, y = o.y === undefined ? 4 : o.y;
   if (o.right) x = o.right - w; if (o.bottom) y = o.bottom - h;
   let idx = Math.min(o.index || 0, items.length - 1);
-  const layer = { draw(ctx) { G.drawMenu(ctx, { x, y, w, h, items, idx, cols, cw, rowH, style }); } };
+  let tapped = false;
+  const tap = i => { idx = i; tapped = true; };
+  const layer = { draw(ctx) { G.tapZone(-999, -999, 2400, 2400, () => { if (o.cancel !== false) tapped = -1; }); G.drawMenu(ctx, { x, y, w, h, items, idx, cols, cw, rowH, style, tap }); } };
   G.ui.layers.push(layer);
   if (o.extra) { layer.draw = (d => ctx => { d(ctx); o.extra(ctx, idx); })(layer.draw); }
   if (o.onMove) o.onMove(idx);
@@ -201,7 +216,9 @@ G.choose = async function (items, o) {
     if (cols > 1 && p.left && idx % cols) n = idx - 1; if (cols > 1 && p.right && idx % cols < cols - 1) n = idx + 1;
     if (n >= 0 && n < items.length && n !== idx) { idx = n; audio.sfx('select'); if (o.onMove) o.onMove(idx); }
     else if (cols === 1 && (p.up || p.down) && items.length > 1) { idx = p.up ? items.length - 1 : 0; audio.sfx('select'); if (o.onMove) o.onMove(idx); }
-    if (p.a) { audio.sfx('select'); res = idx; }
+    if (tapped === true) { tapped = false; audio.sfx('select'); if (o.onMove) o.onMove(idx); res = idx; }
+    else if (tapped === -1) res = -1;
+    else if (p.a) { audio.sfx('select'); res = idx; }
     else if (p.b && o.cancel !== false) res = -1;
   }
   G.ui.layers.splice(G.ui.layers.indexOf(layer), 1);

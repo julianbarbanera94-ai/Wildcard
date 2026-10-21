@@ -164,17 +164,17 @@ D(138, 'Ramblast', ['Fighting', 'Rock'], [80, 115, 80, 45, 60, 75], 90, 168, {
 });
 ART[138] = { main: '#bfa47a', belly: '#f2e0bc', acc: '#3a3a50', ear: 'droopy', horn: 'ram', ruff: true, claws: true, fists: true, backStripes: true, mouth: 'teeth', eye: 'fierce', rockBack: true, iris: '#c83a2a' };
 
-D(139, 'Flurrow', ['Ice', 'Flying'], [42, 40, 38, 60, 50, 70], 200, 60, {
-  evo: [24, 140], learn: [[1, 'Peck'], [1, 'Growl'], [5, 'Frost Nip'], [9, 'Gust'], [15, 'Hail Shard'], [20, 'Wing Attack']],
-  look: { stage: 1, form: 'round', feat: ['wings', 'tail'] }, desc: 'A snowy owlet that glides silently through falling flurries.',
+D(139, 'Floebill', ['Ice', 'Water'], [42, 40, 38, 60, 50, 70], 200, 60, {
+  evo: [24, 140], learn: [[1, 'Peck'], [1, 'Growl'], [5, 'Frost Nip'], [9, 'Water Gun'], [15, 'Hail Shard'], [20, 'Bubble Beam']],
+  look: { stage: 1, form: 'round', feat: ['tail'] }, desc: 'A round penguin chick that toboggans down icy slopes on its belly.',
   habitat: [['shore', 5, 10, 6], ['ridge', 8, 12, 3]],
 });
-ART[139] = { main: '#d4e8f6', belly: '#ffffff', acc: '#6fb5e0', body: 'bird', wing: 'ice', tail: 'feather', tuft3: true, mouth: 'beak', eye: 'round', birdFeet: true, iris: '#2a6aa8', cheek: '#ffb0c0' };
-D(140, 'Hoarowl', ['Ice', 'Flying'], [72, 70, 65, 105, 85, 68], 75, 170, {
-  learn: [[1, 'Peck'], [1, 'Frost Nip'], [1, 'Wing Attack'], [24, 'Hail Shard'], [28, 'Air Slash'], [34, 'Glacier Beam']],
-  look: { stage: 2, form: 'tall', feat: ['wings', 'tail', 'horns'] }, desc: 'Its wingbeats whip up blizzards. Sleet hangs from its feathers like lace.',
+ART[139] = { main: '#3a4a78', belly: '#ffffff', acc: '#ffb040', body: 'round', flipper: true, tail: 'none', stubTail: true, tuft: true, mouth: 'beak', eye: 'round', birdFeet: true, iris: '#2a3a68', cheek: '#ffb0c0' };
+D(140, 'Tuxfrost', ['Ice', 'Water'], [72, 70, 65, 105, 85, 68], 75, 170, {
+  learn: [[1, 'Peck'], [1, 'Frost Nip'], [1, 'Water Gun'], [24, 'Hail Shard'], [28, 'Surf'], [34, 'Glacier Beam']],
+  look: { stage: 2, form: 'tall', feat: ['tail'] }, desc: 'An emperor of the floes. It slides faster than it swims, and swims faster than boats.',
 });
-ART[140] = { main: '#c4def0', belly: '#ffffff', acc: '#4f9fd8', body: 'bird', wing: 'ice', tail: 'feather', horn: 'crest', snowcap: true, icicles: true, mouth: 'beak', hook: true, eye: 'fierce', birdFeet: true, iris: '#ffd040' };
+ART[140] = { main: '#2c3a66', belly: '#ffffff', acc: '#ffb040', body: 'round', flipper: true, tail: 'none', stubTail: true, crown: true, scarf: true, icicles: true, mouth: 'beak', eye: 'fierce', birdFeet: true, iris: '#ffd040' };
 
 D(141, 'Stalabat', ['Rock', 'Flying'], [45, 50, 50, 35, 45, 65], 210, 56, {
   evo: [22, 142], learn: [[1, 'Tackle'], [1, 'Gust'], [5, 'Rock Throw'], [10, 'Bite'], [15, 'Wing Attack'], [19, 'Harden']],

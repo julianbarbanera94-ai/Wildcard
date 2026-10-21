@@ -2,7 +2,7 @@
 // The password is checked in the browser, so it keeps casual players out but is not security.
 (function () {
 const G = globalThis.G;
-const PASSWORD = 'Julian1';
+const PASSWORD = 'abc610';
 const OPTIONS = [['money', 'INFINITE MONEY'], ['items', 'INFINITE ITEMS'], ['pp', 'INFINITE PP'], ['god', 'GOD MODE'], ['catch', 'SURE CATCH']];
 
 G.cheat = k => !!(G.state && G.state.cheats && G.state.cheats.on && G.state.cheats[k]);
@@ -27,11 +27,13 @@ G.textEntry = async function (title, maxLen, mask) {
     G.text(ctx, shown + ((G.frameNo >> 4) % 2 ? '_' : ' '), 36, 33, { shadow: false });
     PAGES[page].forEach((line, r) => [...line].forEach((ch, c) => {
       const x = 28 + c * 18, y = 54 + r * 18, on = r === row && c === col;
+      G.tapZone(x, y, 17, 17, () => { row = r; col = c; G.tapKey('a'); });
       ctx.fillStyle = on ? '#ffb040' : 'rgba(0,0,0,.07)'; ctx.fillRect(x, y, 16, 16);
       G.text(ctx, ch, x + 8, y + 3, { align: 'center', shadow: false, color: on ? '#fff' : '#383840' });
     }));
     CTRL.forEach((lab, c) => {
       const x = 28 + c * 45, y = 130, on = row === 4 && c === col;
+      G.tapZone(x, y, 43, 17, () => { row = 4; col = c; G.tapKey('a'); });
       ctx.fillStyle = on ? '#ffb040' : 'rgba(0,0,0,.07)'; ctx.fillRect(x, y, 42, 16);
       G.text(ctx, lab, x + 21, y + 3, { align: 'center', shadow: false, color: on ? '#fff' : '#383840', font: G.FONT_S || G.FONT });
     });
@@ -68,7 +70,7 @@ async function pickSpecies() {
   const ids = Object.keys(G.SPECIES).map(Number); let idx = 0, top = 0;
   const layer = { draw(ctx) {
     G.frame(ctx, 4, 4, 112, 152, 'light'); G.frame(ctx, 120, 4, 116, 152, 'light');
-    ids.slice(top, top + 10).forEach((id, k) => { const y = 10 + k * 14.4, on = top + k === idx; if (on) { ctx.fillStyle = 'rgba(255,176,64,.35)'; ctx.fillRect(9, y - 1, 102, 13); } G.text(ctx, `${String(id).padStart(3, '0')} ${G.SPECIES[id].name}`, 14, y, { shadow: false }); });
+    ids.slice(top, top + 10).forEach((id, k) => { const y = 10 + k * 14.4, on = top + k === idx; G.tapZone(8, y - 2, 104, 14, () => { idx = top + k; G.tapKey('a'); }); if (on) { ctx.fillStyle = 'rgba(255,176,64,.35)'; ctx.fillRect(9, y - 1, 102, 13); } G.text(ctx, `${String(id).padStart(3, '0')} ${G.SPECIES[id].name}`, 14, y, { shadow: false }); });
     const s = G.SPECIES[ids[idx]];
     ctx.drawImage(G.creatureSprite(s.id), 140, 14, 76, 76); G.text(ctx, s.name.toUpperCase(), 178, 94, { align: 'center' });
     s.types.forEach((t, k) => G.typeBadge(ctx, t, s.types.length === 1 ? 161 : 142 + k * 38, 108));

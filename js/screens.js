@@ -83,6 +83,7 @@ G.applyItem = function (c, name) {
 G.summaryScreen = async function (start) {
   const party = G.state.party; let i = start;
   const layer = push({ draw(ctx) {
+    G.tapZone(0, 0, 120, 160, () => { if (i > 0) { i--; G.audio.sfx('select'); } }); G.tapZone(120, 0, 120, 160, () => { if (i < party.length - 1) { i++; G.audio.sfx('select'); } });
     const c = party[i], sp = G.SPECIES[c.id];
     bg(ctx, '#bfeedd', 'rgba(255,255,255,.35)');
     header(ctx, `${G.name(c)}  Lv${c.lvl}`, '#3cc0a8', `${i + 1}/${party.length}`);
@@ -121,6 +122,7 @@ G.partyScreen = async function (o) {
     bg(ctx, '#8fd3f0', 'rgba(255,255,255,.28)');
     party.forEach((c, i) => {
       const sel = i === idx, x = 3 + (i % 2) * 119, y = 4 + Math.floor(i / 2) * 42 - (sel ? 1 + Math.abs(Math.sin(G.frameNo / 12)) * .8 : 0);
+      G.tapZone(x, y, 116, 40, () => { idx = i; G.tapKey('a'); });
       K.blit(ctx, cardArt(i === swap ? 'swap' : sel ? 'sel' : c.hp <= 0 ? 'fnt' : 'norm'), x, y);
       const hop = sel && c.hp > 0 ? Math.abs(Math.sin(G.frameNo / 7)) * 2.5 : 0;
       G.icon(ctx, c.id, x + 3, y + 5 - hop, 28);
@@ -184,6 +186,7 @@ G.bagScreen = async function (where) {
     const rows = list.concat('CLOSE');
     rows.slice(top, top + 6).forEach((n, k) => {
       const y = 24 + k * 14, i = top + k;
+      G.tapZone(92, y - 3, 144, 14, () => { idx = i; G.tapKey('a'); });
       if (i === idx) hilite(ctx, 95, y - 2.5, 139, 12);
       else if (n !== 'CLOSE') miniOrb(ctx, 100, y + 4, 2);
       G.text(ctx, n === 'CLOSE' ? 'CLOSE' : n, 108, y);
@@ -232,6 +235,7 @@ G.dexScreen = async function () {
     G.frame(ctx, 2, 2, 116, 156, 'light');
     ids.slice(top, top + 9).forEach((id, k) => {
       const y = 9 + k * 16, d = G.state.dex[id] || 0, i = top + k;
+      G.tapZone(4, y - 3, 112, 15, () => { idx = i; G.audio.sfx('select'); });
       if (i === idx) { K.rr(ctx, 5, y - 2.5, 110, 13, 6.5); ctx.fillStyle = `rgba(255,190,90,${.3 + .1 * Math.sin(G.frameNo / 10)})`; ctx.fill(); ctx.strokeStyle = 'rgba(247,152,63,.75)'; ctx.lineWidth = .8; ctx.stroke(); }
       G.text(ctx, String(id).padStart(3, '0') + ' ' + (d ? G.SPECIES[id].name.toUpperCase() : '-----'), 18, y, d ? {} : { color: '#a898b0' });
       if (d > 1) miniOrb(ctx, 11, y + 4, 2.6); else if (d) { ctx.fillStyle = '#c8b8d0'; ctx.beginPath(); ctx.arc(11, y + 4, 2, 0, 7); ctx.fill(); }

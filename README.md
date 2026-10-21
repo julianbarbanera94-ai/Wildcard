@@ -2,7 +2,7 @@
 
 A cosy creature-catching RPG for the browser and Android, with bright, soft, animated art in the spirit of Pokopia: a big free-roam world where wild creatures wander the map, turn-based battles, capture orbs, a party of six with your lead partner walking behind you, trainers, and your own buildings (a base, healing stations, nurseries and decorations).
 
-Everything is original and generated in code. There are no image or audio files: scenery, characters, all 25 creatures, the UI and the chiptune music are drawn or synthesised at runtime (smooth vector shapes rendered at the screen's real resolution). The only bundled asset is the Nunito font (SIL OFL), embedded in `js/fonts.js`. No build step and no dependencies.
+Everything is original and generated in code. There are no image or audio files: scenery, characters, all 156 creatures, the UI and the chiptune music are drawn or synthesised at runtime (smooth vector shapes rendered at the screen's real resolution). The only bundled asset is the Nunito font (SIL OFL), embedded in `js/fonts.js`. No build step and no dependencies.
 
 ## Play
 
@@ -21,7 +21,7 @@ On phones and tablets a thumbstick (drag to walk) and A, B, MENU and ORB buttons
 
 ## Test Mode
 
-START → SETTINGS → TEST MODE, then enter the password (`Julian1`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
+START → SETTINGS → TEST MODE, then enter the password (`abc610`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
 
 ## Android APK
 
@@ -55,7 +55,9 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
 5. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
 6. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
 
-Features: 25 species with evolution lines, 13 types with a type chart, STAB, critical hits, accuracy, stat stages, sleep/paralysis/poison/burn, Gen-3 style capture maths and escape odds, EXP and levelling with move learning (forget-a-move prompt) and evolution, whiteout and respawn, party/summary/bag/Dex/PC/shop screens, and saving to the browser's `localStorage` via START → SAVE.
+Touch: tap any menu item, party card, bag row, Dex entry or on-screen keyboard key to pick it (tap outside a menu to go back); the thumbstick still works everywhere.
+
+Features: 156 species with evolution lines (including four legendaries), 18 types with a type chart, STAB, critical hits, accuracy, stat stages, sleep/paralysis/poison/burn, Gen-3 style capture maths and escape odds, EXP and levelling with move learning (forget-a-move prompt) and evolution, whiteout and respawn, party/summary/bag/Dex/PC/shop screens, and saving to the browser's `localStorage` via START → SAVE.
 
 ## Code layout
 

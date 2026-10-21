@@ -356,5 +356,5 @@ D(69, 'Glimbell', ['Water', 'Fairy'], [90, 40, 70, 100, 110, 50], 90, 130, {
   desc: 'A moon jelly that glows softly in the shallows. Its bell chimes with the tide.',
   habitat: [['shore', 6, 10, 4]],
 });
-ART[69] = { main: '#cfe4ff', belly: null, acc: '#c8a0ff', body: 'jelly', tentacles: true, bubbles: true, sparkles: true, float: true, halo: true, mouth: 'smile', eye: 'happy', cheek: '#ffb0e0', iris: '#5a4aa8' };
+ART[69] = { main: '#f2c6ee', belly: null, acc: '#a8d8ff', body: 'jelly', tentacles: true, bubbles: true, sparkles: true, float: true, halo: true, mouth: 'smile', eye: 'happy', cheek: '#ffb0e0', iris: '#5a4aa8' };
 })();

@@ -801,9 +801,9 @@ function buildParts(sp) {
           for (const [u, v] of tips) stroke(x, p => { p.moveTo(wx + s * 3, wy + 1); p.quadraticCurveTo(wx + s * u * k * .45, wy + v * k * .2 - 8 * k, wx + s * u * k, wy + v * k); }, lineOf(mc), 2);
           cone(x, wx + s * 40 * k, wy - 26 * k, 5 * k, 3.4, -Math.PI / 2 + s * .4, '#fff4dc', 0, { lw: 1 });
         } else if (wingStyle === 'leaf') {
-          const wx = 50 + s * body.rx * .5, wy = body.cy - body.ry * .55, k = SC;
-          leaf(x, wx, wy + 2, 30 * k, 10 * k, s > 0 ? -.7 : Math.PI + .7, adj(leafG, -.04));
-          leaf(x, wx, wy + 5, 22 * k, 7.5 * k, s > 0 ? -.05 : Math.PI + .05, leafG);
+          const wx = 50 + s * body.rx * .72, wy = body.cy - body.ry * .05, k = SC;
+          leaf(x, wx, wy, 30 * k, 10 * k, s > 0 ? -.45 : Math.PI + .45, adj(leafG, -.04));
+          leaf(x, wx, wy + 4, 22 * k, 7.5 * k, s > 0 ? .25 : Math.PI - .25, leafG);
         } else if (wingStyle === 'ice') {
           const wx = 50 + s * body.rx * .5, wy = body.cy - body.ry * .6, k = SC, ic = c.wingCol || '#bfeeff';
           x.globalAlpha = .9;
@@ -1137,7 +1137,7 @@ function buildParts(sp) {
       add(3.2, null, x => gemShape(x, 50, gy, 4.6 * k, gc));
     }
     if (c.sparkles) {
-      const top = Math.min(hd.cy - hd.ry, body.cy - body.ry), L = 50 - big - 5, Rr = 50 + big + 5, scol = c.sparkleCol || '#fff2a0';
+      const top = Math.min(hd.cy - hd.ry, body.cy - body.ry), L = 50 - big - 5, Rr = 50 + big + 5, scol = c.sparkleCol || '#ffd84a';
       const S = [[L, top + 8, 4], [Rr, top + 3, 3.4], [Rr + 1, body.cy + 2, 2.6], [L - 1, body.cy + body.ry * .3, 2.6], [50 + hd.rx * .65, top - 5, 2.4]].concat(st >= 3 ? [[50 - hd.rx * .7, top - 3, 2.2]] : []);
       both(5, back => x => S.forEach(([sx, sy, r], i) => sparkle(x, mx(back, sx + (R2() - .5) * 0), sy, r * (st >= 2 ? 1.15 : 1), i % 2 ? '#ffffff' : scol)));
     }
@@ -1156,7 +1156,7 @@ function buildParts(sp) {
       add(3.1, null, x => lines(x, esp + erx * 1.5));
       add(null, 1.9, x => lines(x, hd.rx * .6));
     }
-    if (c.tusks) add(3.1, null, x => { for (const s of [-1, 1]) cone(x, hd.cx + s * hd.rx * .24, my + 1.5, 8 * k, 4 * k, -Math.PI / 2 + s * .55, '#fffaf0', -s * .3, { lw: 1.1, hi: .1 }); });
+    if (c.tusks) add(3.1, null, x => { for (const s of [-1, 1]) cone(x, hd.cx + s * hd.rx * .3, my + 3, 12 * k, 5.4 * k, -Math.PI / 2 + s * .45, '#fffaf0', -s * .35, { lw: 1.2, hi: .1 }); });
   }
 }
 

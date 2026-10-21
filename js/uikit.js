@@ -198,6 +198,7 @@ G.drawMenu = function (ctx, m) {
     ctx.beginPath(); ctx.moveTo(bx, cy - 3); ctx.lineTo(bx + 5, cy); ctx.lineTo(bx, cy + 3); ctx.closePath();
     ctx.lineJoin = 'round'; ctx.lineWidth = 1.6; ctx.strokeStyle = ctx.fillStyle; ctx.stroke(); ctx.fill();
   }
+  if (m.tap) m.items.forEach((it, i) => { const [cx, cy] = cell(i); G.tapZone(cx - 3, cy - 1.5, m.cw, m.rowH, () => m.tap(i)); });
   m.items.forEach((it, i) => {
     const [cx, cy] = cell(i), sel = i === m.idx;
     G.text(ctx, String(it), cx + 10, cy + 2, dark ? { color: sel ? '#ffffff' : '#d6f4f6', shadow: '#0c2a40' } : { color: sel ? '#3a2a48' : '#5a4a66' });

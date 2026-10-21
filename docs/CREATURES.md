@@ -1,6 +1,6 @@
 # Creature design contract (156 species)
 
-The game has 25 species (ids 1–25). We are adding **131 more (ids 26–156)**, split into three packs designed in parallel. Read this whole file, then `js/data.js` (existing species, moves, `G.defineSpecies`, `G.defineMove`) and the `C` table at the top of the species config section in `js/sprites.js` (how existing creatures are styled).
+The game has 156 species. Ids 1–25 are the originals; ids 26–156 were designed in three parallel packs. Read this whole file, then `js/data.js` (existing species, moves, `G.defineSpecies`, `G.defineMove`) and the `C` table at the top of the species config section in `js/sprites.js` (how existing creatures are styled).
 
 ## Who owns what
 
