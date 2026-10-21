@@ -86,7 +86,7 @@ const sign = (m, x, y, text) => { set(m, x, y, 's'); m.objs.push({ x, y, fn: () 
   npc(m, 2, 5, RIGHT, 'boy', ['Resting at the Lodge is free for any Warden. The PC in the corner stores spare Bondlings.']);
   for (let x = 2; x <= 6; x++) m.objs.push({ x, y: 2, fn: () => nurse() });
   m.objs.push({ x: 8, y: 1, fn: () => G.pcMenu() });
-  warp(m, 5, 7, 'lanternrest', 4, 5, DOWN, () => { G.state.flags.respawn = 'lodge'; return null; });
+  warp(m, 5, 7, 'lanternrest', 4, 5, DOWN);
 })();
 (function () {
   const m = interior('post', 'TRADING POST', 8, 8, 3);
@@ -239,13 +239,13 @@ G.placePlayer = (x, y, dir) => {
 };
 const tileWarp = (x, y) => world.map.warps.some(w => w.x === x && w.y === y);
 
-async function stepEntity(e, d, speed) {
+async function stepEntity(e, d, speed, noFollow) {
   speed = speed || 1; e.dir = d; e.moving = true; const [dx, dy] = VEC[d];
-  if (e === p) followBegin();
+  if (e === p && !noFollow) followBegin();
   e.tx = e.x + dx; e.ty = e.y + dy;
   for (let prog = speed; prog <= 16; prog += speed) { e.ox = dx * prog; e.oy = dy * prog; e.frame = prog < 8 ? (e.alt ? 1 : 2) : 0; await G.nextFrame(); }
   e.x = e.tx; e.y = e.ty; delete e.tx; delete e.ty; e.ox = e.oy = 0; e.moving = false; e.alt = !e.alt; e.frame = 0;
-  if (e === p) followEnd();
+  if (e === p && !noFollow) followEnd();
 }
 function run(fn) {
   if (world.busy) return; world.busy = true;
@@ -417,7 +417,7 @@ function afterStep() {
   const w = m.warps.find(w => w.x === p.x && w.y === p.y);
   if (w) {
     const block = w.need && w.need();
-    if (block) run(async () => { await says(block); await stepEntity(p, OPP[p.dir], 1); });
+    if (block) run(async () => { await says(block); await stepEntity(p, OPP[p.dir], 1, true); });
     else run(() => warpTo(w.to, w.tx, w.ty, w.dir));
     return;
   }

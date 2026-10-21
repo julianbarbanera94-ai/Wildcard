@@ -11,7 +11,7 @@ const OUT = process.env.OUT || '/tmp';
   page.on('console', m => { if (m.type() === 'error' && !/ERR_|Failed to load/.test(m.text())) errors.push('console: ' + m.text()); });
   await page.goto('file://' + path.resolve(__dirname, '../index.html')); await page.waitForTimeout(300);
   const key = async (k, hold = 70) => { await page.keyboard.down(k); await page.waitForTimeout(hold); await page.keyboard.up(k); await page.waitForTimeout(60); };
-  const ev = fn => page.evaluate(fn), shot = n => page.screenshot({ path: `${OUT}/x-${n}.png` });
+  const ev = (fn, arg) => page.evaluate(fn, arg), shot = n => page.screenshot({ path: `${OUT}/x-${n}.png` });
   const until = async (fn, ms = 20000, msg = '') => { const t = Date.now(); while (Date.now() - t < ms) { if (await page.evaluate(fn)) return; await page.waitForTimeout(60); } await shot('timeout'); throw new Error('timeout waiting for ' + (msg || fn) + ' | state ' + JSON.stringify(await page.evaluate(() => ({ busy: G.world.busy, world: G.scene === G.world.scene, fade: G.ui.fade.a, layers: G.ui.layers.length, text: G.ui.text && G.ui.text.lines.join('|'), arrow: G.ui.text && G.ui.text.arrow, map: G.world.mapId, flags: G.state.flags })))); };
   const step = n => console.log('✓', n);
   const cmdReady = () => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0;
