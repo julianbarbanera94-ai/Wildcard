@@ -35,7 +35,7 @@ fs.mkdirSync(OUT, { recursive: true });
     G.loadMap('lanternrest'); G.placePlayer(49, 6, 1); G.scene = G.world.scene;
   });
   await page.waitForTimeout(300); await idle();
-  const ref = "G.homeUse.refinery(G.state.builds.find(b => b.id === 'ref'))", forge = "G.homeUse.forge(G.state.builds.find(b => b.id === 'forge'))";
+  const ref = "() => G.homeUse.refinery(G.state.builds.find(b => b.id === 'ref'))";
 
   // 1) refinery: start a job through the structure menu, inputs consumed only when it starts, done after enough frames
   await ev(() => { G.state.bag.Wood = 3; });

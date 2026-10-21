@@ -410,7 +410,7 @@ function drawHeal(ctx, o, st, tap) {
   const tw = G.textW(ctx, tag) * .75 + 10; K.pill(ctx, 226 - tw, 11.5, tw, 9, o.free || o.charges == null ? '#5cc86a' : '#ffb43a', tag, F6);
   if (!party.length) G.text(ctx, 'You have no creatures with you.', 120, 50, { align: 'center', color: '#8a7a98' });
   party.forEach((c, i) => {
-    const x = 10 + (i % 2) * 112, y = 27 + Math.floor(i / 2) * 19, need = st.need[i], fainted = c.hp <= 0;
+    const x = 10 + (i % 2) * 112, y = 26 + Math.floor(i / 2) * 18, need = st.need[i], fainted = c.hp <= 0;
     const shown = st.anim ? st.from[i] + (st.to[i] - st.from[i]) * Math.min(1, st.anim / 40) : c.hp / c.stats.hp;
     K.rr(ctx, x, y, 108, 17, 6); ctx.fillStyle = need ? `rgba(255,107,138,${.16 + .08 * Math.sin(t / 12)})` : fainted ? 'rgba(160,150,170,.18)' : 'rgba(92,200,106,.14)'; ctx.fill();
     ctx.strokeStyle = need ? 'rgba(255,107,138,.7)' : 'rgba(150,140,170,.35)'; ctx.lineWidth = .8; ctx.stroke();
@@ -428,10 +428,10 @@ function drawHeal(ctx, o, st, tap) {
   });
   const n = st.need.filter(Boolean).length, cant = party.some(c => c.hp <= 0) && !o.revive;
   const line = st.msg || (n ? `${n} ${n > 1 ? 'creatures need' : 'creature needs'} healing.${cant ? ' Fainted ones can\'t be revived here.' : ''}` : cant ? 'Fainted creatures can\'t be revived here.' : 'Everyone is in top shape!');
-  G.text(ctx, line, 120, 85.5, { align: 'center', font: F6, color: st.msg ? '#2a8a4a' : n ? '#c0405a' : '#2a8a4a', shadow: false });
+  G.text(ctx, line, 120, 81, { align: 'center', font: F6, color: st.msg ? '#2a8a4a' : n ? '#c0405a' : '#2a8a4a', shadow: false });
   if (!st.anim) {
-    button(ctx, 54, 92, 70, 11, 'HEAL TEAM', PINK, st.btn === 0, () => tap('heal'), !n);
-    button(ctx, 132, 92, 54, 11, 'CANCEL', '#a088c0', st.btn === 1, () => tap('cancel'));
+    button(ctx, 54, 91, 70, 11, 'HEAL TEAM', PINK, st.btn === 0, () => tap('heal'), !n);
+    button(ctx, 132, 91, 54, 11, 'CANCEL', '#a088c0', st.btn === 1, () => tap('cancel'));
   }
 }
 G.healUI = async function (o) {
