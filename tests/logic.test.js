@@ -1,6 +1,7 @@
 // Run with: node tests/logic.test.js  — checks data integrity and core battle maths.
 const fs = require('fs'), vm = require('vm'), path = require('path'), assert = require('assert');
-for (const f of ["data", "creature"]) vm.runInThisContext(fs.readFileSync(path.join(__dirname, '../js', f + '.js'), 'utf8'), { filename: f });
+const packs = fs.readdirSync(path.join(__dirname, '../js/species')).sort().map(f => 'species/' + f.replace('.js', ''));
+for (const f of ['data', ...packs, 'creature']) vm.runInThisContext(fs.readFileSync(path.join(__dirname, '../js', f + '.js'), 'utf8'), { filename: f });
 const G = globalThis.G;
 let n = 0; const t = (name, fn) => { fn(); n++; console.log('ok -', name); };
 
@@ -39,5 +40,26 @@ t('catch odds: low HP + sleep beats full HP; a 1-HP common creature is very like
   assert(trials(low, 1.5) > trials(full, 1.5) * 3);
   const easy = G.makeCreature(10, 3); easy.hp = 1;
   assert(trials(easy, 1) > 0.9);
+});
+t('species ids run 1..N with no gaps, names are unique, nothing was registered twice', () => {
+  const ids = Object.keys(G.SPECIES).map(Number).sort((a, b) => a - b);
+  ids.forEach((id, i) => assert.equal(id, i + 1, `missing species id ${i + 1}`));
+  const names = Object.values(G.SPECIES).map(s => s.name.toLowerCase());
+  assert.equal(new Set(names).size, names.length, 'duplicate species name: ' + names.filter((n, i) => names.indexOf(n) !== i));
+  assert.deepEqual(G.dupSpecies, [], 'species defined twice'); assert.deepEqual(G.dupMoves, [], 'moves defined twice');
+});
+t('species data is well formed: types, stats, evolution levels, descriptions', () => {
+  for (const s of Object.values(G.SPECIES)) {
+    assert(s.types.length >= 1 && s.types.length <= 2 && s.types.every(t => G.TYPES.includes(t)), `${s.name}: bad types`);
+    assert(s.base.length === 6 && s.base.every(v => v >= 5 && v <= 200), `${s.name}: bad base stats`);
+    assert(s.catchRate >= 3 && s.catchRate <= 255 && s.expYield > 0, `${s.name}: bad catch/exp`);
+    assert(s.desc && s.desc.length <= 90, `${s.name}: missing or long description`);
+    assert(s.look && s.look.stage >= 1 && s.look.stage <= 3 && Array.isArray(s.look.feat), `${s.name}: bad look`);
+    if (s.evo) { const to = G.SPECIES[s.evo[1]]; assert(to && s.evo[0] >= 5 && s.evo[0] <= 60, `${s.name}: bad evolution`); assert(to.base.reduce((a, b) => a + b) > s.base.reduce((a, b) => a + b), `${s.name}: evolution is not stronger`); }
+  }
+});
+t('every type has damaging moves and the chart only names real types', () => {
+  for (const t of G.TYPES) assert(Object.values(G.MOVES).some(m => m.type === t && m.pow > 0), `no ${t} attack`);
+  for (const [a, row] of Object.entries(G.CHART)) { assert(G.TYPES.includes(a)); for (const d of Object.keys(row)) assert(G.TYPES.includes(d), `${a}->${d}`); }
 });
 console.log(`${n} tests passed`);

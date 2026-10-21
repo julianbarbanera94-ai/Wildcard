@@ -68,7 +68,7 @@ async function pickSpecies() {
   const ids = Object.keys(G.SPECIES).map(Number); let idx = 0, top = 0;
   const layer = { draw(ctx) {
     G.frame(ctx, 4, 4, 112, 152, 'light'); G.frame(ctx, 120, 4, 116, 152, 'light');
-    ids.slice(top, top + 10).forEach((id, k) => { const y = 10 + k * 14.4, on = top + k === idx; if (on) { ctx.fillStyle = 'rgba(255,176,64,.35)'; ctx.fillRect(9, y - 1, 102, 13); } G.text(ctx, `${String(id).padStart(2, '0')} ${G.SPECIES[id].name}`, 14, y, { shadow: false }); });
+    ids.slice(top, top + 10).forEach((id, k) => { const y = 10 + k * 14.4, on = top + k === idx; if (on) { ctx.fillStyle = 'rgba(255,176,64,.35)'; ctx.fillRect(9, y - 1, 102, 13); } G.text(ctx, `${String(id).padStart(3, '0')} ${G.SPECIES[id].name}`, 14, y, { shadow: false }); });
     const s = G.SPECIES[ids[idx]];
     ctx.drawImage(G.creatureSprite(s.id), 140, 14, 76, 76); G.text(ctx, s.name.toUpperCase(), 178, 94, { align: 'center' });
     s.types.forEach((t, k) => G.typeBadge(ctx, t, s.types.length === 1 ? 161 : 142 + k * 38, 108));

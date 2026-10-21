@@ -233,7 +233,7 @@ G.dexScreen = async function () {
     ids.slice(top, top + 9).forEach((id, k) => {
       const y = 9 + k * 16, d = G.state.dex[id] || 0, i = top + k;
       if (i === idx) { K.rr(ctx, 5, y - 2.5, 110, 13, 6.5); ctx.fillStyle = `rgba(255,190,90,${.3 + .1 * Math.sin(G.frameNo / 10)})`; ctx.fill(); ctx.strokeStyle = 'rgba(247,152,63,.75)'; ctx.lineWidth = .8; ctx.stroke(); }
-      G.text(ctx, String(id).padStart(2, '0') + ' ' + (d ? G.SPECIES[id].name.toUpperCase() : '-----'), 18, y, d ? {} : { color: '#a898b0' });
+      G.text(ctx, String(id).padStart(3, '0') + ' ' + (d ? G.SPECIES[id].name.toUpperCase() : '-----'), 18, y, d ? {} : { color: '#a898b0' });
       if (d > 1) miniOrb(ctx, 11, y + 4, 2.6); else if (d) { ctx.fillStyle = '#c8b8d0'; ctx.beginPath(); ctx.arc(11, y + 4, 2, 0, 7); ctx.fill(); }
     });
     const id = ids[idx], d = G.state.dex[id] || 0, sp = G.SPECIES[id];

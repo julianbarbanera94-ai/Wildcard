@@ -2,31 +2,37 @@
 (function () {
 const G = globalThis.G = globalThis.G || {};
 
-G.TYPES = ['Normal', 'Fire', 'Water', 'Grass', 'Electric', 'Bug', 'Flying', 'Rock', 'Ground', 'Poison', 'Ghost', 'Psychic', 'Dark'];
+G.TYPES = ['Normal', 'Fire', 'Water', 'Grass', 'Electric', 'Bug', 'Flying', 'Rock', 'Ground', 'Poison', 'Ghost', 'Psychic', 'Dark', 'Ice', 'Fighting', 'Steel', 'Dragon', 'Fairy'];
 
 // Attacker type -> defender type -> multiplier (anything missing is 1x).
 G.CHART = {
-  Normal:   { Rock: .5, Ghost: 0 },
-  Fire:     { Fire: .5, Water: .5, Grass: 2, Bug: 2, Rock: .5 },
-  Water:    { Fire: 2, Water: .5, Grass: .5, Rock: 2, Ground: 2 },
-  Grass:    { Fire: .5, Water: 2, Grass: .5, Poison: .5, Ground: 2, Flying: .5, Bug: .5, Rock: 2 },
-  Electric: { Water: 2, Grass: .5, Electric: .5, Ground: 0, Flying: 2 },
-  Bug:      { Fire: .5, Grass: 2, Flying: .5, Poison: .5, Ghost: .5, Psychic: 2, Dark: 2 },
-  Flying:   { Grass: 2, Electric: .5, Bug: 2, Rock: .5 },
-  Rock:     { Fire: 2, Flying: 2, Bug: 2, Ground: .5 },
-  Ground:   { Fire: 2, Electric: 2, Grass: .5, Bug: .5, Poison: 2, Flying: 0, Rock: 2 },
-  Poison:   { Grass: 2, Poison: .5, Ground: .5, Rock: .5, Ghost: .5 },
+  Normal:   { Rock: .5, Ghost: 0, Steel: .5 },
+  Fire:     { Fire: .5, Water: .5, Grass: 2, Bug: 2, Rock: .5, Ice: 2, Steel: 2, Dragon: .5 },
+  Water:    { Fire: 2, Water: .5, Grass: .5, Rock: 2, Ground: 2, Dragon: .5 },
+  Grass:    { Fire: .5, Water: 2, Grass: .5, Poison: .5, Ground: 2, Flying: .5, Bug: .5, Rock: 2, Dragon: .5, Steel: .5 },
+  Electric: { Water: 2, Grass: .5, Electric: .5, Ground: 0, Flying: 2, Dragon: .5 },
+  Bug:      { Fire: .5, Grass: 2, Flying: .5, Poison: .5, Ghost: .5, Psychic: 2, Dark: 2, Fighting: .5, Steel: .5, Fairy: .5 },
+  Flying:   { Grass: 2, Electric: .5, Bug: 2, Rock: .5, Fighting: 2, Steel: .5 },
+  Rock:     { Fire: 2, Flying: 2, Bug: 2, Ground: .5, Ice: 2, Fighting: .5, Steel: .5 },
+  Ground:   { Fire: 2, Electric: 2, Grass: .5, Bug: .5, Poison: 2, Flying: 0, Rock: 2, Steel: 2 },
+  Poison:   { Grass: 2, Poison: .5, Ground: .5, Rock: .5, Ghost: .5, Fairy: 2, Steel: 0 },
   Ghost:    { Normal: 0, Ghost: 2, Psychic: 2, Dark: .5 },
-  Psychic:  { Psychic: .5, Poison: 2, Dark: 0 },
-  Dark:     { Ghost: 2, Psychic: 2, Dark: .5 },
+  Psychic:  { Psychic: .5, Poison: 2, Dark: 0, Fighting: 2, Steel: .5 },
+  Dark:     { Ghost: 2, Psychic: 2, Dark: .5, Fighting: .5, Fairy: .5 },
+  Ice:      { Grass: 2, Ground: 2, Flying: 2, Dragon: 2, Fire: .5, Water: .5, Ice: .5, Steel: .5 },
+  Fighting: { Normal: 2, Rock: 2, Ice: 2, Dark: 2, Steel: 2, Flying: .5, Poison: .5, Bug: .5, Psychic: .5, Fairy: .5, Ghost: 0 },
+  Steel:    { Rock: 2, Ice: 2, Fairy: 2, Fire: .5, Water: .5, Electric: .5, Steel: .5 },
+  Dragon:   { Dragon: 2, Steel: .5, Fairy: 0 },
+  Fairy:    { Fighting: 2, Dragon: 2, Dark: 2, Fire: .5, Poison: .5, Steel: .5 },
 };
 // As in the classic games, physical/special is decided by the move's type.
-G.PHYS = new Set(['Normal', 'Flying', 'Ground', 'Rock', 'Bug', 'Ghost', 'Poison']);
+G.PHYS = new Set(['Normal', 'Flying', 'Ground', 'Rock', 'Bug', 'Ghost', 'Poison', 'Fighting', 'Steel']);
 
 G.TYPE_COL = {
   Normal: '#c8a878', Fire: '#f08030', Water: '#5890f0', Grass: '#78c850', Electric: '#f8d030',
   Bug: '#a8b820', Flying: '#a890f0', Rock: '#b8a038', Ground: '#d8b860', Poison: '#a040a0',
   Ghost: '#705898', Psychic: '#f85888', Dark: '#705848',
+  Ice: '#7fd4e0', Fighting: '#c8463a', Steel: '#a8a8c4', Dragon: '#7058e8', Fairy: '#f29ac0',
 };
 
 // ---- Moves ----------------------------------------------------------------
@@ -72,6 +78,20 @@ mv('Psybeam', 'Psychic', 65, 100, 20);
 mv('Psychic', 'Psychic', 90, 100, 10);
 mv('Bite', 'Dark', 60, 100, 25);
 mv('Crunch', 'Dark', 80, 100, 15);
+// moves for the newer types, and a stronger tier for the original ones
+mv('Frost Nip', 'Ice', 40, 100, 30); mv('Hail Shard', 'Ice', 65, 95, 20); mv('Glacier Beam', 'Ice', 90, 100, 10);
+mv('Jab', 'Fighting', 40, 100, 30); mv('Palm Strike', 'Fighting', 65, 100, 20); mv('Mighty Blow', 'Fighting', 100, 85, 10); mv('Pump Up', 'Fighting', 0, 100, 20, { stat: ['atk', 2], self: true });
+mv('Iron Bash', 'Steel', 50, 100, 30); mv('Steel Spin', 'Steel', 80, 100, 15); mv('Brace', 'Steel', 0, 100, 20, { stat: ['def', 2], self: true });
+mv('Drake Breath', 'Dragon', 60, 100, 20, { status: 'par', chance: 30 }); mv('Wyrm Claw', 'Dragon', 80, 100, 15); mv('Sky Roar', 'Dragon', 110, 85, 5);
+mv('Pixie Dust', 'Fairy', 40, 100, 30); mv('Glimmer', 'Fairy', 65, 100, 20); mv('Moonbeam', 'Fairy', 95, 100, 10); mv('Charm Wink', 'Fairy', 0, 100, 20, { stat: ['atk', -2] });
+mv('Glare', 'Normal', 0, 100, 20, { stat: ['spe', -2] }); mv('Belly Flop', 'Normal', 85, 100, 15, { status: 'par', chance: 30 });
+mv('Inferno Blast', 'Fire', 110, 85, 5, { status: 'brn', chance: 20 }); mv('Tidal Crash', 'Water', 110, 85, 5); mv('Seed Burst', 'Grass', 80, 100, 15);
+mv('Volt Crash', 'Electric', 110, 85, 5, { status: 'par', chance: 20 }); mv('Toxic Spray', 'Poison', 90, 100, 10, { status: 'psn', chance: 30 });
+mv('Phantom Rush', 'Ghost', 90, 100, 10); mv('Mind Spike', 'Psychic', 75, 100, 15); mv('Dusk Fang', 'Dark', 75, 100, 15);
+mv('Earth Pulse', 'Ground', 75, 100, 15); mv('Boulder Crash', 'Rock', 100, 85, 5); mv('Swarm', 'Bug', 90, 100, 10); mv('Sky Dive', 'Flying', 100, 95, 10);
+// Species/move packs in js/species/*.js register through these. A duplicate move name is ignored (and recorded for the tests).
+G.dupMoves = [];
+G.defineMove = function (name, type, pow, acc, pp, o) { if (M[name]) { G.dupMoves.push(name); return; } mv(name, type, pow, acc, pp, o); };
 
 // ---- Species --------------------------------------------------------------
 // base = [hp, atk, def, spa, spd, spe]; look drives the procedural sprite.
@@ -181,6 +201,10 @@ sp(25, 'Joker', ['Psychic', 'Ghost'], [100, 100, 100, 100, 100, 100], 30, 250, {
   look: { stage: 3, form: 'tall', feat: ['horns', 'wings', 'tail', 'arms', 'legs', 'spikes'] }, desc: 'The Wildcard. No one knows what it will do next.',
   learn: [[1, 'Psychic'], [1, 'Shadow Claw'], [1, 'Thunderbolt'], [1, 'Flamethrower']]
 });
+
+G.dupSpecies = [];
+G.defineSpecies = function (id, name, types, base, catchRate, expYield, o) { if (SP[id]) { G.dupSpecies.push(id); return; } sp(id, name, types, base, catchRate, expYield, o); };
+G.CREATURE_ART = G.CREATURE_ART || {};   // per-species art configs from the packs (see js/sprites.js and docs/CREATURES.md)
 
 // ---- Items ----------------------------------------------------------------
 G.ITEMS = {

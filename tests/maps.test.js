@@ -2,7 +2,8 @@
 const fs = require('fs'), vm = require('vm'), path = require('path'), assert = require('assert');
 globalThis.document = { createElement: () => ({ getContext: () => ({}) }) };
 globalThis.addEventListener = () => {};
-const files = ['data', 'creature', 'gfx', 'terrain', 'mapkit', ...fs.readdirSync(path.join(__dirname, '../js/maps')).sort().map(f => 'maps/' + f.replace('.js', '')), 'world'];
+const packs = fs.readdirSync(path.join(__dirname, '../js/species')).sort().map(f => 'species/' + f.replace('.js', ''));
+const files = ['data', ...packs, 'creature', 'gfx', 'terrain', 'mapkit', ...fs.readdirSync(path.join(__dirname, '../js/maps')).sort().map(f => 'maps/' + f.replace('.js', '')), 'world'];
 for (const f of files) vm.runInThisContext(fs.readFileSync(path.join(__dirname, '../js', f + '.js'), 'utf8'), { filename: f });
 const G = globalThis.G, maps = G.MAPS;
 let n = 0; const t = (name, fn) => { fn(); n++; console.log('ok -', name); };
@@ -68,5 +69,15 @@ t('regions are connected back to the hub both ways', () => {
     assert(maps.lanternrest.warps.some(w => w.to === r), `hub has no exit to ${r}`); assert(maps[r].warps.some(w => w.to === 'lanternrest'), `${r} has no way back`);
   }
   assert(maps.ridge.warps.some(w => w.to === 'mine') && maps.mine.warps.some(w => w.to === 'ridge'));
+});
+t('species habitats name real encounter maps, and every species can be obtained', () => {
+  assert.deepEqual(G.badHabitats, [], 'habitats pointing at maps without encounter tables');
+  const wild = new Set(Object.values(maps).flatMap(m => (m.enc || []).map(e => e[0])));
+  const special = new Set([1, 4, 7, 25]);   // starters and the Joker (static encounter)
+  for (const m of Object.values(maps)) for (const n of m.npcs) if (n.creature) special.add(n.creature);
+  const got = new Set([...wild, ...special]); let grew = true;
+  while (grew) { grew = false; for (const s of Object.values(G.SPECIES)) if (got.has(s.id) && s.evo && !got.has(s.evo[1])) { got.add(s.evo[1]); grew = true; } }
+  const missing = Object.values(G.SPECIES).filter(s => !got.has(s.id)).map(s => s.name);
+  assert.deepEqual(missing, [], 'species that can never be obtained');
 });
 console.log(`${n} map tests passed`);

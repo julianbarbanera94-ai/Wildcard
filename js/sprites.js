@@ -230,7 +230,7 @@ function plan(sp, c) {
 
 // ---- Creature generator -------------------------------------------------------
 function buildParts(sp) {
-  const c = C[sp.id] || {}, B = plan(sp, c), { body, head, f, st } = B;
+  const c = C[sp.id] || G.CREATURE_ART[sp.id] || {}, B = plan(sp, c), { body, head, f, st } = B;
   const R = G.mulberry(sp.id * 7919 + 13);
   const tc = sp.types.map(t => vivid(G.TYPE_COL[t] || '#c8a878'));
   const main = c.main || tc[0], acc = c.acc || (tc[1] || adj(main, -.12)), belly = c.belly === undefined ? adj(main, .25, .7) : c.belly;

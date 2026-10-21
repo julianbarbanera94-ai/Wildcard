@@ -410,4 +410,11 @@ function draw(ctx) {
   if (world.banner) G.drawBanner(ctx, world.banner.text, world.banner.t);
 }
 world.scene = { update, draw };
+// Species packs declare where they live: habitat [[mapId, minLv, maxLv, weight], ...]. Merge into encounter tables.
+G.badHabitats = [];
+for (const s of Object.values(G.SPECIES)) for (const [id, lo, hi, wt] of s.habitat || []) {
+  const m = maps[id];
+  if (!m || !m.enc) { G.badHabitats.push(`${s.name} -> ${id}`); continue; }
+  if (!m.enc.some(e => e[0] === s.id)) m.enc.push([s.id, lo, hi, wt]);
+}
 })();
