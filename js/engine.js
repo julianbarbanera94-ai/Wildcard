@@ -89,7 +89,7 @@ function tick() {
 function draw(ctx) {
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, G.W, G.H);
   G.scene && G.scene.draw(ctx);
-  if (G.ui.text) drawText(ctx, G.ui.text);
+  if (G.ui.text) G.drawTextbox(ctx, G.ui.text);
   G.ui.layers.forEach(l => l.draw(ctx));
   const f = G.ui.fade; if (f.a > 0) { ctx.globalAlpha = Math.min(1, f.a); ctx.fillStyle = f.color; ctx.fillRect(0, 0, G.W, G.H); ctx.globalAlpha = 1; }
   if (G.ui.wipe > 0) { // battle-entry shutters
@@ -99,7 +99,14 @@ function draw(ctx) {
   if (audio.muted) G.text(ctx, 'MUTE', G.W - 4, 2, { align: 'right', color: '#fff', shadow: '#000' });
 }
 G.start = function (canvas) {
-  const ctx = canvas.getContext('2d'); ctx.scale(G.S, G.S); ctx.imageSmoothingEnabled = false;
+  const ctx = canvas.getContext('2d', { alpha: false });
+  // The game is laid out in 240x160 logical units; the backing store is sized to the real screen so art stays sharp.
+  const fit = () => {
+    const w = canvas.getBoundingClientRect().width || 960, s = Math.max(3, Math.min(8, Math.round(w * (window.devicePixelRatio || 1) / G.W)));
+    if (canvas.width !== G.W * s) { canvas.width = G.W * s; canvas.height = G.H * s; }
+    G.S = s; ctx.setTransform(s, 0, 0, s, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  };
+  fit(); addEventListener('resize', fit);
   let last = performance.now(), acc = 0;
   const dt = 1000 / 60;
   (function frame(now) {
@@ -134,12 +141,6 @@ function wrap(ctx, str, maxW) {
 }
 const measure = document.createElement('canvas').getContext('2d');
 G.wrap = (s, w) => wrap(measure, s, w);
-function drawText(ctx, t) {
-  G.frame(ctx, 2, 110, 236, 48, t.style);
-  const dark = t.style === 'dark';
-  t.lines.forEach((l, i) => G.text(ctx, l.slice(0, Math.max(0, t.shown - t.lines.slice(0, i).join('').length)), 12, 118 + i * 15, dark ? { color: '#fff', shadow: '#102030' } : {}));
-  if (t.arrow && (G.frameNo >> 4) % 2) { ctx.fillStyle = dark ? '#fff' : '#d04848'; ctx.beginPath(); ctx.moveTo(224, 144); ctx.lineTo(231, 144); ctx.lineTo(227.5, 149); ctx.fill(); }
-}
 // opts: { auto: frames to wait instead of A, style: 'light'|'dark' }
 G.say = async function (str, opts) {
   opts = opts || {};
@@ -166,17 +167,7 @@ G.choose = async function (items, o) {
   let x = o.x === undefined ? 4 : o.x, y = o.y === undefined ? 4 : o.y;
   if (o.right) x = o.right - w; if (o.bottom) y = o.bottom - h;
   let idx = Math.min(o.index || 0, items.length - 1);
-  const layer = {
-    draw(ctx) {
-      G.frame(ctx, x, y, w, h, style);
-      const dark = style === 'dark';
-      items.forEach((it, i) => {
-        const cx = x + 6 + (i % cols) * cw, cy = y + 5 + Math.floor(i / cols) * rowH;
-        G.text(ctx, String(it), cx + 10, cy + 2, dark ? { color: '#fff', shadow: '#102030' } : {});
-        if (i === idx) { ctx.fillStyle = dark ? '#f8d848' : '#d04848'; ctx.beginPath(); ctx.moveTo(cx + 1, cy + 2); ctx.lineTo(cx + 6, cy + 5.5); ctx.lineTo(cx + 1, cy + 9); ctx.fill(); }
-      });
-    },
-  };
+  const layer = { draw(ctx) { G.drawMenu(ctx, { x, y, w, h, items, idx, cols, cw, rowH, style }); } };
   G.ui.layers.push(layer);
   if (o.extra) { layer.draw = (d => ctx => { d(ctx); o.extra(ctx, idx); })(layer.draw); }
   if (o.onMove) o.onMove(idx);

@@ -62,6 +62,7 @@ async function main() {
 addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('screen');
   G.start(canvas);
+  if (document.fonts) ['700', '800', '900'].forEach(w => document.fonts.load(w + ' 10px Nunito'));
   main();
   // Touch / mouse controls.
   document.querySelectorAll('[data-k]').forEach(b => {

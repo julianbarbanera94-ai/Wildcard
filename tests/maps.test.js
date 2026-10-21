@@ -2,7 +2,8 @@
 const fs = require('fs'), vm = require('vm'), path = require('path'), assert = require('assert');
 globalThis.document = { createElement: () => ({ getContext: () => ({}) }) };
 globalThis.addEventListener = () => {};
-for (const f of ['data', 'creature', 'gfx', 'world']) vm.runInThisContext(fs.readFileSync(path.join(__dirname, '../js', f + '.js'), 'utf8'), { filename: f });
+const files = ['data', 'creature', 'gfx', 'terrain', 'mapkit', ...fs.readdirSync(path.join(__dirname, '../js/maps')).sort().map(f => 'maps/' + f.replace('.js', '')), 'world'];
+for (const f of files) vm.runInThisContext(fs.readFileSync(path.join(__dirname, '../js', f + '.js'), 'utf8'), { filename: f });
 const G = globalThis.G, maps = G.MAPS;
 let n = 0; const t = (name, fn) => { fn(); n++; console.log('ok -', name); };
 const solid = (m, x, y) => { const c = m.t[y] && m.t[y][x]; return !c || G.TILES[c].solid; };

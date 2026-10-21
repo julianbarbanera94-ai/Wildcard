@@ -395,7 +395,7 @@ G.startBattle = async function (opts) {
   const lead = party.find(c => c.hp > 0);
   b = { wild: !!opts.wild, trainer: opts.trainer, bg: opts.bg || 'grass', showFoe: false, showMe: false, fx: null, orb: null, escapes: 0 };
   b.me = mkF(lead); b.foe = mkF(opts.wild || opts.trainer.team.find(c => c.hp > 0));
-  const mine = G.charSprite(G.state.style)[1][0], big = (img) => { const [c, x] = G.cv(48, 60); x.drawImage(img, 0, 0, 16, 20, 0, 0, 48, 60); return c; };
+  const mine = G.charSprite(G.state.style)[1][0], big = (img) => { const [c, x] = G.cv(img.width * 3, img.height * 3); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, c.width, c.height); return c; };
   b.tMe = { img: big(mine), x: 20, y: 50, ox: 0 };
   G.ui.style = 'dark'; G.scene = scene; G.ui.fade.a = 0;
   if (!b.wild) b.tFoe = { img: big(G.charSprite(opts.trainer.style)[0][0]), x: 160, y: 10, ox: 0 };
