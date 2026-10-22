@@ -91,7 +91,7 @@ const quest = G.quest = {
   step(id) { const q = DEFS[id], s = quest.state(id), p = q && s && s.st === 'active' ? q.steps[s.step] : null; if (!p) return null;
     return typeof p.at === 'function' ? Object.assign({}, p, { at: p.at(G.state) }) : p; },
   // The current main-story lead (the first active main quest), for the journal header and the map marker.
-  lead() { for (const id of ORDER) { const q = DEFS[id]; if (q.cat === 'main' && quest.active(id)) return { q, step: quest.step(id) }; } return null; },
+  lead() { const qs = ORDER.map(id => DEFS[id]).filter(q => q.cat === 'main' && quest.active(q.id)).sort((a, b) => (b.prio || 0) - (a.prio || 0)); return qs.length ? { q: qs[0], step: quest.step(qs[0].id) } : null; },
   // Places to mark on the world map: { id: 'main' | 'side' }.
   markers() {
     const S = st(), out = {}; if (!S || S.journal.markers === false) return out;

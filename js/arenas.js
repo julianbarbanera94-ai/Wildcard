@@ -149,6 +149,7 @@ async function award(b) {
   const opens = G.BADGE_OPENS[n];
   if (opens) await says(`With ${n} badge${n > 1 ? 's' : ''}, the road to ${opens} is now open to you!`);
   else if (n === 7) await says('One badge remains. Only the last Arena Leader stands between you and the whole of Aurelis!');
+  if (G.onBadge) await G.onBadge(b);
 }
 G.awardBadge = award;
 hooks.tick.push(() => {

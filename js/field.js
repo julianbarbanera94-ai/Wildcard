@@ -18,7 +18,7 @@ G.fieldHelper = function (kind) {
   const F = FIELD[kind], S = G.state; if (!F || !S) return null;
   const c = S.party.find(c => c.hp > 0 && c.lvl >= F.minLv && (G.SPECIES[c.id].types || []).some(t => F.types.includes(t)));
   if (c) return { creature: c, name: G.name(c) };
-  if (G.inv && G.inv.count(F.tool) > 0) return { tool: F.tool, name: 'your ' + F.tool };
+  for (const t of [F.tool].concat(F.tools || [])) if (G.inv && G.inv.count(t) > 0) return { tool: t, name: 'your ' + t };
   return null;
 };
 

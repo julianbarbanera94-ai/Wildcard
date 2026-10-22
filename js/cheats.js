@@ -101,6 +101,8 @@ function unlockEverything() {
   // fly anywhere: every outdoor place counts as visited, and the FLY ANYWHERE option is on
   for (const m of Object.values(G.MAPS)) if (m.outdoor) S.visited[m.id] = true;
   S.energy = G.farm && G.farm.energyMax ? G.farm.energyMax() : 100;
+  // the story so far, and the Warden's Lamp
+  for (const k of G.storyFlags || []) S.flags[k] = true; if (G.LAMP) S.bag[G.LAMP] = 1;
   // every quest finished (rewards given once) and every region's reputation at HERO
   if (G.quest) { for (const q of G.quest.all()) G.quest.start(q.id, true); G.quest.completeAll(); G.rep.max(); }
   if (G.home && G.world.map) G.home.refresh();

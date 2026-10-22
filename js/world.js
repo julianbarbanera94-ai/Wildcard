@@ -249,6 +249,7 @@ async function orrin() {
 }
 async function wren() {
   const f = flags(), S = G.state;
+  if (f.starter && G.onWren && await G.onWren()) return;
   if (!f.starter) await says(['ELDER WREN: Welcome, little Warden. The Great Lantern has dimmed ever since the Wildcard slipped away.', 'Three Ember Shards once fed its flame. They were hidden with the Wardens of the Meadow, the Marsh and the Mine.', 'But you cannot walk the wild roads alone. Three Bondlings sleep on the hearth stones. Wake one, and it will be your partner.']);
   else if (!f.wrenTips) {
     f.wrenTips = true;
@@ -288,7 +289,7 @@ async function chooseStarter(id) {
   const yes = await G.yesNo();
   G.ui.layers.splice(G.ui.layers.indexOf(l), 1);
   if (!yes) { G.closeText(); return; }
-  S.party.push(G.makeCreature(id, 5)); S.flags.starter = true; S.dex[id] = 2; G.audio.sfx('caught');
+  const c = G.makeCreature(id, 5); c.starter = true; S.party.push(c); S.flags.starter = true; S.flags.starterSp = id; S.dex[id] = 2; G.audio.sfx('caught');
   await says([`The hearth stone cracks open, and ${sp.name.toUpperCase()} wakes up. It nuzzles ${S.name}.`, 'ELDER WREN: It chose you. Come and talk to me when you are ready.']);
 }
 async function nurse() {

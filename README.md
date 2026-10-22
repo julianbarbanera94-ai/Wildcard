@@ -61,6 +61,10 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
 6. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
 7. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
 
+## Story so far (Prologue and Chapter 1)
+
+After Elder Wren's advice, your fellow trainee **Tam** stops you outside the Hearth Shrine for a first battle (losing is fine). Wren gives you the **Warden's Lamp**, which also lights dark passages. **Chapter 1: First Light** sends you to Stonebridge, where two **Ashen Wardens** are taking creatures for **Warden Vesper**. Beat both, and Vesper speaks to you from across the river. A frightened **Cairnwight** hides by the water: read its mood and respond gently three times to earn its trust, and it joins you. **Mason** gives you Climbing Gear after the Keystone Badge, plus a bonus if your first partner is still standing. Then report back to Wren. The journal tracks every step.
+
 ## Journal, quests and reputation
 
 START → JOURNAL lists everything you're doing in one place: STORY, QUESTS, FINDS, PEOPLE, CREATURES and HOME, plus REP (how well each region knows you: Stranger, Known, Friend, Trusted, Hero). Quests notice what you've already done, so you can do things in any order. Markers on the map (gold for the story, blue for the rest) can be turned off in the journal. Beating an Arena Leader and winning a shard raise your reputation in that region. Quest rewards are given once only.
@@ -190,6 +194,7 @@ node tests/e2e-quests.js                        # quests, journal, reputation, r
 node tests/e2e-access.js                        # badges, reputation or permits; Leader scaling; land from reputation
 node tests/e2e-slots.js                         # three save slots: continue, load, new game, save to another slot
 node tests/e2e-field.js                         # CLIMB, LIGHT and DIG with creatures or tools; hidden chests
+node tests/e2e-story1.js                        # Prologue and Chapter 1: Tam, Ashen Wardens, Vesper, the Cairnwight, Mason, Wren
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles
