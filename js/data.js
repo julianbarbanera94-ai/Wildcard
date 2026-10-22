@@ -208,16 +208,24 @@ G.CREATURE_ART = G.CREATURE_ART || {};   // per-species art configs from the pac
 
 // ---- Items ----------------------------------------------------------------
 G.ITEMS = {
-  'Catch Orb': { kind: 'orb', mult: 1, price: 200, desc: 'Throw it at a wild creature to catch it.' },
-  'Super Orb': { kind: 'orb', mult: 1.5, price: 600, desc: 'A better orb with a higher catch rate.' },
-  'Ultra Orb': { kind: 'orb', mult: 2, price: 1200, desc: 'A top-quality orb. Great catch rate.' },
+  // Capture orbs (catch rules and art in js/orbart.js: type orbs are 3x on their types)
+  'Terra Orb': { kind: 'orb', mult: 1, price: 200, desc: 'The standard capture orb. Reliable for most creatures.' },
+  'Aqua Orb': { kind: 'orb', mult: 1, price: 450, desc: 'Catches Water-type creatures far more easily.' },
+  'Flare Orb': { kind: 'orb', mult: 1, price: 450, desc: 'Catches Fire-type creatures far more easily.' },
+  'Verdant Orb': { kind: 'orb', mult: 1, price: 450, desc: 'Better on Grass and Bug creatures of field and forest.' },
+  'Frost Orb': { kind: 'orb', mult: 1, price: 450, desc: 'Catches Ice-type creatures far more easily.' },
+  'Gale Orb': { kind: 'orb', mult: 1, price: 450, desc: 'Catches Flying-type creatures far more easily.' },
+  'Stone Orb': { kind: 'orb', mult: 1, price: 450, desc: 'Better on Rock, Ground and Steel creatures.' },
+  'Void Orb': { kind: 'orb', mult: 1, price: 700, desc: 'Better on Ghost, Dark and Psychic creatures, and rare ones.' },
+  'Pulse Orb': { kind: 'orb', mult: 1.5, price: 600, desc: 'A strong orb, even better on fast or fierce creatures.' },
+  'Mythic Orb': { kind: 'orb', mult: 2, price: 2000, desc: 'The highest catch rate. Made for legendary creatures.' },
   'Potion': { kind: 'heal', amt: 20, price: 300, desc: 'Restores 20 HP.' },
   'Super Potion': { kind: 'heal', amt: 50, price: 700, desc: 'Restores 50 HP.' },
   'Full Heal': { kind: 'cure', price: 600, desc: 'Cures any status problem.' },
   'Revive': { kind: 'revive', price: 1500, desc: 'Revives a fainted creature to half HP.' },
   'Old Lantern': { kind: 'key', price: 0, desc: 'A battered brass lantern. Someone must be missing it.' },
 };
-G.MART_STOCK = ['Catch Orb', 'Super Orb', 'Potion', 'Super Potion', 'Full Heal', 'Revive'];
+G.MART_STOCK = ['Terra Orb', 'Pulse Orb', 'Potion', 'Super Potion', 'Full Heal', 'Revive'];
 G.STATUS_NAME = { slp: 'SLP', par: 'PAR', psn: 'PSN', brn: 'BRN' };
 G.STAT_NAME = { hp: 'HP', atk: 'ATTACK', def: 'DEFENSE', spa: 'SP. ATK', spd: 'SP. DEF', spe: 'SPEED' };
 })();

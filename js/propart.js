@@ -534,6 +534,17 @@ function fxBath(ctx, x, y, W, H, t) {
   for (let i = 0; i < 2; i++) { const ph = (t / 60 + i * .5) % 1, a = Math.sin(ph * PI) * .6; ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = .5; ctx.beginPath(); ctx.ellipse(x + 6 + i * (W - 14), y + fy * .5, 1 + ph * 2.4, .5 + ph * 1, 0, 0, TAU); ctx.stroke(); }
 }
 
+// A garden mailbox on a post: red box, rounded top, a little yellow flag.
+P.mailbox = (c, W, H, col) => {
+  col = col || '#e0503e';
+  dropShadow(c, W / 2 - 4, H - 3, 8, 2.4);
+  rf(c, W / 2 - 1, H - 11, 2, 10, .5, '#8a5a2c');
+  rr(c, W / 2 - 5, H - 19, 10, 8, [4, 4, 1, 1]); c.fillStyle = lg(c, 0, H - 19, 0, H - 11, shade(col, 1.3), shade(col, .85)); c.fill(); c.strokeStyle = shade(col, .55); c.lineWidth = .6; c.stroke();
+  c.fillStyle = shade(col, .6); c.fillRect(W / 2 - 4, H - 13.6, 8, .8);
+  rf(c, W / 2 + 4.4, H - 22, .9, 7, .3, '#6a6a7a'); rf(c, W / 2 + 4.6, H - 22, 3.2, 2.4, .5, '#ffd24a');
+  c.fillStyle = 'rgba(255,255,255,.45)'; c.fillRect(W / 2 - 3.6, H - 17.6, 3, .7);
+};
+
 // ---- prop() -------------------------------------------------------------------------
 HA.prop = function (ctx, kind, x, y, w, h, t, info) {
   w = w || 1; h = h || 1; t = t || 0; info = info || {};

@@ -59,7 +59,7 @@ const hash = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.54
   rect(m, 13, 10, 9, 4, 'G'); rect(m, 27, 10, 9, 4, 'G'); rect(m, 2, 6, 5, 5, 'G');
   rect(m, 39, 6, 11, 7, 'g'); rect(m, 41, 6, 8, 1, 'f'); rect(m, 39, 7, 2, 2, 'p'); scatter(m, 'r', [[49, 6], [49, 12], [44, 12], [39, 12]]); scatter(m, 'n', [[38, 11], [38, 12], [37, 13], [45, 13], [46, 12]]);
   scatter(m, 'n', [[8, 11], [7, 13], [12, 13], [22, 13], [23, 11], [26, 13], [36, 10], [1, 12], [2, 13]]); scatter(m, 'r', [[11, 5], [17, 5], [32, 5], [12, 9], [22, 10]]);
-  m.objs.push({ x: 48, y: 9, id: 'rd_orb', item: 'Super Orb', qty: 2, ball: true });
+  m.objs.push({ x: 48, y: 9, id: 'rd_orb', item: 'Pulse Orb', qty: 2, ball: true });
   sign(m, 44, 9, 'RIDGE LOOKOUT\nOn a clear night you can see the Great Lantern from here.');
   trainer(m, 'rd_pia', 17, 10, UP, 'lass', { name: 'PIA', cls: 'CLIMBER', sight: 3, team: [[16, 9], [21, 10]], pre: 'Almost at the top! But you have to get past me first.', win: 'You must have mountain legs!', post: 'Kade guards the deep chamber. Bring your best.', prize: 36 });
   // sprinkle pines and boulders over the open slopes, keeping build flats, the trail edges, sight lines and anything near people/items clear
@@ -114,8 +114,8 @@ const hash = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.54
   rect(m, 7, 2, 26, 6, 'c'); rect(m, 9, 1, 22, 1, 'c');
   scatter(m, 'i', [[7, 2], [8, 2], [7, 3], [32, 2], [31, 2], [32, 3], [7, 7], [32, 7], [12, 4], [27, 4], [19, 3], [20, 3], [15, 6], [24, 6], [9, 1], [30, 1]]);
   scatter(m, 'C', [[19, 7], [7, 6], [32, 6]]);
-  m.objs.push({ x: 10, y: 3, id: 'mn_rev', item: 'Revive', ball: true }); m.objs.push({ x: 29, y: 3, id: 'mn_ultra', item: 'Ultra Orb', ball: true });
-  trainer(m, 'mn_kade', 19, 9, DOWN, 'kade', { name: 'KADE', cls: 'MINE WARDEN', sight: 4, team: [[22, 12], [23, 13], [24, 14]], pre: 'I am Kade, Warden of the Mine. The MINE EMBER SHARD lies in the chamber behind me. Only a true Warden may take it!', win: 'The Mine accepts you. Take the shard, and these as well.', post: 'Light the Lantern. The Wildcard will come when the vale is whole.', prize: 60, shard: 'mine', reward: ['Ultra Orb', 3] });
+  m.objs.push({ x: 10, y: 3, id: 'mn_rev', item: 'Revive', ball: true }); m.objs.push({ x: 29, y: 3, id: 'mn_ultra', item: 'Mythic Orb', ball: true });
+  trainer(m, 'mn_kade', 19, 9, DOWN, 'kade', { name: 'KADE', cls: 'MINE WARDEN', sight: 4, team: [[22, 12], [23, 13], [24, 14]], pre: 'I am Kade, Warden of the Mine. The MINE EMBER SHARD lies in the chamber behind me. Only a true Warden may take it!', win: 'The Mine accepts you. Take the shard, and these as well.', post: 'Light the Lantern. The Wildcard will come when the vale is whole.', prize: 60, shard: 'mine', reward: ['Mythic Orb', 3] });
   // west tunnel and grotto
   rect(m, 3, 33, 3, 1, 'c'); rect(m, 3, 21, 1, 13, 'c'); rect(m, 2, 13, 8, 8, 'e'); rect(m, 3, 12, 6, 1, 'e'); rect(m, 4, 16, 4, 2, 'c'); rect(m, 3, 17, 1, 4, 'c');
   scatter(m, 'i', [[2, 13], [9, 13], [2, 20], [9, 20], [6, 12], [9, 16], [5, 14]]); scatter(m, 'C', [[2, 14], [9, 19]]);
@@ -129,6 +129,8 @@ const hash = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.54
   // hidden south-east nook behind the entrance hall
   rect(m, 26, 47, 5, 1, 'c'); rect(m, 30, 43, 6, 6, 'c'); rect(m, 31, 42, 4, 1, 'c');
   scatter(m, 'i', [[30, 43], [35, 43], [35, 48], [31, 42], [34, 42], [33, 45]]);
-  m.objs.push({ x: 34, y: 44, id: 'mn_orb', item: 'Super Orb', qty: 3, ball: true });
+  m.objs.push({ x: 34, y: 44, id: 'mn_orb', item: 'Pulse Orb', qty: 3, ball: true });
+  // ore-bearing boulders along the cave walls (Iron Ore and Coal with a Pickaxe), clear of the routes
+  scatter(m, 'r', [[15, 47], [24, 46], [7, 28], [31, 27], [8, 38], [31, 40], [14, 36], [8, 19], [37, 14], [30, 19], [31, 48]]);
 })();
 })();

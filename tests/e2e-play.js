@@ -44,7 +44,7 @@ const OUT = process.env.OUT || '/tmp';
   await mash(3, 'z');                                       // finish text, YES
   await until(() => G.state.party.length === 1, 8000, 'starter chosen'); await mash(6, 'z'); await until(() => !G.world.busy, 8000);
   assert.equal(await ev(() => G.state.party[0].id), 4); step('chose starter (Splashling)');
-  await ev(() => { G.state.bag['Catch Orb'] = 10; G.state.bag.Potion = 3; });
+  await ev(() => { G.state.bag['Terra Orb'] = 10; G.state.bag.Potion = 3; });
 
   // helpers for battles: advance text with A only when the game is waiting on it
   const cmdReady = () => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0;
@@ -63,11 +63,11 @@ const OUT = process.env.OUT || '/tmp';
   await page.waitForTimeout(300); await shot('05-command-menu');
   await key('z'); await page.waitForTimeout(300); await shot('06-move-menu'); await key('x'); await page.waitForTimeout(200);
   await key('ArrowRight'); await key('z'); await page.waitForTimeout(300); await shot('07-bag');   // BAG
-  await key('z');                                                                                  // first item = Catch Orb
+  await key('z');                                                                                  // first item = Terra Orb
   await until(() => window.__res !== undefined, 40000, 'battle result'); await page.waitForTimeout(500);
   const res = await ev(() => window.__res);
   assert.equal(res, 'caught'); assert.equal(await ev(() => G.state.party.length), 2);
-  assert.equal(await ev(() => G.state.dex[10]), 2); assert.equal(await ev(() => G.state.bag['Catch Orb']), 9);
+  assert.equal(await ev(() => G.state.dex[10]), 2); assert.equal(await ev(() => G.state.bag['Terra Orb']), 9);
   await until(() => !G.world.busy, 5000); step('caught a wild creature with an orb (party=2, dex marked, orb consumed)');
 
   // --- trainer battle: fight to the end, get EXP / level up ---
@@ -104,11 +104,12 @@ const OUT = process.env.OUT || '/tmp';
   await until(() => G.state.party[0].hp === G.state.party[0].stats.hp, 8000, 'healed'); await advance(() => !G.world.busy, 15000);
   assert.equal(await ev(() => G.state.party[0].status), null); step('Warden Lodge heals HP and status');
   await ev(() => { G.loadMap('post'); G.placePlayer(4, 4, 1); G.state.money = 1000; });
-  await page.waitForTimeout(300); await key('z'); await advance(() => G.ui.layers.length >= 2, 8000, 'shop menu');
-  await shot('10-shop'); await key('z'); await page.waitForTimeout(500); await shot('10b-shop-buy');
-  await key('z');                                                                                           // BUY -> Catch Orb
-  await advance(() => G.ui.text && G.ui.text.lines.join(' ').includes('How many') && G.ui.text.shown > 20, 8000, 'quantity picker'); await page.waitForTimeout(400); await key('ArrowUp'); await page.waitForTimeout(150); await shot('10c-shop-qty'); await key('z');   // qty 2
-  await until(() => G.state.money === 600, 6000, 'purchase'); assert.equal(await ev(() => G.state.bag['Catch Orb']), 11); step('bought 2 Catch Orbs at the Trading Post ($1000 -> $600)');
+  await page.waitForTimeout(300); await key('z'); await advance(() => G.shopState && G.shopState.id === 'general' && G.shopState.mode === 'list', 8000, 'shop menu');
+  await shot('10-shop'); assert.equal(await ev(() => G.shopState.rows[0].item), 'Terra Orb');
+  await key('z'); await until(() => G.shopState.mode === 'qty', 4000, 'quantity picker'); await key('ArrowUp'); await shot('10c-shop-qty');   // qty 2
+  await key('z'); await until(() => G.shopState.mode === 'confirm', 4000, 'confirm'); await key('z');
+  await until(() => G.state.money === 600, 6000, 'purchase'); assert.equal(await ev(() => G.state.bag['Terra Orb']), 11); step('bought 2 Terra Orbs at the Trading Post ($1000 -> $600)');
+  for (let i = 0; i < 10 && await ev(() => G.world.busy); i++) { await key('x'); await page.waitForTimeout(200); }
   await ev(() => { G.ui.layers.length = 0; G.closeText(); G.world.busy = false; });
 
   // --- start menu, party, bag, dex screens render ---

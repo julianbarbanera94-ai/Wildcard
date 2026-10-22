@@ -106,13 +106,13 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   sign(m, 39, 26, 'LILY POND\nCross the bridges to the little island.');
 
   item(m, 66, 5, 'sm_potion', 'Potion');                     // under the orchard trees
-  item(m, 9, 4, 'sm_super', 'Super Orb');                    // up on the flower plateau
-  item(m, 30, 38, 'sm_orb', 'Catch Orb', 2);                 // in the south grass
+  item(m, 9, 4, 'sm_super', 'Pulse Orb');                    // up on the flower plateau
+  item(m, 30, 38, 'sm_orb', 'Terra Orb', 2);                 // in the south grass
   item(m, 69, 33, 'sm_spot', 'Super Potion');                // corner of the south-east field
-  item(m, 42, 32, 'sm_ultra', 'Ultra Orb');                  // on the pond island
+  item(m, 42, 32, 'sm_ultra', 'Mythic Orb');                  // on the pond island
   item(m, 5, 39, 'sm_revive', 'Revive');                     // the secret nook in the pines
   item(m, 30, 4, 'sm_heal', 'Full Heal');                    // between the crop beds
-  item(m, 3, 37, 'sm_orb2', 'Catch Orb', 3);                 // deeper in the secret nook
+  item(m, 3, 37, 'sm_orb2', 'Terra Orb', 3);                 // deeper in the secret nook
 
   trainer(m, 'sm_dot', 30, 10, DOWN, 'girl', { name: 'DOT', cls: 'PICNICKER', sight: 4, team: [[10, 4], [16, 4]], pre: 'Hi hi! Nice day for a battle, right?', win: 'Aww, you were too good!', post: 'The grass here is the best for picnics.', prize: 28 });
   trainer(m, 'sm_rue', 45, 18, UP, 'kid', { name: 'RUE', cls: 'KID', sight: 4, team: [[18, 4], [12, 5]], pre: 'You walked right into my meadow!', win: 'You win this round!', post: 'I will get stronger.', prize: 28 });

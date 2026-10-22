@@ -26,20 +26,20 @@ G.SHOPS = {
     stock: ['Wood', 'Stone', 'Plank', 'Brick', 'Nails', 'Clay'].map(n => it(n, 'MATERIALS')),
     sells: ['mat'], rate: .5 },
   seeds: { name: 'MEADOWBROOK SEEDS', place: 'SUNMEADOW', color: '#5fae3f', greet: 'Fresh seeds from the meadow! Plant them in a Garden Plot and water them daily.', bye: 'Happy growing!',
-    stock: [it('Turnip Seeds', 'SEEDS'), it('Carrot Seeds', 'SEEDS'), it('Wheat Seeds', 'SEEDS'), it('Tomato Seeds', 'SEEDS'), it('Watering Can', 'FARM'), it('Fertilizer', 'FARM')],
+    stock: [it('Turnip Seeds', 'SEEDS'), it('Carrot Seeds', 'SEEDS'), it('Wheat Seeds', 'SEEDS'), it('Tomato Seeds', 'SEEDS'), it('Watering Can', 'FARM'), it('Fertilizer', 'FARM'), it('Verdant Orb', 'ORBS')],
     sells: ['crop'], rate: .6 },
   apothecary: { name: 'BOGROOT APOTHECARY', place: 'MIREWOOD', color: '#8a62c8', greet: 'Salves and spores, dearie. And I always pay well for Glowcaps and Honey.', bye: 'Mind the mud on your way out.',
-    stock: ['Herb Salve', 'Full Heal', 'Glowcap Spores', 'Honey'].map(n => it(n, 'REMEDIES')),
+    stock: [...['Herb Salve', 'Full Heal', 'Glowcap Spores', 'Honey'].map(n => it(n, 'REMEDIES')), it('Void Orb', 'ORBS')],
     sells: ['Glowcap', 'Honey'], rate: .6 },
   forge: { name: 'RIDGEHOLD FORGE', place: 'THE RIDGE', color: '#d0603a', greet: 'Iron, copper and good tools. Bring me your ore and I will buy it.', bye: 'Keep your pick sharp!',
-    stock: [it('Iron Ingot', 'METAL'), it('Copper Ingot', 'METAL'), it('Coal', 'METAL'), it('Gear', 'METAL'), it('Axe', 'TOOLS'), it('Pickaxe', 'TOOLS'), it('Pepper Seeds', 'SEEDS')],
+    stock: [it('Iron Ingot', 'METAL'), it('Copper Ingot', 'METAL'), it('Coal', 'METAL'), it('Gear', 'METAL'), it('Axe', 'TOOLS'), it('Pickaxe', 'TOOLS'), it('Pepper Seeds', 'SEEDS'), it('Stone Orb', 'ORBS'), it('Flare Orb', 'ORBS'), it('Frost Orb', 'ORBS')],
     sells: ['Iron Ore', 'Copper Ore', 'Coal', 'Iron Ingot', 'Copper Ingot'], rate: .6 },
   motors: { name: 'TIDEWHEEL MOTORS', place: 'TIDEPOOL SHORE', color: '#3a8ad8', special: 'vehicles', greet: 'Welcome to Tidewheel Motors! Wheels for every Warden.', bye: 'Drive safe out there!',
     stock: [{ vehicle: 'bicycle', cat: 'VEHICLES' }, { vehicle: 'motorbike', cat: 'VEHICLES' }, { vehicle: 'car', cat: 'VEHICLES' }, { vehicle: 'helicopter', cat: 'VEHICLES' },
       it('Wheel', 'PARTS'), it('Engine Part', 'PARTS')],
     sells: ['Wheel', 'Engine Part', 'Gear', 'Wire', 'Hover Core', 'Rotor'], rate: .5 },
   market: { name: 'TIDEWHEEL MARKET', place: 'TIDEPOOL SHORE', color: '#ff8a5a', greet: 'Fresh from the shore! I buy Pearls, crops and home cooking too.', bye: 'Come back with full baskets!',
-    stock: [it('Pumpkin Seeds', 'SEEDS'), it('Tomato Seeds', 'SEEDS')],
+    stock: [it('Pumpkin Seeds', 'SEEDS'), it('Tomato Seeds', 'SEEDS'), it('Aqua Orb', 'ORBS'), it('Gale Orb', 'ORBS')],
     sells: ['Pearl', 'crop', 'food'], rate: .6 },
 };
 const VNAME = { bicycle: 'Bicycle', scooter: 'Scooter', quad: 'Quad Bike', motorbike: 'Motorbike', car: 'Car', hoverboard: 'Hoverboard', helicopter: 'Helicopter' };
@@ -58,13 +58,14 @@ function paintIcon(x, name, kind) {
   const shine = (cx, cy, r) => { x.fillStyle = 'rgba(255,255,255,.7)'; x.beginPath(); x.ellipse(cx, cy, r, r * .6, -.6, 0, 7); x.fill(); };
   const shadow = () => { x.fillStyle = 'rgba(40,30,60,.18)'; x.beginPath(); x.ellipse(8, 14.6, 5.6, 1.4, 0, 0, 7); x.fill(); };
   shadow();
+  if (kind === 'orb' && G.orbImage) { x.drawImage(G.orbImage(G.orbStyleOf(name)), 1.4, 1, 13.2, 13.2); return; }
   if (kind === 'orb') {
-    const top = name === 'Super Orb' ? '#4a8aff' : name === 'Ultra Orb' ? '#ffd23a' : '#ff4d5e';
+    const top = name === 'Pulse Orb' ? '#4a8aff' : name === 'Mythic Orb' ? '#ffd23a' : '#ff4d5e';
     x.fillStyle = '#3d3352'; x.beginPath(); x.arc(8, 8, 6.4, 0, 7); x.fill();
     x.fillStyle = K.lin(x, 0, 2, 0, 8, [shd(top, 1.3), top]); x.beginPath(); x.arc(8, 8, 5.7, Math.PI, 0); x.fill();
     x.fillStyle = '#f4f2fa'; x.beginPath(); x.arc(8, 8, 5.7, 0, Math.PI); x.fill();
     x.fillStyle = '#3d3352'; x.fillRect(2.3, 7.4, 11.4, 1.2); x.beginPath(); x.arc(8, 8, 2, 0, 7); x.fill(); x.fillStyle = '#fff'; x.beginPath(); x.arc(8, 8, 1.2, 0, 7); x.fill();
-    if (name === 'Ultra Orb') { x.fillStyle = '#3d3352'; x.fillRect(4.5, 3.4, 1.4, 3.4); x.fillRect(10.1, 3.4, 1.4, 3.4); }
+    if (name === 'Mythic Orb') { x.fillStyle = '#3d3352'; x.fillRect(4.5, 3.4, 1.4, 3.4); x.fillRect(10.1, 3.4, 1.4, 3.4); }
     shine(5.6, 4.6, 1.4); return;
   }
   if (kind === 'heal' || kind === 'cure') {   // a round flask

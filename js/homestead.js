@@ -18,6 +18,8 @@ G.migrateState = function (S) {
   S.builds = S.builds || []; S.home = S.home || { deed: 1 }; S.day = S.day || 1; S.clock = S.clock || 0;
   if (typeof S.energy !== 'number') S.energy = 100;
   S.storage = S.storage || {}; S.gather = S.gather || {}; S.visited = S.visited || {}; S.recipes = S.recipes || {}; S.can = S.can || 0;
+  // the capture orbs were renamed: Catch -> Terra, Super -> Pulse, Ultra -> Mythic
+  for (const st of [S.bag || {}, S.storage]) for (const [o, n] of [['Catch Orb', 'Terra Orb'], ['Super Orb', 'Pulse Orb'], ['Ultra Orb', 'Mythic Orb']]) if (st[o]) { st[n] = (st[n] || 0) + st[o]; delete st[o]; }
   S.vehicles = Object.assign({ owned: [], riding: null, parked: null, paint: {}, tune: {} }, S.vehicles || {});
   for (const b of S.builds) {
     b.lvl = b.lvl || 1; b.rot = b.rot || 0;

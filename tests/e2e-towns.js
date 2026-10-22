@@ -66,7 +66,7 @@ const OUT = process.env.OUT || '/tmp';
   step('too little money: "You need $40 more." and neither money nor bag change');
 
   // 4) selling crops on the SELL tab
-  await key('ArrowRight'); await key('ArrowRight');
+  for (let i = 0; i < 6 && await ev(() => G.shopState.tabs[G.shopState.tab] !== 'SELL'); i++) await key('ArrowRight');
   assert.equal(await ev(() => G.shopState.tabs[G.shopState.tab]), 'SELL');
   assert.deepEqual(await ev(() => G.shopState.rows.map(r => r.item)), ['Turnip'], 'the seed stand only buys crops');
   const price = await ev(() => G.shopState.rows[0].price); assert.equal(price, 36);

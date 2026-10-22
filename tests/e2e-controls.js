@@ -34,7 +34,7 @@ const OUT = process.env.OUT || '/tmp';
   step(`thumbstick moves the player (y ${y0} -> ${moved[1]}) and steers by its strongest axis`);
 
   // ORB button: throw at a nearby roaming creature -> battle opens with the capture attempt (Sure Catch for determinism)
-  await ev(() => { const S = G.state; S.flags.starter = true; S.party.length = 0; S.party.push(G.makeCreature(4, 12)); S.bag = { 'Catch Orb': 3 }; S.cheats = { on: true, catch: true };
+  await ev(() => { const S = G.state; S.flags.starter = true; S.party.length = 0; S.party.push(G.makeCreature(4, 12)); S.bag = { 'Terra Orb': 3 }; S.cheats = { on: true, catch: true };
     const w = G.MAPS.lanternrest.warps.find(w => w.to === 'sunmeadow'); G.loadMap('sunmeadow'); G.placePlayer(w.tx, w.ty, 2); });
   await page.waitForTimeout(600);
   const tgt = await ev(() => { const P = G.world.p, rs = G.world.map.roamers; rs.forEach(r => r.timer = 99999);
@@ -45,7 +45,7 @@ const OUT = process.env.OUT || '/tmp';
   await until(() => G.scene !== G.world.scene, 8000, 'battle opened');
   await until(() => G.world.scene === G.scene && !G.world.busy, 60000, 'back on the map');
   assert(await ev(() => G.state.party.some(c => c === window.__t.c) || G.state.box.includes(window.__t.c)), 'creature was caught');
-  assert.equal(await ev(() => G.state.bag['Catch Orb']), 2, 'exactly one orb used');
+  assert.equal(await ev(() => G.state.bag['Terra Orb']), 2, 'exactly one orb used');
   assert(await ev(() => !G.world.map.roamers.includes(window.__t)), 'caught creature left the map');
   step(`ORB button throws at the nearby ${tgt}; the battle opens with the capture and it is caught`);
 

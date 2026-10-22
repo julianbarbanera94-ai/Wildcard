@@ -28,7 +28,7 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   scatter(m, 'd', [[3, 29], [8, 33]]); rect(m, 2, 16, 3, 2, 'f'); rect(m, 7, 19, 2, 1, 'f'); rect(m, 5, 35, 3, 2, 'f');
   sign(m, 12, 23, 'MIREWOOD MARSH\nStay on the boardwalk... or do not. The creatures here like it wild.');
   m.objs.push({ x: 2, y: 49, id: 'mw_heal', item: 'Full Heal', ball: true });
-  m.objs.push({ x: 4, y: 34, id: 'mw_catch', item: 'Catch Orb', qty: 3, ball: true });
+  m.objs.push({ x: 4, y: 34, id: 'mw_catch', item: 'Terra Orb', qty: 3, ball: true });
 
   // -- north shore: tree line, reed beds and the shore path --
   rect(m, 11, 7, 53, 1, 'p'); rect(m, 11, 7, 1, 17, 'p');
@@ -40,7 +40,7 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   rect(m, 35, 4, 4, 2, 'f'); scatter(m, 'u', [[24, 6], [31, 5], [32, 5], [42, 6], [52, 6], [12, 9], [16, 9], [28, 9]]); scatter(m, 'd', [[26, 4], [39, 4], [55, 5]]);
   // north-east grove: a ring of pines hides a little nook with an item
   rect(m, 64, 2, 9, 5, 'n'); rect(m, 65, 3, 7, 3, 'g'); rect(m, 66, 3, 5, 1, 'f'); set(m, 64, 4, 'g'); set(m, 63, 4, 'g');
-  m.objs.push({ x: 70, y: 4, id: 'mw_orb', item: 'Super Orb', qty: 2, ball: true });
+  m.objs.push({ x: 70, y: 4, id: 'mw_orb', item: 'Pulse Orb', qty: 2, ball: true });
   trainer(m, 'mw_mo', 34, 5, DOWN, 'bug', { name: 'MO', cls: 'BUG CATCHER', sight: 3, team: [[18, 8], [19, 9]], pre: 'Marsh bugs are the best bugs!', win: 'Mine got squashed!', post: 'I will catch a bigger one next time.', prize: 32 });
 
   // -- main boardwalk east from the woods --

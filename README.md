@@ -51,9 +51,54 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
    - **North, the Ridge and Glimmer Mine:** the hardest region. Warden Kade holds the Mine Ember Shard.
    - **South, Tidepool Shore:** optional, with hidden items, rare creatures in the dune grass, and Moll's lost lantern.
 3. Wild creatures roam the map. Bold ones notice you and give chase, shy ones scurry off, curious ones mill about. Bump into one (or press A on it) to battle, or get within a few steps and **throw an orb** at it (ORB button / `C`): the battle opens with that capture attempt, and if it breaks free you fight it. More hide in the tall grass. Weaken them and throw an orb from the BAG to catch them. Sleep and poison improve your odds. Trainers will spot you and walk up for a battle.
-4. **Build** (START → BUILD) on open grass or sand outdoors; each village and region has marked building plots. A **Base** you can walk into (bed to rest, PC), a **Healing Station** (heal any time), a **Nursery** (leave a creature; it earns EXP for every step you walk), and decorations (lamps, flowers, bushes, pines, fences). Press A on a structure to use it or take it down for half the cost back. Builds are saved.
+4. **Your homestead**: take the road north out of Lanternrest's north-east plot. You own a little cabin and the land around it; see *Homestead* below.
 5. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
 6. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
+
+## Homestead
+
+- **Build** (START → BUILD), grouped by HOME, CREATURES, CRAFTING, FARMING, VEHICLES and DECOR.
+  - Every structure shows its cost: what you have against what you need, in green or red.
+  - Placing shows a grid and a green or red ghost with the reason. Tap a tile to move the ghost, rotate with C, and place plots, fences and paths several in a row.
+  - Press A on a structure to use it, **upgrade** it (with a preview of the new size, what it unlocks, the cost and any requirements), move it, rotate it or remove it. Removing refunds half.
+  - Data lives in `js/structures.js`; adding a structure or a level is a data change.
+- **Player House**, 4 levels: Cabin → Cottage → Family Home → Grand Homestead. Walk inside: bed (sleep to the next day and heal), kitchen (cook meals), fridge and cupboards (storage), shower or bath and toilet (energy), sofa, TV, bookshelf (recipe book), desk (ledger), wardrobe and trophies.
+- **Creatures:**
+  - **Nursery**: 1–3 slots that earn EXP as you walk.
+  - **Barn**: creatures living there make Wool, Milk, Honey, Fertilizer, Coal, Stone, Clay, Pearls and so on every day, depending on their type.
+  - **Healing Station**: 1, 3 or unlimited free heals a day, with revives from level 2.
+- **Crafting:**
+  - **Refinery**: timed jobs that turn wood, ore, clay, fibre, wool and wheat into planks, ingots, bricks, rope, glass, cloth and flour.
+  - **Forge**: tools, parts, orbs, care items and vehicles.
+  - **Kitchen**: meals.
+- **Farming:**
+  - Garden plots (normal, rich or a self-watering planter box), watering can, well, sprinklers and greenhouse.
+  - Eight crops with growth stages. A crop withers after 3 dry days.
+  - Seeds come from bushes (it depends on the region) and from seed shops.
+  - **Days** advance by sleeping or after 10 minutes of play. **Energy** is spent gathering and farming, and restored by food and rest.
+- **Gathering**: press A facing trees, stumps, bushes, boulders, crystals or water.
+  - An **Axe** gives more wood. A **Pickaxe** unlocks ore and crystals on the Ridge and in the Mine.
+  - Tiles regrow after 150 steps.
+- **Land Office**: buy deeds 2 and 3 to clear the thicket and grow your land.
+- **Vehicles**: the **Garage** stores them, and START → TRAVEL lets you ride or get off.
+  - **Bicycle**: land, not tall grass. Craft it or buy it.
+  - **Scooter**: roads only. A courier quest in Lanternrest.
+  - **Quad bike**: everywhere on land, including tall grass and caves. Repair the wreck on the Ridge.
+  - **Motorbike** and **car**: bought at Tidewheel Motors on the Shore. The car stays on roads.
+  - **Hoverboard**: crosses water. Craft it after the Lantern is lit.
+  - **Helicopter**: flies between landing spots. It needs a Garage Lv3 and a Helipad.
+  - Vehicles park themselves outside when you go indoors.
+- **Flying**: START → TRAVEL → FLY, with an evolved Flying-type creature at Lv18+. Pick any place you've visited on the vale map.
+- **Map**: START → MAP shows the whole vale, where you are, what you've visited, and the healers, shops and wardens in each region.
+- **Towns**: every service has a name plate.
+  - Lanternrest: General Store, Builder's Yard, Warden Lodge (healing).
+  - Sunmeadow: Meadowbrook Seeds.
+  - Mirewood: Bogroot Apothecary.
+  - Ridge: Ridgehold Forge and a Healing Post.
+  - Shore: Tidewheel Motors, Tidewheel Market and a Healing Post.
+- **Orbs**: Terra (standard), Aqua, Flare, Verdant, Frost, Gale, Stone (3x on their types), Void (Ghost, Dark, Psychic and rare creatures), Pulse (strong, best on fast or fierce creatures) and Mythic (the best, 4x on legendaries).
+  - Each region's shops sell the orbs that suit its creatures.
+  - Throwing from the overworld picks your best orb for that creature.
 
 Touch: tap any menu item, party card, bag row, Dex entry or on-screen keyboard key to pick it (tap outside a menu to go back); the thumbstick still works everywhere.
 
@@ -76,10 +121,21 @@ js/battle.js        battle scene, turn logic, catching, EXP, evolution
 js/mapkit.js        map-building helpers
 js/maps/*.js        the world: hub village, Sunmeadow, Mirewood, Ridge + Mine, Shore + Hollow
 js/world.js         overworld runtime: movement, follower, roaming creatures, trainers, story, save/load
-js/build.js         player building: base, healing station, nursery, decorations
+js/economy.js       item catalogue (materials, tools, seeds, crops, food) and inventory helpers (G.inv)
+js/orbart.js        the ten capture orbs: art and catch bonuses
+js/structures.js    every buildable structure: levels, costs, requirements, perks (data)
+js/homestead.js     building framework: placement, upgrades, move/rotate/remove, land deeds, nursery, healing station, save migration
+js/homeart.js       structure and crop art          js/propart.js   furniture and vehicle art
+js/farm.js          days, energy, plots and crops, barn, sprinklers, greenhouse
+js/craft.js         refinery, forge, kitchen, storage, house furniture
+js/gather.js        gathering from trees, bushes, rocks, crystals and water
+js/shops.js         every shop (G.SHOPS, G.openShop) and the shared healing screen (G.healUI)
+js/vehicles.js      vehicles, garage, riding, parking, flight, helicopter, the TRAVEL menu and the vale MAP
+js/build.js         the legacy base interior (old saves)
 js/cheats.js        Settings and the password-gated Test Mode
 js/main.js          title screen and boot
 docs/CONTRACT.md    rendering model, APIs, file ownership and map contract
+docs/HOMESTEAD.md   homestead systems contract: hooks, state fields, rules and numbers
 tests/              logic unit tests and headless-browser playthroughs
 ```
 
@@ -92,9 +148,16 @@ node tests/logic.test.js                       # data integrity + battle/catch m
 node tests/maps.test.js                        # map data + every NPC/item/warp is reachable on foot
 npm i playwright && node tests/e2e-play.js     # headless playthrough: new game, capture, trainer, shop, save/load
 node tests/e2e-extra.js                        # level-up, evolution, whiteout, boss, relight, follower, Joker capture, fuzz bot
-node tests/e2e-world.js                        # roaming creatures, building, healing station, nursery EXP, base, saved builds
+node tests/e2e-world.js                        # roaming creatures, building outdoors, healing station, nursery EXP, legacy base, saved builds
 node tests/e2e-cheats.js                       # Settings, password prompt, Test Mode options
 node tests/e2e-controls.js                     # thumbstick, ORB button, touch title prompt, throwing orbs at roaming creatures
+node tests/e2e-touch.js                        # tapping menus, the title and the on-screen keyboard
+node tests/home-maps.test.js                   # homestead/house/shop maps: props never block exits or furniture
+node tests/e2e-homestead.js                    # build menu, invalid placement, costs, upgrades, move/rotate/remove, deeds, save
+node tests/e2e-farm.js                         # crops, watering, withering, sprinklers, days, energy, gathering, barn
+node tests/e2e-craft.js                        # refinery jobs, forge, kitchen, storage, treats, furniture
+node tests/e2e-towns.js                        # shops (D-pad and touch), selling, healing centres, homestead road
+node tests/e2e-vehicles.js                     # garage, riding rules, parking, buying, flight, helicopter, quests, world map
 ```
 
 The end-to-end tests drive the real game with keyboard input in headless Chromium. Set `PW` to the playwright module path, `CHROME` to a Chromium binary and `OUT` to a folder for screenshots if the defaults don't apply.

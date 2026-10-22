@@ -56,14 +56,14 @@ const OUT = process.env.OUT || '/tmp';
   await ev(() => { G.scene = G.world.scene; G.ui.fade.a = 0; G.world.busy = false; });
 
   // 4) mine boss ambush: shard + reward, then relight the Great Lantern, open the gate, catch Joker ------------
-  await ev(() => { const S = G.state; S.party.length = 0; for (let i = 0; i < 3; i++) { const j = G.makeCreature(25, 60); j.moves = [{ id: 'Quake', pp: 10 }]; S.party.push(j); } S.bag = { 'Ultra Orb': 30 }; S.flags = { starter: true };
+  await ev(() => { const S = G.state; S.party.length = 0; for (let i = 0; i < 3; i++) { const j = G.makeCreature(25, 60); j.moves = [{ id: 'Quake', pp: 10 }]; S.party.push(j); } S.bag = { 'Mythic Orb': 30 }; S.flags = { starter: true };
     G.loadMap('mine'); const k = G.world.map.npcs.find(n => n.trainer && n.trainer.id === 'mn_kade'); const v = G.worldApi.VEC[k.dir]; const s = k.trainer.sight;
     window.__kd = [1, 0, 3, 2][k.dir]; G.placePlayer(k.x + v[0] * (s + 1), k.y + v[1] * (s + 1), window.__kd); G.world.map.roamers = []; G.world.map._spawn = false; });
   await page.waitForTimeout(400); await key(['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'][await ev(() => window.__kd)], 250);   // step into Kade's line of sight
   await until(() => G.world.busy, 5000, 'trainer spotted'); await page.waitForTimeout(500); await shot('boss-spotted');
   await fight(() => !G.state.flags.mn_kade); await idle();
-  assert.equal(await ev(() => G.state.bag['Ultra Orb']), 33); assert(await ev(() => G.state.flags.shard_mine));
-  step('mine warden spots the player, battles, and gives the Mine Ember Shard + 3 Ultra Orbs');
+  assert.equal(await ev(() => G.state.bag['Mythic Orb']), 33); assert(await ev(() => G.state.flags.shard_mine));
+  step('mine warden spots the player, battles, and gives the Mine Ember Shard + 3 Mythic Orbs');
   // relight: the other two shards are given directly; the Mine shard goes in via the real pedestal interaction
   await ev(() => { Object.assign(G.state.flags, { shard_meadow: true, shard_marsh: true }); G.loadMap('tower'); });
   for (const [x, y, d] of [[3, 4, 1], [9, 4, 1], [6, 3, 1]]) {
@@ -78,7 +78,7 @@ const OUT = process.env.OUT || '/tmp';
   await advance(cmdReady, 40000, 'joker battle'); await page.waitForTimeout(200); await shot('joker-battle');
   for (let tries = 0; tries < 12; tries++) {
     if (!(await ev(() => G.scene !== G.world.scene))) break;
-    await advance(cmdReady, 40000, 'cmd'); await key('ArrowRight'); await key('z'); await page.waitForTimeout(300); await key('z');   // BAG -> Ultra Orb
+    await advance(cmdReady, 40000, 'cmd'); await key('ArrowRight'); await key('z'); await page.waitForTimeout(300); await key('z');   // BAG -> Mythic Orb
     await advance(() => (G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0) || G.state.flags.jokerCaught, 40000, 'catch result');
   }
   await until(() => G.state.flags.jokerCaught, 60000, 'Joker caught'); await advance(() => !G.world.busy, 40000);
@@ -105,7 +105,7 @@ const OUT = process.env.OUT || '/tmp';
     const out = [];
     G.ui.layers.length = 0; G.closeText(); G.world.busy = false; G.scene = G.world.scene; G.ui.fade.a = 0;
     for (let n = 0; n < 8; n++) {
-      const S = G.state; S.party.length = 0; S.bag = { 'Catch Orb': 5, Potion: 5, Revive: 2, 'Full Heal': 2 };
+      const S = G.state; S.party.length = 0; S.bag = { 'Terra Orb': 5, Potion: 5, Revive: 2, 'Full Heal': 2 };
       [[1, 24], [4, 22], [7, 23]].forEach(([id, l]) => S.party.push(G.makeCreature(id, l)));
       S.party[0].moves = [['Sleep Powder', 'Thunder Wave', 'Poison Powder', 'Growl'][n % 4], 'Ember', 'Lullaby', 'Harden'].map(id => ({ id, pp: G.MOVES[id].pp }));
       const wild = n % 2 === 0, foe = G.makeCreature([22, 23, 24, 20, 21, 12, 14, 16][n], 8 + (n >> 1));

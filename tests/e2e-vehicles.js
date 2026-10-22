@@ -193,11 +193,11 @@ fs.mkdirSync(OUT, { recursive: true });
   // 7) Garage Lv2: tune-up and paint
   await ev(() => { setup('lanternrest', 49, 9, 1); G.vehicles.grant('bicycle'); G.state.bag['Engine Part'] = 1; G.state.builds.push({ id: 'g1', type: 'garage', map: 'lanternrest', x: 48, y: 6, lvl: 2, rot: 0 }); G.applyBuilds(G.world.map); });
   const s0 = await ev(() => G.vehicles.speed('bicycle'));
-  await ev(() => G.runWorld(() => G.homeUse.garage(G.state.builds[0]))); await until(() => G.ui.layers.length >= 2, 3000, 'garage');
-  await key('z'); await page.waitForTimeout(300); await key('ArrowDown'); await shot('dbg-tune'); await key('z'); await page.waitForTimeout(500); await shot('dbg-tune2');   // BICYCLE > TUNE-UP > YES
+  await ev(() => G.runWorld(() => G.homeUse.garage(G.state.builds.find(b => b.type === 'garage')))); await until(() => G.ui.layers.length >= 2, 3000, 'garage');
+  await key('z'); await page.waitForTimeout(300); await key('ArrowDown'); await key('z');   // BICYCLE > TUNE-UP > YES
   await advance();
   assert.equal(await ev(() => G.vehicles.speed('bicycle')), s0 + .5); assert.equal(await ev(() => G.state.bag['Engine Part'] || 0), 0);
-  await ev(() => G.runWorld(() => G.homeUse.garage(G.state.builds[0]))); await until(() => G.ui.layers.length >= 2, 3000, 'garage');
+  await ev(() => G.runWorld(() => G.homeUse.garage(G.state.builds.find(b => b.type === 'garage')))); await until(() => G.ui.layers.length >= 2, 3000, 'garage');
   await key('z'); await page.waitForTimeout(300); await key('ArrowDown'); await key('ArrowDown'); await key('z');   // PAINT
   await until(() => G.ui.layers.length >= 2, 3000); await key('ArrowDown'); await page.waitForTimeout(300); await shot('garage-paint'); await key('z');   // BLUE
   await advance();
@@ -210,10 +210,10 @@ fs.mkdirSync(OUT, { recursive: true });
   await until(() => G.vehicles._map && G.scene === G.vehicles._map.scene && G.ui.fade.a === 0, 4000, 'map screen');
   assert.equal(await ev(() => G.vehicles._map.here), 'lanternrest', 'you are here: Lanternrest (outside the cottage)');
   await page.waitForTimeout(400); await shot('world-map');
-  assert.match(await ev(() => G.vehicles._map.desc), /hub village/);
+  assert.match(await ev(() => G.vehicles._map.desc), /hub village.*healing/);
   await key('ArrowLeft'); await page.waitForTimeout(100);
   assert.equal(await ev(() => G.vehicles._map.nodes[G.vehicles._map.sel].id), 'sunmeadow');
-  assert.match(await ev(() => G.vehicles._map.desc), /windmill.*shard won/);
+  assert.match(await ev(() => G.vehicles._map.desc), /windmill.*Ember Shard won/);
   await key('ArrowRight'); await key('ArrowRight'); await page.waitForTimeout(100);
   assert.equal(await ev(() => G.vehicles._map.nodes[G.vehicles._map.sel].id), 'mirewood');
   assert.equal(await ev(() => G.vehicles._map.desc), "You haven't been here yet.");

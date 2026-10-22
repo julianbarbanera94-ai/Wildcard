@@ -52,7 +52,7 @@ const OUT = process.env.OUT || '/tmp';
 
   // UNLOCK EVERYTHING
   await key('z'); await advance(() => G.state.flags.lanternLit && !G.ui.text, 10000);
-  const st = await ev(() => ({ dex: Object.values(G.state.dex).filter(v => v > 1).length, shards: ['meadow', 'marsh', 'mine'].every(k => G.state.flags['shard_' + k] && G.state.flags['placed_' + k]), money: G.state.money, orbs: G.state.bag['Catch Orb'], lit: G.state.flags.lanternLit, on: G.state.cheats }));
+  const st = await ev(() => ({ dex: Object.values(G.state.dex).filter(v => v > 1).length, shards: ['meadow', 'marsh', 'mine'].every(k => G.state.flags['shard_' + k] && G.state.flags['placed_' + k]), money: G.state.money, orbs: G.state.bag['Terra Orb'], lit: G.state.flags.lanternLit, on: G.state.cheats }));
   assert.equal(st.dex, await ev(() => Object.keys(G.SPECIES).length)); assert(st.shards && st.lit); assert.equal(st.orbs, 99); assert(st.money >= 9999999); assert(st.on.god && st.on.catch && st.on.pp && st.on.items && st.on.money);
   step('UNLOCK EVERYTHING: full Dex, shards placed, Lantern lit, items x99, money, all infinite options on');
 
@@ -68,7 +68,7 @@ const OUT = process.env.OUT || '/tmp';
   await idle();
 
   // battle effects: god mode (no damage), infinite PP / items, sure catch on the first orb
-  await ev(() => { const S = G.state; S.party.length = 0; const c = G.makeCreature(1, 10); c.moves = [{ id: 'Tackle', pp: 1 }]; S.party.push(c); S.bag = { 'Catch Orb': 1 }; window.__res = undefined;
+  await ev(() => { const S = G.state; S.party.length = 0; const c = G.makeCreature(1, 10); c.moves = [{ id: 'Tackle', pp: 1 }]; S.party.push(c); S.bag = { 'Terra Orb': 1 }; window.__res = undefined;
     const foe = G.makeCreature(25, 60); G.runWorld(async () => { window.__res = await G.startBattle({ wild: foe }); await G.fadeTo(0, 5); }); });
   const cmdReady = () => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0;
   for (let turn = 0; turn < 3; turn++) { await advance(cmdReady, 40000); await key('z', 50); await key('z', 50); }   // FIGHT -> Tackle three times with 1 PP
@@ -77,7 +77,7 @@ const OUT = process.env.OUT || '/tmp';
   assert.equal(mid.hp, mid.max, 'god mode: a level-60 Joker did no damage'); assert.equal(mid.pp, 1, 'infinite PP'); step('GOD MODE (no damage) and INFINITE PP hold through three turns against a Lv60 Joker');
   await key('ArrowRight'); await key('z'); await page.waitForTimeout(400); await key('z');      // BAG -> first item (an orb, bag refilled to 99 by the tick or kept)
   await until(() => window.__res !== undefined, 60000, 'catch');
-  assert.equal(await ev(() => window.__res), 'caught'); assert.equal(await ev(() => G.state.bag['Catch Orb']), 1, 'infinite items: the orb was not used up'); step('SURE CATCH catches a Lv60 legendary with the first orb, and the orb is not used up');
+  assert.equal(await ev(() => window.__res), 'caught'); assert.equal(await ev(() => G.state.bag['Terra Orb']), 1, 'infinite items: the orb was not used up'); step('SURE CATCH catches a Lv60 legendary with the first orb, and the orb is not used up');
 
   await browser.close();
   console.log('errors:', errors.length ? errors : 'none');

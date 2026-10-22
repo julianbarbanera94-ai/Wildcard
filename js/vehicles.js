@@ -429,7 +429,7 @@ G.hooks.overlay.push((ctx) => {
 let lastMap = null;
 G.hooks.load.push(m => {
   if (!G.state) return;
-  const V = st(), prev = lastMap; lastMap = m.id;
+  const V = st(), prev = lastMap; lastMap = m.id; toast = null;
   if (m.outdoor) G.state.visited[m.id] = true;
   if (V.riding && !m.outdoor) {
     const p = G.world.p, id = V.riding; V.riding = null;
@@ -739,8 +739,8 @@ const NODES = [
   { id: 'mine', name: 'GLIMMER MINE', x: 126, y: 18, cave: true },
   { id: 'sunmeadow', name: 'SUNMEADOW', x: 40, y: 82 },
   { id: 'mirewood', name: 'MIREWOOD', x: 202, y: 84 },
-  { id: 'shore', name: 'TIDEPOOL SHORE', x: 112, y: 118 },
-  { id: 'hollow', name: 'STARLIT HOLLOW', x: 184, y: 114 },
+  { id: 'shore', name: 'TIDEPOOL SHORE', x: 106, y: 108 },
+  { id: 'hollow', name: 'STARLIT HOLLOW', x: 184, y: 108 },
 ];
 function nodeWhy(n) {
   const S = G.state, m = G.MAPS[n.id];
@@ -798,12 +798,12 @@ function valeArt() {
     grove(74, 60, 20, 18, 14, 11); grove(80, 104, 24, 14, 14, 12); grove(150, 92, 16, 20, 12, 13); grove(140, 40, 26, 10, 12, 14); grove(10, 112, 20, 12, 10, 15); grove(228, 50, 18, 16, 10, 16);
     grove(60, 44, 30, 8, 12, 17); grove(186, 46, 22, 8, 10, 18);
     // the Hollow: a crystal outcrop
-    x.fillStyle = '#8a7a9a'; x.beginPath(); x.ellipse(184, 110, 12, 7, 0, 0, TAU); x.fill(); x.fillStyle = '#6a5a7a'; x.beginPath(); x.ellipse(184, 112, 10, 4, 0, 0, TAU); x.fill();
-    [[178, 107, 4], [184, 104, 6], [190, 108, 4], [181, 109, 3]].forEach(([cx, cy, h]) => { x.fillStyle = '#c8a8ff'; x.beginPath(); x.moveTo(cx - 1.6, cy + 2); x.lineTo(cx, cy - h); x.lineTo(cx + 1.6, cy + 2); x.closePath(); x.fill(); x.fillStyle = 'rgba(255,255,255,.6)'; x.beginPath(); x.moveTo(cx - .4, cy + 1); x.lineTo(cx, cy - h + 1); x.lineTo(cx + .4, cy + 1); x.closePath(); x.fill(); });
+    x.fillStyle = '#8a7a9a'; x.beginPath(); x.ellipse(184, 106, 12, 7, 0, 0, TAU); x.fill(); x.fillStyle = '#6a5a7a'; x.beginPath(); x.ellipse(184, 108, 10, 4, 0, 0, TAU); x.fill();
+    [[178, 103, 4], [184, 100, 6], [190, 104, 4], [181, 105, 3]].forEach(([cx, cy, h]) => { x.fillStyle = '#c8a8ff'; x.beginPath(); x.moveTo(cx - 1.6, cy + 2); x.lineTo(cx, cy - h); x.lineTo(cx + 1.6, cy + 2); x.closePath(); x.fill(); x.fillStyle = 'rgba(255,255,255,.6)'; x.beginPath(); x.moveTo(cx - .4, cy + 1); x.lineTo(cx, cy - h + 1); x.lineTo(cx + .4, cy + 1); x.closePath(); x.fill(); });
     // roads out of Lanternrest
     const road = pts => { x.lineCap = 'round'; x.lineJoin = 'round'; for (const [w, col] of [[3.6, 'rgba(150,110,50,.35)'], [2.4, '#ecd896']]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 4) x.quadraticCurveTo(pts[i], pts[i + 1], pts[i + 2], pts[i + 3]); x.stroke(); } };
-    road([120, 82, 84, 72, 40, 82]); road([120, 82, 160, 92, 202, 84]); road([120, 82, 100, 60, 104, 40, 110, 28, 126, 24]); road([120, 82, 124, 102, 112, 118]);
-    road([120, 82, 150, 66, 162, 54]); road([120, 82, 176, 94, 184, 112]);
+    road([120, 82, 84, 72, 40, 82]); road([120, 82, 160, 92, 202, 84]); road([120, 82, 100, 60, 104, 40, 110, 28, 126, 24]); road([120, 82, 118, 98, 106, 108]);
+    road([120, 82, 150, 66, 162, 54]); road([120, 82, 172, 92, 184, 106]);
     // Lanternrest: a plaza with little houses
     x.fillStyle = '#f0dca0'; x.beginPath(); x.ellipse(120, 82, 13, 9, 0, 0, TAU); x.fill();
     x.fillStyle = '#5cb8e0'; x.beginPath(); x.ellipse(103, 92, 5, 3, 0, 0, TAU); x.fill();
@@ -858,7 +858,7 @@ function navPick(nodes, sel, k) {
   const dir = k.up ? [0, -1] : k.down ? [0, 1] : k.left ? [-1, 0] : k.right ? [1, 0] : null;
   if (!dir) return sel;
   const cur = nodes[sel]; let best = sel, score = 1e9;
-  nodes.forEach((n, i) => { if (i === sel) return; const dx = n.x - cur.x, dy = n.y - cur.y, along = dx * dir[0] + dy * dir[1], perp = Math.abs(dx * dir[1] - dy * dir[0]); if (along <= 0) return; const sc = along + perp * 2.2; if (sc < score) { score = sc; best = i; } });
+  nodes.forEach((n, i) => { if (i === sel) return; const dx = n.x - cur.x, dy = n.y - cur.y, along = dx * dir[0] + dy * dir[1], perp = Math.abs(dx * dir[1] - dy * dir[0]); if (along <= 0) return; const sc = along + perp * 3.5; if (sc < score) { score = sc; best = i; } });
   return best;
 }
 function drawSky(ctx, t, lit, cl) {
@@ -955,14 +955,14 @@ async function flight(mode, carrier) {
 
 // ---- World map (START > MAP): a view-only map of the vale ---------------------------------------------
 const REGION_DESC = {
-  lanternrest: 'The hub village around the Great Lantern. Four roads lead out from here.',
-  homestead: 'Your own land: build, farm and keep your vehicles here.',
-  ridge: 'A switchback trail up four terraces to the mouth of Glimmer Mine.',
-  mine: 'Crystal caves under the Ridge, guarded by the Mine Warden.',
-  sunmeadow: 'Rolling fields, an orchard and a windmill. Gentle creatures.',
-  mirewood: 'A misty marsh of boardwalks and reeds. Bug and Poison types.',
-  shore: 'Dunes, tidepools and a lighthouse. Rare finds wash up here.',
-  hollow: 'A starlit crystal cavern. Something waits at its heart.',
+  lanternrest: 'The hub village around the Great Lantern.',
+  homestead: 'Your own land: build, farm and park your vehicles.',
+  ridge: 'A switchback trail up to the mouth of Glimmer Mine.',
+  mine: 'Crystal caves under the Ridge, home of a Warden.',
+  sunmeadow: 'Rolling fields, an orchard and a windmill.',
+  mirewood: 'A misty marsh of boardwalks and reeds.',
+  shore: 'Dunes, tidepools and a lighthouse.',
+  hollow: 'A starlit crystal cavern. Something waits inside.',
 };
 const WARDEN = { sunmeadow: 'meadow', mirewood: 'marsh', mine: 'mine' };
 // The outdoor map (a map-screen node) that a map belongs to: itself, or the first node its warps lead back to.
@@ -1023,15 +1023,16 @@ G.worldMapScreen = async function () {
         if (isHere) { const by = n.y - 15 - (I.known ? 4 : 0) + Math.sin(t / 7) * 1.4; ctx.fillStyle = '#ff6b5a'; ctx.beginPath(); ctx.arc(n.x, by - 2.5, 2.6, 0, TAU); ctx.moveTo(n.x - 2.2, by - 1.2); ctx.lineTo(n.x, by + 2); ctx.lineTo(n.x + 2.2, by - 1.2); ctx.fill(); circ(ctx, n.x, by - 2.5, 1, '#ffffff'); }
       });
       G.frame(ctx, 4, 4, 104, 17, 'light'); G.text(ctx, 'MAP OF THE VALE', 12, 8.5, { font: G.FONT_B || G.FONT });
+      G.frame(ctx, 176, 4, 60, 17, 'light'); G.text(ctx, G.touch ? 'TAP: CLOSE' : 'B: CLOSE', 206, 9.5, { align: 'center', font: G.FONT_S, color: '#8a7a90', shadow: false });
       const n = nodes[sel], I = mapNodeInfo(n, here);
       G.frame(ctx, 4, 128, 232, 29, 'light');
-      G.text(ctx, I.known ? n.name : '???', 12, 132, { font: G.FONT_B || G.FONT });
-      if (n.id === here) G.kit.pill(ctx, 12 + G.textW(ctx, I.known ? n.name : '???') + 6, 132.5, 40, 9, '#ff8a3c', 'YOU ARE HERE');
+      const nm = I.known ? n.name : '???';
+      G.text(ctx, nm, 12, 132, { font: G.FONT_B || G.FONT });
+      if (n.id === here) { ctx.font = '900 5.5px ' + G.FONT_FAM; const pw = ctx.measureText('YOU ARE HERE').width + 10; ctx.font = G.FONT_B || G.FONT; G.kit.pill(ctx, 12 + ctx.measureText(nm).width + 5, 132.5, pw, 9, '#ff8a3c', 'YOU ARE HERE'); }
       api._map.desc = !I.exists ? 'Not on the map yet.' : I.sealed ? 'Sealed until the Great Lantern burns again.' : !I.known ? "You haven't been here yet." : mapDesc(n.id);
-      G.text(ctx, api._map.desc, 12, 143, { font: G.FONT_S, color: '#5a4a66', shadow: false });
+      G.wrap(api._map.desc, 300).slice(0, 2).forEach((l, k) => G.text(ctx, l, 12, 142 + k * 7, { font: G.FONT_S, color: '#5a4a66', shadow: false }));
       // legend
-      [[iconCross, 'HEAL'], [iconCoin, 'SHOP'], [(c, x, y) => iconShard(c, x, y, true), 'SHARD']].forEach(([f, l], k) => { const x = 150 + k * 28; f(ctx, x, 136.5); G.text(ctx, l, x + 4.5, 134, { font: G.FONT_S, color: '#8a7a90', shadow: false }); });
-      G.text(ctx, G.touch ? 'TAP OUTSIDE: CLOSE' : 'B: CLOSE', 228, 150, { align: 'right', font: G.FONT_S, color: '#8a7a90', shadow: false });
+      [[iconCross, 'HEAL'], [iconCoin, 'SHOP'], [(c, x, y) => iconShard(c, x, y, true), 'SHARD']].forEach(([f, l], k) => { const x = 150 + k * 26; f(ctx, x, 135); G.text(ctx, l, x + 4.5, 132.6, { font: G.FONT_S, color: '#8a7a90', shadow: false }); });
       G.tapZone(-999, -999, 2400, 2400, () => { close = true; });
       nodes.forEach((n2, i) => G.tapZone(n2.x - 12, n2.y - 14, 24, 34, () => { tapped = i; }));
       G.tapZone(4, 128, 232, 29, () => {});
@@ -1041,8 +1042,9 @@ G.worldMapScreen = async function () {
     const sv = servicesOf(id), bits = [];
     if (sv.heal) bits.push('healing');
     if (sv.shop) bits.push(sv.shop > 1 ? `${sv.shop} shops` : 'a shop');
-    if (WARDEN[id]) bits.push(S.flags['shard_' + WARDEN[id]] ? 'shard won' : 'a Warden');
-    return REGION_DESC[id] + (bits.length ? ' (' + bits.join(', ') + ')' : '');
+    if (WARDEN[id]) bits.push(S.flags['shard_' + WARDEN[id]] ? 'Ember Shard won' : 'a Warden holds an Ember Shard');
+    const b = bits.join(', ');
+    return REGION_DESC[id] + (b ? ' Has ' + b + '.' : '');
   }
   api._map = { scene, nodes, here, get sel() { return sel; }, desc: '' };
   G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = scene; await G.fadeTo(0, 8);

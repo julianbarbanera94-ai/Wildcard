@@ -170,7 +170,7 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   const m = interior('post', 'TRADING POST', 8, 8, 3);
   rect(m, 3, 3, 4, 1, 'k'); rect(m, 1, 1, 1, 3, 'S'); rect(m, 6, 1, 1, 1, 'S');
   npc(m, 4, 2, DOWN, 'clerk', null, { still: true });
-  npc(m, 5, 5, LEFT, 'girl', ['Wardens who clear the Mine sometimes carry ULTRA ORBS. I could never afford one!']);
+  npc(m, 5, 5, LEFT, 'girl', ['Wardens who clear the Mine sometimes carry MYTHIC ORBS. I could never afford one!']);
   for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 3, prompt: 'Shop', fn: () => G.shopMenu() });
   warp(m, 3, 7, 'lanternrest', 43, 31, DOWN);
 })();

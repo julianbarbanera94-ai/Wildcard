@@ -77,9 +77,9 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   sign(m, 48, 24, 'LIGHTHOUSE POINT\nThe lamp has guided boats home for a hundred years.');
 
   item(m, 4, 36, 'sh_lantern', 'Old Lantern');                // on the islet at the end of the sandbar
-  item(m, 2, 11, 'sh_orb', 'Catch Orb', 2);                   // west dunes
+  item(m, 2, 11, 'sh_orb', 'Terra Orb', 2);                   // west dunes
   item(m, 13, 20, 'sh_sp', 'Super Potion');                   // beside a tidepool
-  item(m, 25, 33, 'sh_ultra', 'Ultra Orb');                   // end of the boardwalk spur
+  item(m, 25, 33, 'sh_ultra', 'Mythic Orb');                   // end of the boardwalk spur
   item(m, 57, 29, 'sh_heal', 'Full Heal');                    // round the back of the lighthouse
   item(m, 61, 5, 'sh_potion', 'Potion');                      // north-east corner by the woods
   item(m, 50, 23, 'sh_rev', 'Revive');                        // tucked behind a tidepool
@@ -141,6 +141,7 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
     [22, 11], [12, 11], [27, 13], [17, 13], [16, 10], [21, 14], [30, 23], [8, 23]]);
   scatter(m, 'l', [[16, 25], [21, 25], [16, 21], [23, 21], [26, 15]]);
   scatter(m, 'i', [[32, 19], [29, 24], [6, 20]]);
+  scatter(m, 'u', [[11, 16], [29, 19], [25, 24], [14, 23], [26, 12]]);   // glow-berry bushes (Starmelon Seeds)
   m.npcs.push({ x: 19, y: 5, dir: DOWN, creature: 25, still: true, id: 'joker', hide: () => G.state.flags.jokerGone, talk: () => G.story.joker() });
   warp(m, 18, 31, 'lanternrest', 52, 39, DOWN); warp(m, 19, 31, 'lanternrest', 53, 39, DOWN);
 })();
