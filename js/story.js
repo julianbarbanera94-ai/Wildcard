@@ -73,11 +73,19 @@ Q.def({ id: 'home', cat: 'home', title: 'A Place of My Own', desc: 'Your homeste
   ],
   reward: { money: 5000, rep: { vale: 20 } } });
 
+// Progress for the homestead's land: badges, plus 1 for every 80 reputation in total.
+G.progressPoints = () => { const S = G.state; if (!S) return 0; const rep = G.REP_REGIONS.reduce((a, [r]) => a + G.rep.get(r), 0); return (G.badgeCount ? G.badgeCount() : 0) + Math.floor(rep / 80); };
+// Beating a trainer: +2 with the region you're in (once per trainer).
+G.onTrainerWin = (t, mapId) => G.grantOnce('rep:tr_' + t.id, () => G.rep.add(G.regionOf(G.worldPlaceOf ? G.worldPlaceOf(mapId) || mapId : mapId), 2));
 // ---- Reputation from what you already do --------------------------------------------------------------------------------------
 // Beating an Arena Leader: +20 with that region. Winning a shard: +15. Given once each.
 G.hooks.tick.push(() => {
-  const S = G.state; if (!S || !S.flags || G.frameNo % 30) return;
+  const S = G.state; if (!S || !S.flags || G.frameNo % 30) return; S.once = S.once || {};
   for (const b of G.BADGES || []) if (S.flags['badge_' + b.id]) G.grantOnce('rep:badge_' + b.id, () => G.rep.add(G.regionOf(b.city), 20));
   for (const [k, place] of SHARDS) if (S.flags['shard_' + k]) G.grantOnce('rep:shard_' + k, () => G.rep.add(G.regionOf(place), 15));
+  // a new kind of creature caught: +1 with the region you're in (creatures caught before this existed count for nothing)
+  const seeded = !!S.once['dex:seeded'], here = G.regionOf((G.worldPlaceOf && G.world.mapId && G.worldPlaceOf(G.world.mapId)) || 'lanternrest');
+  for (const [id, v] of Object.entries(S.dex || {})) if (v > 1 && !S.once['dex:' + id]) { S.once['dex:' + id] = true; if (seeded) G.rep.add(here, 1); }
+  S.once['dex:seeded'] = true;
 });
 })();

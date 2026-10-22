@@ -129,17 +129,14 @@ const badges = () => (G.badgeCount ? G.badgeCount() : 0);
 const lanternLit = () => !!(G.state && G.state.flags && G.state.flags.lanternLit);
 // Why a place can't be entered yet (null when open).
 G.worldLockWhy = function (id) {
+  if (G.access) return G.access.why(id);
   const p = BYID[id]; if (!p) return null;
   const bits = [];
   if (p.need > badges()) bits.push(`${p.need} Arena Badge${p.need > 1 ? 's' : ''} (you have ${badges()})`);
   if (p.lantern && !lanternLit()) bits.push('the Great Lantern relit');
   return bits.length ? 'Needs ' + bits.join(' and ') + '.' : null;
 };
-G.worldLockShort = function (id) {
-  const p = BYID[id]; if (!p) return '';
-  const bits = []; if (p.need > badges()) bits.push(`LOCKED: ${p.need} BADGE${p.need > 1 ? 'S' : ''} NEEDED (HAVE ${badges()})`); if (p.lantern && !lanternLit()) bits.push(bits.length ? 'AND THE LANTERN RELIT' : 'LOCKED: LANTERN MUST BE RELIT');
-  return bits.join(' ');
-};
+G.worldLockShort = id => (G.access ? G.access.short(id) : '');
 G.worldVisited = id => !!(G.state && G.state.visited && (G.state.visited[id] || (id === 'ridge' && G.state.visited.mine)));
 
 // ---- Painting helpers ---------------------------------------------------------------------------------------------
@@ -778,7 +775,8 @@ G.worldMapScreen = async function () {
       if (I.services.arena) svc((c, x, y) => iconArena(c, x, y, I.badgeGot, 3), I.badge ? (I.badgeGot ? I.badge.name.toUpperCase() + ' (WON)' : I.badge.name.toUpperCase()) : 'ARENA');
       if (I.services.ferry) svc((c, x, y) => iconAnchor(c, x, y, 2.8), 'FERRY'); if (I.services.cave) svc((c, x, y) => iconCave(c, x, y, 2.8), 'CAVE');
       const wl = I.levels ? `WILD LV ${I.levels[0]}-${I.levels[1]}` : I.kind === 'city' || I.kind === 'town' ? 'NO WILD CREATURES' : '';
-      if (wl) G.text(ctx, wl, x0 + pw - 2, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false, align: 'right' });
+      const dg = G.access && I.levels ? G.access.danger(id) : null;   // soft gate: how tough the wild creatures are for your team
+      if (wl) G.text(ctx, wl + (dg === 'high' ? ' (TOUGH!)' : dg === 'some' ? ' (HARD)' : ''), x0 + pw - 2, py0 + 33, { font: G.FONT_S, color: dg === 'high' ? '#c03030' : dg ? '#c07010' : '#2a7a4a', shadow: false, align: 'right' });
       if (I.locked) { iconLock(ctx, L + 3, py0 + 36, 2.4); G.text(ctx, G.worldLockShort(id), L + 9, py0 + 33, { font: G.FONT_S, color: '#b03a3a', shadow: false }); }
       else G.text(ctx, I.visited ? 'Open to you.' : 'Open to you, not visited yet.', L, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false });
       const qs = G.quest ? G.quest.all().map(q => [q, G.quest.step(q.id)]).filter(([, s]) => s && s.at === id) : [];
@@ -822,10 +820,12 @@ G.ferryRoutes = function (fromId) {
   for (const f of WORLD.ferries) {
     const fwd = f.from === here, rev = f.to === here; if (!fwd && !rev) continue;
     const to = fwd ? f.to : f.from, need = fwd ? f.badges : 0, lantern = fwd ? f.lantern : false;
-    out.push({ to, name: BYID[to].name, price: G.ferryPrice(here, to), badges: need, lantern, why: ferryWhy(need, lantern) });
+    out.push({ to, name: BYID[to].name, price: G.ferryPrice(here, to), badges: need, lantern, why: G.access && fwd ? ferryAccess(to, here) : ferryWhy(need, lantern) });
   }
   return out;
 };
+// The ferry follows the same access rules as the roads (badges, reputation or a permit), with the Lantern for the northern waters.
+function ferryAccess(to, here) { return G.access.why(to, here); }
 function ferryWhy(need, lantern) {
   if (need > badges()) return `The ferry only takes Wardens with ${need} Arena Badges. You have ${badges()}.`;
   if (lantern && !lanternLit()) return 'The northern waters are sealed. The ferry can\'t sail until the Great Lantern burns again.';

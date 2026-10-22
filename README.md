@@ -61,6 +61,10 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
 
 START → JOURNAL lists everything you're doing in one place: STORY, QUESTS, FINDS, PEOPLE, CREATURES and HOME, plus REP (how well each region knows you: Stranger, Known, Friend, Trusted, Hero). Quests notice what you've already done, so you can do things in any order. Markers on the map (gold for the story, blue for the rest) can be turned off in the journal. Beating an Arena Leader and winning a shard raise your reputation in that region. Quest rewards are given once only.
 
+## Getting into new places
+
+Locked places open in more than one way: earn the Arena Badges the map shows, become known to the locals (reputation in that region, or the one you're coming from), or buy a travel permit from the ranger at the gate. The far islands have no permit, and the Hollow Gate and Aurora Isles still need the Great Lantern relit. The same rule applies on roads, harbour gates, ferries and flight. Places whose wild creatures are well above your team are marked HARD or TOUGH on the map, and the ranger warns you. Arena Leaders match your progress: the first Leader you face fights like the first Arena, whichever city it is in. Your homestead grows with badges and reputation.
+
 ## Homestead
 
 - **Build** (START → BUILD), grouped by HOME, CREATURES, CRAFTING, FARMING, VEHICLES and DECOR.
@@ -175,6 +179,7 @@ node tests/e2e-towns.js                        # shops (D-pad and touch), sellin
 node tests/e2e-vehicles.js                     # garage, riding rules, parking, buying, boats, flight, helicopter, quests
 node tests/e2e-mapview.js                       # map and flight picker on a phone: full screen, zoom, touch pan
 node tests/e2e-quests.js                        # quests, journal, reputation, rewards once, Test Mode completes all
+node tests/e2e-access.js                        # badges, reputation or permits; Leader scaling; land from reputation
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles

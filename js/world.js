@@ -318,9 +318,9 @@ async function runBattle(opts) { const r = await G.startBattle(opts); await afte
 async function trainerBattle(n) {
   const t = n.trainer;
   await says(t.pre);
-  const r = await runBattle({ trainer: { name: t.name, cls: t.cls, style: t.style, win: t.win, prize: t.prize, team: t.team.map(([id, l]) => G.makeCreature(id, l)) }, bg: world.map.bg });
+  const r = await runBattle({ trainer: { name: t.name, cls: t.cls, style: t.style, win: t.win, prize: t.prize, team: (G.scaledTeam ? G.scaledTeam(t.team, world.map) : t.team).map(([id, l]) => G.makeCreature(id, l)) }, bg: world.map.bg });
   if (r === 'win') {
-    flags()[t.id] = true;
+    flags()[t.id] = true; if (G.onTrainerWin) G.onTrainerWin(t, world.mapId);
     if (t.shard) { flags()['shard_' + t.shard] = true; G.audio.sfx('levelup'); await says(`${G.state.name} received the ${t.shard.toUpperCase()} EMBER SHARD!`); }
     if (t.reward) { G.state.bag[t.reward[0]] = (G.state.bag[t.reward[0]] || 0) + t.reward[1]; G.audio.sfx('levelup'); await says(`${G.state.name} received ${t.reward[1]} ${t.reward[0].toUpperCase()}s!`); }
   }
@@ -361,7 +361,7 @@ function afterStep() {
   const w = m.warps.find(w => w.x === p.x && w.y === p.y);
   if (w) {
     const block = w.need && w.need();
-    if (block) run(async () => { await says(block); await stepEntity(p, OPP[p.dir], 1, true); });
+    if (block) run(async () => { await says(block); if (w.offer && await w.offer()) { for (const h of hooks.beforeWarp) await h(w); await warpTo(w.to, w.tx, w.ty, w.dir); } else await stepEntity(p, OPP[p.dir], 1, true); });
     else run(async () => { for (const h of hooks.beforeWarp) await h(w); await warpTo(w.to, w.tx, w.ty, w.dir); });
     return;
   }

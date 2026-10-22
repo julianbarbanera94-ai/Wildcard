@@ -215,7 +215,7 @@ function whyNot(type, x, y, rot, ignore, lvl) {
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
     const tx = x + i, ty = y + j, k = tx + ',' + ty, own = ignoreCells.has(k);
     if (tx < 1 || ty < 1 || tx >= m.w - 1 || ty >= m.h - 1) return 'Too close to the edge.';
-    if (m.id === HOME && !G.home.owned(tx, ty)) return 'That land is not yours yet. It opens as you earn Arena badges.';
+    if (m.id === HOME && !G.home.owned(tx, ty)) return 'That land is not yours yet. It opens as you earn Arena badges and make your name across Aurelis.';
     const ch = W.tileAt(tx, ty);
     if (!own && (!ch || !okTile[ch])) return 'The ground there is not clear.';
     if (!own && m.block.has(k)) return 'Something is already built there.';
@@ -385,12 +385,12 @@ async function remove(b) {
 }
 
 // ---- Your land grows with your progress -------------------------------------------------------
-// The homestead starts as a small plot. Every Arena badge you earn (every town you open) releases more land:
-// deed 1 at the start, then 1, 3, 5 and 7 badges. The map's m.zones lists the five parcels (js/maps/homestead.js).
+// The homestead starts as a small plot. Progress releases more land: progress points are your Arena badges plus one for
+// every 80 reputation across Aurelis (G.progressPoints); deed 1 at the start, then 1, 3, 5 and 7 points. The map's m.zones lists the five parcels (js/maps/homestead.js).
 const DEED_BADGES = [0, 1, 3, 5, 7];
 const DEED_NAMES = ['Starter plot', 'Home lot', 'Country lot', 'Grand estate', 'The whole valley'];
 G.DEEDS = DEED_BADGES.map((badges, i) => ({ deed: i + 1, badges, name: DEED_NAMES[i] }));
-const deedFor = () => { const n = G.badgeCount ? G.badgeCount() : 0; let d = 1; DEED_BADGES.forEach((b, i) => { if (n >= b) d = i + 1; }); return d; };
+const deedFor = () => { const n = G.progressPoints ? G.progressPoints() : G.badgeCount ? G.badgeCount() : 0; let d = 1; DEED_BADGES.forEach((b, i) => { if (n >= b) d = i + 1; }); return d; };
 G.home.deedFor = deedFor;
 // Grow the property when progress allows (never shrinks). Returns true when it grew.
 function syncDeed() {
@@ -411,10 +411,10 @@ G.hooks.tick.push(() => {
   }
 });
 async function landOffice() {
-  const S = G.state, deed = S.home.deed || 1, n = G.badgeCount ? G.badgeCount() : 0;
+  const S = G.state, deed = S.home.deed || 1, n = G.progressPoints ? G.progressPoints() : G.badgeCount ? G.badgeCount() : 0;
   const lines = [`LAND OFFICE: Your homestead is parcel ${deed} of ${DEED_BADGES.length}: ${DEED_NAMES[deed - 1]}.`];
   if (deed >= DEED_BADGES.length) lines.push('You own the whole valley now. It is a fine homestead.');
-  else lines.push(`More land is released as you open new towns. The next parcel opens at ${DEED_BADGES[deed]} Arena badge${DEED_BADGES[deed] > 1 ? 's' : ''}. You have ${n}.`);
+  else lines.push(`More land is released as you make progress: every Arena badge is a point, and so is every 80 reputation across Aurelis. The next parcel opens at ${DEED_BADGES[deed]} point${DEED_BADGES[deed] > 1 ? 's' : ''}. You have ${n}.`);
   await says(lines);
 }
 

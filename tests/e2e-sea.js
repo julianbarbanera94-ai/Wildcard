@@ -34,7 +34,7 @@ const OUT = process.env.OUT || '/tmp';
   step('the sea map is the illustrated map: mainland, Lakeside on its lake, islands and open water where the picture has them');
 
   // ---- 2) sail a motorboat out of Driftwood Port's harbour onto the sea ----
-  await ev(() => { const S = G.state; S.flags.starter = true; S.party.length = 0; S.party.push(G.makeCreature(1, 20)); S.vehicles.owned.push('motorboat'); S.vehicles.riding = 'motorboat'; S.home.seen = S.home.deed;
+  await ev(() => { const S = G.state; S.flags.starter = true; S.party.length = 0; S.party.push(G.makeCreature(1, 20)); S.vehicles.owned.push('motorboat'); S.vehicles.riding = 'motorboat'; S.home.seen = S.home.deed; S.flags.permit_verdant = true;
     const into = G.MAPS.aurelis_sea.warps.find(w => w.to === 'driftwood'); G.loadMap('driftwood'); G.placePlayer(into.tx, into.ty, 2); G.scene = G.world.scene; });
   await page.waitForTimeout(500);
   assert.equal(await ev(() => G.world.mapId), 'driftwood'); assert.equal(await ev(() => G.state.vehicles.riding), 'motorboat');

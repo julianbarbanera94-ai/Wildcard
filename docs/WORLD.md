@@ -261,3 +261,12 @@ All of them blend with their neighbours like the existing tiles. Owners may use 
 - Rewards (`money`, `items`, `rep`, `flags`, `fn`) go through `G.grantOnce(key)` and are paid exactly once per save.
 - Reputation: `G.rep.add(region, n)`, regions west, south, north, east and vale (`G.regionOf(placeId)`), 0 to 100.
 - Save fields: `S.quests`, `S.rep`, `S.once`, `S.journal`. Test Mode's UNLOCK EVERYTHING completes every quest and sets every region to 100.
+
+## 10. Region access and difficulty (js/access.js)
+
+- `G.access.rule(placeId)`: badges (the place's `need`), reputation (15 for 1-2 badges, 40 for 3-4, 70 for 5-6, 100 for 8), a permit price (none for 8-badge places), and the Lantern.
+- A place is open with the badges, or the reputation (its region, or the region you come from), or `flags.permit_<id>`, and the Lantern if it needs it.
+- `wire()` replaces `need` on every warp into a ruled place (roads, sea harbour gates) and adds `w.offer` (the ranger's permit sale). Ferries use `ferryAccess`; the map and flight use `G.worldLockWhy`, which uses `G.access.why`.
+- `G.access.danger(id)`: 'some' or 'high' when wild levels are above your team.
+- `G.arenaShift(map)` / `G.scaledTeam(team, map)`: an Arena's trainers and Leader shift so the k-th Leader you face fights at the k-th Arena's strength.
+- Reputation also comes from trainer wins (+2 each, once) and new species caught (+1 in the region you're in). `G.progressPoints()` = badges + total reputation / 80 drives homestead land.
