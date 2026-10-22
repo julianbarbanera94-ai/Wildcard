@@ -117,6 +117,14 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   // lighthouse-less breakwater beacon on the south-west rocks
   scatter(m, 'r', [[19, 49], [19, 48]]);
 
+  // garnish the lawns between the blocks: flowers, shrubs and the odd tree (kept off paths and the two clear building lawns)
+  const near = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if ('=%zpDy'.includes(get(m, x + i, y + j) || 'x')) return true; return false; };
+  for (let y = 3; y < 50; y++) for (let x = 3; x < 61; x++) {
+    if (get(m, x, y) !== 'g' || near(x, y)) continue;
+    if (x >= 47 && x <= 58 && ((y >= 32 && y <= 41) || y <= 9)) continue;
+    const r = hash(x + 3, y + 8);
+    set(m, x, y, r < .07 ? 'f' : r < .11 ? 'u' : r < .15 ? '#' : 'g');
+  }
   // clean any trees/props that landed on the exits and arrival tiles
   rect(m, 30, 0, 2, 3, '='); rect(m, 30, 49, 2, 3, '='); rect(m, 62, 24, 2, 2, '='); rect(m, 60, 24, 2, 2, '=');
   rect(m, 8, 24, 2, 2, '=');
