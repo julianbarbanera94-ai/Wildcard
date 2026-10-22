@@ -20,11 +20,11 @@ const OUT = process.env.OUT || '/tmp';
 
   // 1) quests appear by themselves; finished steps are skipped
   let q = await ev(() => ({ lantern: G.state.quests.lantern, arenas: !!G.state.quests.arenas, lead: G.quest.lead().step.id, at: G.quest.step('lantern').at }));
-  assert.equal(q.lantern.st, 'active'); assert.equal(q.lead, 'shards', 'the Bondling step is already done'); assert.equal(q.at, 'sunmeadow', 'marker points at the first missing shard'); assert(q.arenas);
-  step('quests start themselves; the story lead skips steps already done and points at Sunmeadow');
+  assert.equal(q.lantern.st, 'active'); assert.equal(q.lead, 'shards', 'the Bondling step is already done'); assert.equal(q.at, 'evergreen', 'marker points at the first missing shard'); assert(q.arenas);
+  step('quests start themselves; the story lead skips steps already done and points at Evergreen');
   // 2) doing things out of order: win the mine shard first, then the meadow
   await ev(() => { G.state.flags.shard_mine = true; G.state.flags.shard_meadow = true; }); await page.waitForTimeout(800);
-  assert.equal(await ev(() => G.quest.step('lantern').at), 'mirewood', 'with two shards won in any order, the marker moves to Mirewood');
+  assert.equal(await ev(() => G.quest.step('lantern').at), 'tidefall', 'with two shards won in any order, the marker moves to Tidefall');
   await ev(() => { G.state.flags.shard_marsh = true; G.state.flags.lanternLit = true; }); await page.waitForTimeout(800);
   assert.equal(await ev(() => G.quest.lead().step.id), 'joker');
   step('out-of-order progress: shards in any order, steps move on together');
@@ -50,7 +50,7 @@ const OUT = process.env.OUT || '/tmp';
   assert(await ev(() => G.ui.layers.length > 0), 'journal open'); await shot('journal');
   await key('ArrowRight'); await shot('journal-quests'); for (let i = 0; i < 5; i++) await key('ArrowRight'); await shot('journal-rep');
   await key('x', 300); await key('x', 300);
-  assert.deepEqual(await ev(() => G.quest.markers()), await ev(() => ({ sunmeadow: 'main', stonebridge: 'side', homestead: 'side' })));
+  assert.deepEqual(await ev(() => G.quest.markers()), await ev(() => ({ evergreen: 'main', stonebridge: 'side', homestead: 'side' })));
   await ev(() => { G.state.journal.markers = false; }); assert.deepEqual(await ev(() => G.quest.markers()), {}, 'markers can be hidden');
   await ev(() => { G.state.journal.markers = true; G.ui.layers.length = 0; G.closeText(); G.runWorld(() => G.worldMapScreen()); }); await page.waitForTimeout(1200); await shot('map-markers');
   await key('x', 600);

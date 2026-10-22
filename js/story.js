@@ -2,7 +2,7 @@
 // Every step reads saved state, so a quest is right however you got there: early, out of order, or from an old save.
 (function () {
 const Q = G.quest, F = S => S.flags;
-const SHARDS = [['meadow', 'sunmeadow', 'Sunmeadow'], ['marsh', 'mirewood', 'Mirewood Marsh'], ['mine', 'ridge', 'the Ridge']];
+const SHARDS = [['meadow', 'evergreen', 'Evergreen Forest'], ['marsh', 'tidefall', 'Tidefall'], ['mine', 'ridge', 'the Ridge']];   // where each is found (js/chapter2.js)
 const shardCount = S => SHARDS.filter(([k]) => F(S)['shard_' + k]).length;
 // Which reputation region a place belongs to.
 const REGION = { sunmeadow: 'west', sunhaven: 'west', evergreen: 'west', driftwood: 'west', verdant: 'west',
@@ -16,11 +16,11 @@ const caught = S => Object.values(S.dex || {}).filter(v => v > 1).length;
 
 // ---- Main story -------------------------------------------------------------------------------------------------------------
 Q.def({ id: 'lantern', cat: 'main', title: 'The Dimming Lantern', giver: 'Elder Wren',
-  desc: 'The Great Lantern is failing. Three Wardens each guard a shard that can relight it.',
+  desc: 'The Great Lantern is failing. Three Ember Shards can relight it, and the Wardens of the Meadow, the Marsh and the Mine know where they are.',
   start: () => true,
   steps: [
     { id: 'bond', text: 'Wake a Bondling at the Hearth Shrine', at: 'lanternrest', done: S => !!F(S).starter },
-    { id: 'shards', text: 'Win the three shards from the Wardens', count: S => [shardCount(S), 3], done: S => shardCount(S) >= 3,
+    { id: 'shards', text: 'Find the three Ember Shards', count: S => [shardCount(S), 3], done: S => shardCount(S) >= 3,
       at: S => (SHARDS.find(([k]) => !F(S)['shard_' + k]) || [, 'lanternrest'])[1] },
     { id: 'light', text: 'Place the shards in the Great Lantern', at: 'lanternrest', done: S => !!F(S).lanternLit },
     { id: 'joker', text: 'Go through the Hollow Gate and find the Wildcard', at: 'hollow', done: S => !!(F(S).jokerCaught || F(S).jokerGone) },

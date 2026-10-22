@@ -78,7 +78,7 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   // -- Warden Bog's dock: a narrow pier out to a lantern-lit platform at the far east --
   rect(m, 65, 24, 4, 1, 'z'); rect(m, 69, 19, 5, 11, 'z'); rect(m, 70, 18, 3, 1, 'z'); rect(m, 70, 30, 3, 1, 'z');
   set(m, 73, 19, 'l'); set(m, 73, 29, 'l'); set(m, 69, 19, 'd'); set(m, 69, 29, 'd'); set(m, 73, 24, 'l');
-  trainer(m, 'mw_bog', 71, 24, LEFT, 'camper', { name: 'BOG', cls: 'MARSH WARDEN', sight: 5, team: [[20, 11], [22, 11], [19, 12]], pre: 'I am Bog, Warden of the Marsh. The MARSH EMBER SHARD glows in my keeping. Prove your bond is true!', win: 'Your partner trusts you. That is rare. Take the shard.', post: 'The Great Lantern needs that light. Go on.', prize: 44, shard: 'marsh' });
+  trainer(m, 'mw_bog', 71, 24, LEFT, 'camper', { name: 'BOG', cls: 'MARSH WARDEN', sight: 5, team: [[20, 11], [22, 11], [19, 12]], pre: 'I am Bog, Warden of the Marsh. Prove your bond is true!', win: 'Your partner trusts you. That is rare.', post: 'The Marsh shard washed downriver years ago, all the way to the drowned shrine at Tidefall. Only a strong swimmer can reach it.', prize: 44 });
 
   // -- south shore: shore path, Moll's fishing pier, a build clearing (18..25, 45..50) and a secret reed islet --
   rect(m, 13, 43, 58, 1, 'p'); rect(m, 11, 26, 1, 18, 'p'); rect(m, 11, 43, 2, 1, 'p');

@@ -65,6 +65,14 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
 
 After Elder Wren's advice, your fellow trainee **Tam** stops you outside the Hearth Shrine for a first battle (losing is fine). Wren gives you the **Warden's Lamp**, which also lights dark passages. **Chapter 1: First Light** sends you to Stonebridge, where two **Ashen Wardens** are taking creatures for **Warden Vesper**. Beat both, and Vesper speaks to you from across the river. A frightened **Cairnwight** hides by the water: read its mood and respond gently three times to earn its trust, and it joins you. **Mason** gives you Climbing Gear after the Keystone Badge, plus a bonus if your first partner is still standing. Then report back to Wren. The journal tracks every step.
 
+## Chapters 2 to 4
+
+- **Chapter 2: The Green Hush.** Hazel says the Meadow shard went into Evergreen with its guardian. Relight the old lantern by the Elder Oak, earn the Florelle guardian's trust for the **Meadow shard**, then face Vesper and the lieutenant Mordant. Win Ferna's Bloom Badge. Reward: a rowboat.
+- **Chapter 3: Tides and Winds.** Relight Grimsby's lighthouse in Driftwood Port and win Zephyra's Gale Badge. Then sail to Verdant Isle and drive off the Ashen sailors with Tam, who starts to doubt Vesper. Reward: a motorboat.
+- **Chapter 4: The Quiet Water.** Win the stolen Tide Stone back at Lakeside and win Marlo's Tide Badge. Then beat Sable at Tidefall and dive into the drowned shrine with a Water creature (Lv 15+) for the **Marsh shard**. Reward: a sailboat.
+
+The Mine shard is still Kade's on the Ridge for now. Hazel and Bog still battle you, but they no longer hold shards. Saves that already have those shards keep them.
+
 ## Optional quests
 
 Five side stories, each with a choice that changes the world afterwards:
@@ -207,6 +215,7 @@ node tests/e2e-slots.js                         # three save slots: continue, lo
 node tests/e2e-field.js                         # CLIMB, LIGHT and DIG with creatures or tools; hidden chests
 node tests/e2e-story1.js                        # Prologue and Chapter 1: Tam, Ashen Wardens, Vesper, the Cairnwight, Mason, Wren
 node tests/e2e-threads.js                       # the five optional quests, both sides of the choices, deadlines
+node tests/e2e-story2.js                        # Chapters 2-4: guardian shard, lighthouse, Tam, Tide Stone, drowned shrine, boats
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles
