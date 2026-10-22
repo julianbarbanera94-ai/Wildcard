@@ -91,10 +91,10 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   trainer(m, 'sh_gus', 47, 20, LEFT, 'hiker', { name: 'GUS', cls: 'FISHERMAN', sight: 5, team: [[4, 6], [14, 7], [4, 8]], pre: 'Nothing is biting today. You will have to do!', win: 'The one that got away...', post: 'Maro at the lighthouse knows every story on this shore.', prize: 34 });
 
   // -- Shore Row: a Healing Post, Tidewheel Market and Tidewheel Motors along the grass strip by the road --
-  building(m, 24, 2, 5, 'R', 2); building(m, 33, 2, 5, 'R', 2); building(m, 39, 2, 7, 'Q', 3);
-  set(m, 42, 6, 'y'); scatter(m, 'l', [[23, 4], [46, 4]]); scatter(m, 'f', [[29, 4], [38, 4]]);
-  m.labels = [{ x: 26, y: 2, text: 'HEALING POST', style: 'heal' }, { x: 35, y: 2, text: 'TIDEWHEEL MARKET', style: 'shop' }, { x: 42, y: 2, text: 'TIDEWHEEL MOTORS', style: 'craft' }];
-  warp(m, 26, 4, 'shoreheal', 3, 5, UP); warp(m, 35, 4, 'market', 3, 5, UP); warp(m, 42, 4, 'motors', 4, 6, UP);
+  building(m, 24, 3, 5, 'R', 2); building(m, 33, 3, 5, 'R', 2); building(m, 39, 3, 7, 'Q', 3);
+  scatter(m, 'y', [[42, 6], [34, 6], [27, 6]]); scatter(m, 'l', [[23, 5], [46, 5]]); scatter(m, 'f', [[29, 5], [38, 5], [29, 4], [38, 4]]);
+  m.labels = [{ x: 26, y: 3, text: 'HEALING POST', style: 'heal' }, { x: 35, y: 3, text: 'TIDEWHEEL MARKET', style: 'shop' }, { x: 42, y: 3, text: 'TIDEWHEEL MOTORS', style: 'craft' }];
+  warp(m, 26, 5, 'shoreheal', 3, 5, UP); warp(m, 35, 5, 'market', 3, 5, UP); warp(m, 42, 5, 'motors', 4, 6, UP);
 
   warp(m, 30, 0, 'lanternrest', 28, 50, UP); warp(m, 31, 0, 'lanternrest', 29, 50, UP);
 })();
@@ -104,7 +104,7 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   npc(m, 4, 1, DOWN, 'nurse', null, { still: true });
   npc(m, 6, 5, LEFT, 'lass', ['The salt air is good for creatures, but the tidepools pinch! Good thing this post is here.']);
   for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Heal', fn: () => G.healUI ? G.healUI({ name: 'SHORE HEALING POST', free: true }) : G.story.nurse() });
-  warp(m, 3, 6, 'shore', 26, 5, DOWN);
+  warp(m, 3, 6, 'shore', 26, 6, DOWN);
 })();
 (function () {
   const m = interior('market', 'TIDEWHEEL MARKET', 8, 7, 3);
@@ -112,7 +112,7 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   npc(m, 4, 1, DOWN, 'mom', null, { still: true });
   npc(m, 1, 5, RIGHT, 'boy', ['Pearls from the barn sell for a fortune here. Water-types make them!']);
   for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Shop', fn: () => G.openShop ? G.openShop('market') : G.story.says('The market stalls are empty today.') });
-  warp(m, 3, 6, 'shore', 35, 5, DOWN);
+  warp(m, 3, 6, 'shore', 35, 6, DOWN);
 })();
 (function () {
   const m = interior('motors', 'TIDEWHEEL MOTORS', 10, 8, 4);
@@ -120,7 +120,7 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   npc(m, 5, 1, DOWN, 'clerk', null, { still: true, style: { hair: '#202838', skin: '#f0c8a0', shirt: '#3a8ad8', pants: '#2a3048', hat: '#ff5a3a' } });
   npc(m, 8, 6, LEFT, 'camper', ['I saved up for a bicycle all summer. The motorbike next! Then maybe a car...', 'The helicopter? That needs a whole Motor Hall and a Helipad. One day!']);
   for (let x = 3; x <= 7; x++) m.objs.push({ x, y: 2, prompt: 'Shop', fn: () => G.openShop ? G.openShop('motors') : G.story.says('The showroom is closed for now.') });
-  warp(m, 4, 7, 'shore', 42, 5, DOWN);
+  warp(m, 4, 7, 'shore', 42, 6, DOWN);
 })();
 
 // ---- Starlit Hollow: opens after the Lantern is relit; the Wildcard waits here ----

@@ -934,7 +934,7 @@ G.terrain = {
     if (kind === 'ball') {
       const b = Math.abs(Math.sin(t / 26 + x * .1)) * 1.4;
       ctx.globalAlpha = .3 - b * .08; ctx.drawImage(glowSprite('#1a3020', .9), x + 3.5, y + 11.5, 9, 4); ctx.globalAlpha = 1;
-      ctx.drawImage(itemOrb(), x + 2.5, y + 3 - b, 11, 11);
+      if (G.drawOrb) G.drawOrb(ctx, info.style || 'terra', x + 8, y + 8.5 - b, 11, 0); else ctx.drawImage(itemOrb(), x + 2.5, y + 3 - b, 11, 11);
       const k = (t + x * 7 + y * 3) % 150; if (k < 26) { const s = Math.sin(k / 26 * PI) * 6; ctx.drawImage(starSprite(), x + 11 - s / 2, y + 4 - b - s / 2, s, s); }
     } else if (kind === 'orb') {
       const col = info.color || '#f0a040', b = Math.sin(t / 22 + x) * 1.2;

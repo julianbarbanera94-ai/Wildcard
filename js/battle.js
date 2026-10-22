@@ -161,10 +161,9 @@ function infoBox(ctx, f, x, y, w, mine) {
     G.text(ctx, 'EXP', x + w - 42, y + 25, { color: '#4a8cff', shadow: false, font: '900 4.5px ' + G.FONT_FAM });
   }
 }
-function drawOrb(ctx, x, y, rot, s) {
-  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s || 1, s || 1);
-  const e = orbArt(); ctx.drawImage(e.c, -7 - e.pad, -7 - e.pad, 14 + e.pad * 2, 14 + e.pad * 2);
-  ctx.restore();
+function drawOrb(ctx, x, y, rot, s, style) {
+  if (G.drawOrb) G.drawOrb(ctx, style || 'terra', x, y, 15 * (s || 1), rot);
+  else { ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s || 1, s || 1); const e = orbArt(); ctx.drawImage(e.c, -7 - e.pad, -7 - e.pad, 14 + e.pad * 2, 14 + e.pad * 2); ctx.restore(); }
   if ((s || 1) > 1.05) K.star(ctx, x + 6, y - 6, 2.5, '#fff8c0');
 }
 // ---- Particles ------------------------------------------------------------
@@ -247,7 +246,7 @@ function draw(ctx) {
   }
   if (b.beam) { const k = b.beam.t; ctx.globalCompositeOperation = 'lighter'; K.drawGlow(ctx, '#ff9ad0', b.beam.x, b.beam.y, 10 + k * 1.6, Math.min(1, 1.2 - k / 14)); ctx.globalCompositeOperation = 'source-over'; }
   if (b.proj) { ctx.globalCompositeOperation = 'lighter'; K.drawGlow(ctx, b.proj.col, b.proj.x, b.proj.y, 12, .9); ctx.globalCompositeOperation = 'source-over'; ell(ctx, b.proj.x, b.proj.y, 3.4, 3.4, '#ffffff'); }
-  if (b.orb) drawOrb(ctx, b.orb.x, b.orb.y, b.orb.rot, b.orb.s);
+  if (b.orb) drawOrb(ctx, b.orb.x, b.orb.y, b.orb.rot, b.orb.s, b.orb.style);
   if (b.fx) drawFx(ctx, b.fx);
   for (const p of b.parts) drawPart(ctx, p);
   ctx.restore();
@@ -504,12 +503,12 @@ async function doSwitch(idx, forced) {
 
 // ---- Catching -------------------------------------------------------------
 async function throwOrb(item) {
-  const bonus = G.ITEMS[item].mult;
+  const bonus = G.orbBonus ? G.orbBonus(item, b.foe.c) : G.ITEMS[item].mult;
   if (!G.cheat('items')) { G.state.bag[item]--; if (!G.state.bag[item]) delete G.state.bag[item]; }
   await msg(`${G.state.name} used the ${item.toUpperCase()}!`, 14);
   const res = G.cheat('catch') ? { shakes: 3, caught: true } : G.catchCheck(b.foe.c, bonus), [fx, fy] = center(b.foe);
   G.audio.sfx('throw');
-  b.orb = { x: 40, y: 70, rot: 0, s: 1 };
+  b.orb = { x: 40, y: 70, rot: 0, s: 1, style: G.orbStyleOf ? G.orbStyleOf(item) : 'terra' };
   for (let i = 0; i <= 26; i++) { const t = i / 26; b.orb.x = 40 + (fx - 40) * t; b.orb.y = 70 + (fy - 70) * t - Math.sin(t * Math.PI) * 50; b.orb.rot = t * 12; await G.nextFrame(); }
   b.foe.tint = '#ffffff'; b.beam = { x: b.orb.x, y: b.orb.y, t: 0 }; burst('Sparkle', b.orb.x, b.orb.y, 14, { speed: 2.2, life: 24 }); b.shake = 4;
   for (let i = 10; i >= 0; i--) { b.foe.scale = Math.max(.04, i / 10); b.beam.t++; if (i % 2) burst('Psychic', fx, fy, 1, { speed: .5, life: 12 }); await G.nextFrame(); }

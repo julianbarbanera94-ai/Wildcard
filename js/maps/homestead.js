@@ -122,7 +122,7 @@ function furnish(m, lvl, list) {
   m.props = m.props || [];
   for (const [kind, x, y, w, h, room] of list) {
     const p = { x, y, w: w || 1, h: h || 1, kind, info: { lvl, room } };
-    if (kind === 'rug' || kind === 'painting') p.flat = true;
+    if (kind === 'rug') p.flat = true;   // paintings hang on the top wall row itself
     m.props.push(p);
     if (kind === 'rug') continue;
     const info = { lvl, room, kind, id: m.id + ':' + kind + ':' + x + ',' + y };
@@ -218,7 +218,7 @@ house('home4', 'YOUR GRAND HOMESTEAD', 4, [
   'BBBBBBBBBBmBBBBBBBBBBB',
 ], [
   // master bedroom
-  ['bed2', 1, 1, 2, 2], ['lamp', 3, 1], ['wardrobe', 5, 1], ['rug', 2, 3, 3, 1], ['desk', 5, 3], ['plant', 1, 4], ['painting', 2, 0],
+  ['bed2', 1, 1, 2, 2], ['lamp', 3, 1], ['wardrobe', 5, 1], ['rug', 2, 3, 3, 1], ['desk', 5, 3], ['plant', 1, 4], ['painting', 4, 0],
   // spare room
   ['bed', 7, 1, 1, 2], ['lamp', 8, 1], ['chest', 10, 1], ['bookshelf', 10, 4], ['plant', 7, 4],
   // bathroom

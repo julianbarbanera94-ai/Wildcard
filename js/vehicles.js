@@ -361,9 +361,9 @@ function fallback(c, id, dir, x, y, t, info) {
 // ---- Drawing the rider ---------------------------------------------------------------------------
 G.hooks.drawPlayer = function (ctx, x, y, dir, frame, t, grassOver) {
   const id = riding(); if (!id || !G.world.map || !G.world.map.outdoor) return false;
-  const moving = G.world.p.moving, sp = seat(id, dir);
+  const moving = G.world.p.moving, sp = seat(id, dir); t = G.frameNo;   // the same clock as seat(), so a hoverboard's bob lines up
   art(ctx, id, dir, x, y, t, { moving, layer: 'back' });
-  if (!sp.hide) G.drawChar(ctx, G.state.style, dir, 0, x + sp.dx, y + sp.dy, t);
+  if (!sp.hide) G.drawChar(ctx, G.state.style, dir, 0, x + sp.dx, y + sp.dy, t, true);
   art(ctx, id, dir, x, y, t, { moving, layer: 'front' });
   if (id === 'quad') grassOver();
   return true;
@@ -849,9 +849,24 @@ function drawCarrier(ctx, mode, c, x, y, t, faceRight, moving) {
   const flap = moving ? Math.sin(t / 3.2) : Math.sin(t / 10) * .4, img = G.creatureSprite(c.id), sz = 30;
   ctx.save(); ctx.translate(x, y);
   // rider sits on the back
-  ctx.save(); ctx.translate(0, -11 + flap * .6); ctx.scale(.6, .6); G.drawChar(ctx, G.state.style, faceRight ? RIGHT : LEFT, 0, -8, -15, t); ctx.restore();
+  ctx.save(); ctx.translate(0, -11 + flap * .6); ctx.scale(.6, .6); G.drawChar(ctx, G.state.style, faceRight ? RIGHT : LEFT, 0, -8, -15, t, true); ctx.restore();
   ctx.save(); if (!faceRight) ctx.scale(-1, 1); ctx.drawImage(img, -sz / 2, -sz * .62 + flap, sz, sz * (1 + flap * .04)); ctx.restore();
   ctx.restore();
+}
+// The node nearest in the pressed D-pad direction (or the same index when nothing lies that way).
+function navPick(nodes, sel, k) {
+  const dir = k.up ? [0, -1] : k.down ? [0, 1] : k.left ? [-1, 0] : k.right ? [1, 0] : null;
+  if (!dir) return sel;
+  const cur = nodes[sel]; let best = sel, score = 1e9;
+  nodes.forEach((n, i) => { if (i === sel) return; const dx = n.x - cur.x, dy = n.y - cur.y, along = dx * dir[0] + dy * dir[1], perp = Math.abs(dx * dir[1] - dy * dir[0]); if (along <= 0) return; const sc = along + perp * 2.2; if (sc < score) { score = sc; best = i; } });
+  return best;
+}
+function drawSky(ctx, t, lit, cl) {
+  G.kit.blit(ctx, valeArt(), 0, 0);
+  G.kit.drawGlow(ctx, lit ? '#ffd860' : '#c8b0a0', 120, 79, lit ? 11 + Math.sin(t / 10) * 1.5 : 6, lit ? .9 : .5);
+  ctx.fillStyle = '#d8c8a8'; ctx.fillRect(118.4, 75, 3.2, 6); ctx.fillStyle = lit ? '#fff2a0' : '#8a7a70'; ctx.fillRect(118.8, 74, 2.4, 2);
+  for (let i = 0; i < 5; i++) { const e = cloudArt(i % 3), w = 34 + (i % 3) * 6, cx = ((i * 61 + cl * .5) % 300 + 300) % 300 - 40, cy = 8 + i * 27;
+    ctx.globalAlpha = .18; ctx.fillStyle = '#284060'; ctx.beginPath(); ctx.ellipse(cx + w / 2 + 6, cy + 18, w / 2.4, 3, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = .55; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * 18 / 40 + e.pad * 2); ctx.globalAlpha = 1; }
 }
 async function flight(mode, carrier) {
   const S = G.state, back = G.scene;
@@ -865,15 +880,10 @@ async function flight(mode, carrier) {
     tap() {},
     draw(ctx) {
       const t = fly.t;
-      G.kit.blit(ctx, valeArt(), 0, 0);
-      // the Great Lantern glows when lit
-      G.kit.drawGlow(ctx, S.flags.lanternLit ? '#ffd860' : '#c8b0a0', 120, 79, S.flags.lanternLit ? 11 + Math.sin(t / 10) * 1.5 : 6, S.flags.lanternLit ? .9 : .5);
-      ctx.fillStyle = '#d8c8a8'; ctx.fillRect(118.4, 75, 3.2, 6); ctx.fillStyle = S.flags.lanternLit ? '#fff2a0' : '#8a7a70'; ctx.fillRect(118.8, 74, 2.4, 2);
-      // slow drifting cloud shadows and clouds (far layer)
+      // slow drifting clouds; they stream past while flying
       const drift = phase === 'fly' ? (fly.faceRight ? -1 : 1) : 0, vel = phase === 'fly' ? 1.6 : .12;
       fly.cl = (fly.cl || 0) + vel * (drift || 1);
-      for (let i = 0; i < 5; i++) { const e = cloudArt(i % 3), w = 34 + (i % 3) * 6, cx = ((i * 61 + fly.cl * .5) % 300 + 300) % 300 - 40, cy = 8 + i * 27;
-        ctx.globalAlpha = .18; ctx.fillStyle = '#284060'; ctx.beginPath(); ctx.ellipse(cx + w / 2 + 6, cy + 18, w / 2.4, 3, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = .55; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * 18 / 40 + e.pad * 2); ctx.globalAlpha = 1; }
+      drawSky(ctx, t, !!S.flags.lanternLit, fly.cl);
       nodes.forEach((n, i) => drawNode(ctx, n, why(n), phase === 'pick' && i === sel, t));
       if (phase === 'fly') {
         const gx = fly.from.x + (fly.to.x - fly.from.x) * fly.k, gy = fly.from.y + (fly.to.y - fly.from.y) * fly.k;
@@ -909,12 +919,7 @@ async function flight(mode, carrier) {
     const k = G.input.pressed;
     if (tapped >= 0) { if (tapped === sel && !why(nodes[sel])) { target = nodes[sel]; break; } sel = tapped; tapped = -1; G.audio.sfx('select'); continue; }
     if (cancel || k.b) break;
-    const dir = k.up ? [0, -1] : k.down ? [0, 1] : k.left ? [-1, 0] : k.right ? [1, 0] : null;
-    if (dir) {
-      const cur = nodes[sel]; let best = -1, score = 1e9;
-      nodes.forEach((n, i) => { if (i === sel) return; const dx = n.x - cur.x, dy = n.y - cur.y, along = dx * dir[0] + dy * dir[1], perp = Math.abs(dx * dir[1] - dy * dir[0]); if (along <= 0) return; const sc = along + perp * 2.2; if (sc < score) { score = sc; best = i; } });
-      if (best >= 0) { sel = best; G.audio.sfx('select'); }
-    }
+    const nx = navPick(nodes, sel, k); if (nx !== sel) { sel = nx; G.audio.sfx('select'); }
     if (k.a) { if (!why(nodes[sel])) { target = nodes[sel]; break; } G.audio.sfx('bump'); }
   }
   if (!target) { await G.fadeTo(1, 10, '#000'); G.scene = back || G.world.scene; await G.fadeTo(0, 10); api._fly = null; return false; }
@@ -947,6 +952,109 @@ async function flight(mode, carrier) {
   await says(mode === 'heli' ? `The helicopter touched down in ${m.name}.` : `${G.name(carrier)} carried you safely to ${m.name}!`);
   return true;
 }
+
+// ---- World map (START > MAP): a view-only map of the vale ---------------------------------------------
+const REGION_DESC = {
+  lanternrest: 'The hub village around the Great Lantern. Four roads lead out from here.',
+  homestead: 'Your own land: build, farm and keep your vehicles here.',
+  ridge: 'A switchback trail up four terraces to the mouth of Glimmer Mine.',
+  mine: 'Crystal caves under the Ridge, guarded by the Mine Warden.',
+  sunmeadow: 'Rolling fields, an orchard and a windmill. Gentle creatures.',
+  mirewood: 'A misty marsh of boardwalks and reeds. Bug and Poison types.',
+  shore: 'Dunes, tidepools and a lighthouse. Rare finds wash up here.',
+  hollow: 'A starlit crystal cavern. Something waits at its heart.',
+};
+const WARDEN = { sunmeadow: 'meadow', mirewood: 'marsh', mine: 'mine' };
+// The outdoor map (a map-screen node) that a map belongs to: itself, or the first node its warps lead back to.
+function regionOf(id) {
+  const seen = new Set([id]), q = [id];
+  while (q.length) {
+    const cur = q.shift();
+    if (NODES.some(n => n.id === cur)) return cur;
+    for (const w of (G.MAPS[cur] && G.MAPS[cur].warps) || []) if (!seen.has(w.to) && G.MAPS[w.to]) { seen.add(w.to); q.push(w.to); }
+  }
+  return 'lanternrest';
+}
+function servicesOf(id) {
+  const m = G.MAPS[id], out = { heal: 0, shop: 0 };
+  for (const L of (m && m.labels) || []) { if (L.style === 'heal' || /HEAL/.test(L.text)) out.heal++; else if (L.style === 'shop' || L.style === 'craft') out.shop++; }
+  return out;
+}
+function mapNodeInfo(n, here) {
+  const S = G.state, sealed = n.id === 'hollow' && !S.flags.lanternLit, known = n.id === here || !!S.visited[n.id] || (n.id === 'mine' && !!S.visited.mine);
+  const exists = !!G.MAPS[n.id];
+  return { sealed, known: known && exists, exists };
+}
+function iconCross(c, x, y) { circ(c, x, y, 3.2, '#ffffff'); circ(c, x, y, 2.6, '#ff6b8a'); c.fillStyle = '#ffffff'; c.fillRect(x - 1.6, y - .5, 3.2, 1); c.fillRect(x - .5, y - 1.6, 1, 3.2); }
+function iconCoin(c, x, y) { circ(c, x, y, 3.2, '#ffffff'); circ(c, x, y, 2.6, '#f0b030'); circ(c, x, y, 1.7, '#ffd860'); c.fillStyle = '#b07a10'; c.fillRect(x - .35, y - 1.2, .7, 2.4); }
+function iconShard(c, x, y, got) {
+  c.beginPath(); c.moveTo(x, y - 3.4); c.lineTo(x + 2.4, y); c.lineTo(x, y + 3.4); c.lineTo(x - 2.4, y); c.closePath();
+  c.fillStyle = got ? '#ff8a3c' : 'rgba(255,255,255,.75)'; c.fill(); c.strokeStyle = got ? '#ffffff' : '#8a8494'; c.lineWidth = .7; c.stroke();
+  if (got) { c.fillStyle = '#fff2a0'; c.beginPath(); c.moveTo(x, y - 2); c.lineTo(x + .9, y); c.lineTo(x, y + .6); c.closePath(); c.fill(); }
+}
+function iconHouse(c, x, y) { circ(c, x, y, 3.4, '#ffffff'); c.fillStyle = '#5fae3f'; c.beginPath(); c.moveTo(x - 2.4, y); c.lineTo(x, y - 2.3); c.lineTo(x + 2.4, y); c.closePath(); c.fill(); c.fillRect(x - 1.6, y, 3.2, 1.9); }
+G.worldMapScreen = async function () {
+  st();
+  const S = G.state, back = G.scene, here = regionOf(G.world.mapId);
+  const nodes = NODES.map(n => Object.assign({}, n));
+  let sel = Math.max(0, nodes.findIndex(n => n.id === here)), close = false, tapped = -1, t = 0, cl = 0;
+  const scene = {
+    update() { t++; cl += .12; },
+    draw(ctx) {
+      drawSky(ctx, t, !!S.flags.lanternLit, cl);
+      nodes.forEach((n, i) => {
+        const I = mapNodeInfo(n, here), isHere = n.id === here, on = i === sel;
+        if (isHere) { const r = 7 + (t % 50) / 50 * 9; ctx.strokeStyle = `rgba(255,120,60,${1 - (t % 50) / 50})`; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, TAU); ctx.stroke(); }
+        if (on) { ctx.strokeStyle = `rgba(90,140,255,${.6 + Math.sin(t / 6) * .3})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(n.x, n.y, 7, 0, TAU); ctx.stroke(); }
+        circ(ctx, n.x, n.y + .8, 4.6, 'rgba(40,30,60,.35)'); circ(ctx, n.x, n.y, 4.6, '#ffffff');
+        circ(ctx, n.x, n.y, 3.3, isHere ? '#ff8a3c' : I.sealed ? '#7a6a9a' : I.known ? '#3f9fd8' : '#a8a4b4');
+        if (I.sealed) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = .7; ctx.beginPath(); ctx.arc(n.x, n.y - .6, 1.3, Math.PI, TAU); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fillRect(n.x - 1.7, n.y - .6, 3.4, 2.4); }
+        else if (!I.known) G.text(ctx, '?', n.x, n.y - 3, { align: 'center', font: G.FONT_S, color: '#fff', shadow: false });
+        const label = !I.known ? (I.sealed ? '??? · SEALED' : '???') : n.name + (I.sealed ? ' · SEALED' : '');
+        G.drawSignPlate(ctx, label, n.x, n.y + 18, t, isHere ? 'shop' : I.known ? 'home' : 'craft');
+        if (I.known) {   // service icons above the node
+          const sv = servicesOf(n.id), icons = [];
+          if (n.id === 'homestead') icons.push(c => iconHouse(c, 0, 0));
+          if (sv.heal) icons.push(c => iconCross(c, 0, 0));
+          if (sv.shop) icons.push(c => iconCoin(c, 0, 0));
+          if (WARDEN[n.id]) icons.push(c => iconShard(c, 0, 0, !!S.flags['shard_' + WARDEN[n.id]]));
+          icons.forEach((f, k) => { ctx.save(); ctx.translate(n.x - (icons.length - 1) * 4 + k * 8, n.y - 9); f(ctx); ctx.restore(); });
+        }
+        if (isHere) { const by = n.y - 15 - (I.known ? 4 : 0) + Math.sin(t / 7) * 1.4; ctx.fillStyle = '#ff6b5a'; ctx.beginPath(); ctx.arc(n.x, by - 2.5, 2.6, 0, TAU); ctx.moveTo(n.x - 2.2, by - 1.2); ctx.lineTo(n.x, by + 2); ctx.lineTo(n.x + 2.2, by - 1.2); ctx.fill(); circ(ctx, n.x, by - 2.5, 1, '#ffffff'); }
+      });
+      G.frame(ctx, 4, 4, 104, 17, 'light'); G.text(ctx, 'MAP OF THE VALE', 12, 8.5, { font: G.FONT_B || G.FONT });
+      const n = nodes[sel], I = mapNodeInfo(n, here);
+      G.frame(ctx, 4, 128, 232, 29, 'light');
+      G.text(ctx, I.known ? n.name : '???', 12, 132, { font: G.FONT_B || G.FONT });
+      if (n.id === here) G.kit.pill(ctx, 12 + G.textW(ctx, I.known ? n.name : '???') + 6, 132.5, 40, 9, '#ff8a3c', 'YOU ARE HERE');
+      api._map.desc = !I.exists ? 'Not on the map yet.' : I.sealed ? 'Sealed until the Great Lantern burns again.' : !I.known ? "You haven't been here yet." : mapDesc(n.id);
+      G.text(ctx, api._map.desc, 12, 143, { font: G.FONT_S, color: '#5a4a66', shadow: false });
+      // legend
+      [[iconCross, 'HEAL'], [iconCoin, 'SHOP'], [(c, x, y) => iconShard(c, x, y, true), 'SHARD']].forEach(([f, l], k) => { const x = 150 + k * 28; f(ctx, x, 136.5); G.text(ctx, l, x + 4.5, 134, { font: G.FONT_S, color: '#8a7a90', shadow: false }); });
+      G.text(ctx, G.touch ? 'TAP OUTSIDE: CLOSE' : 'B: CLOSE', 228, 150, { align: 'right', font: G.FONT_S, color: '#8a7a90', shadow: false });
+      G.tapZone(-999, -999, 2400, 2400, () => { close = true; });
+      nodes.forEach((n2, i) => G.tapZone(n2.x - 12, n2.y - 14, 24, 34, () => { tapped = i; }));
+      G.tapZone(4, 128, 232, 29, () => {});
+    },
+  };
+  function mapDesc(id) {
+    const sv = servicesOf(id), bits = [];
+    if (sv.heal) bits.push('healing');
+    if (sv.shop) bits.push(sv.shop > 1 ? `${sv.shop} shops` : 'a shop');
+    if (WARDEN[id]) bits.push(S.flags['shard_' + WARDEN[id]] ? 'shard won' : 'a Warden');
+    return REGION_DESC[id] + (bits.length ? ' (' + bits.join(', ') + ')' : '');
+  }
+  api._map = { scene, nodes, here, get sel() { return sel; }, desc: '' };
+  G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = scene; await G.fadeTo(0, 8);
+  for (;;) {
+    await G.nextFrame();
+    const k = G.input.pressed;
+    if (tapped >= 0) { if (tapped !== sel) G.audio.sfx('select'); sel = tapped; tapped = -1; continue; }
+    if (close || k.b) break;
+    const nx = navPick(nodes, sel, k); if (nx !== sel) { sel = nx; G.audio.sfx('select'); }
+  }
+  G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = back || G.world.scene; api._map = null; await G.fadeTo(0, 8);
+};
 
 // ---- TRAVEL menu (START > TRAVEL) ---------------------------------------------------------------
 function statusLayer() {

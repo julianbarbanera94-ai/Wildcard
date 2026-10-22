@@ -840,18 +840,20 @@ P.plot = (c, lvl, W, H, o) => {
     for (const [nx, ny] of [[1.2, 1], [14.8, 1], [1.2, 14.2], [14.8, 14.2]]) el(c, nx, ny, .45, .45, '#7a7a8c');
     return;
   }
-  // raised brick planter (self-watering): brick front face, soil on top, a copper tap
-  softShadow(c, 9, 14.6, 7.6, 1.6, .25);
-  rf(c, .4, -2, 15.2, 17.6, 1.6, '#7a3a2e');
-  rr(c, .6, 7.8, 14.8, 7.4, [0, 0, 1.4, 1.4]); c.fillStyle = '#c8644e'; c.fill();
-  c.save(); rr(c, .6, 7.8, 14.8, 7.4, [0, 0, 1.4, 1.4]); c.clip();
-  for (let yy = 7.8, row = 0; yy < 15.2; yy += 2.4, row++) for (let xx = .6 - (row % 2) * 2; xx < 15.4; xx += 4) { rf(c, xx + .2, yy + .2, 3.6, 2, .4, row % 2 ? '#d8745a' : '#e0805e'); }
+  // raised brick planter (self-watering): a stone rim, deep soil, a short brick front face and a copper tap
+  softShadow(c, 9, 14.8, 7.6, 1.6, .25);
+  rf(c, .4, -1.6, 15.2, 17.4, 1.6, '#7a3a2e');
+  rr(c, .6, 12, 14.8, 3.6, [0, 0, 1.4, 1.4]); c.fillStyle = '#c8644e'; c.fill();
+  c.save(); rr(c, .6, 12, 14.8, 3.6, [0, 0, 1.4, 1.4]); c.clip();
+  for (let yy = 12, row = 0; yy < 15.6; yy += 1.8, row++) for (let xx = .6 - (row % 2) * 2; xx < 15.4; xx += 4) rf(c, xx + .2, yy + .2, 3.6, 1.5, .4, row % 2 ? '#d8745a' : '#e0805e');
   c.restore();
-  rf(c, .2, -2.4, 15.6, 3, 1.2, '#e0d4cc'); rf(c, .2, 5.6, 15.6, 2.6, .8, '#d8ccc4'); rf(c, .2, -2.4, 2.4, 10.6, .8, '#d8ccc4'); rf(c, 13.4, -2.4, 2.4, 10.6, .8, '#c8bcb4');
-  c.fillStyle = '#f4ece6'; c.fillRect(.6, -2.2, 14.8, .5);
-  rr(c, 2.6, .6, 10.8, 5, 1); c.fillStyle = '#4e3022'; c.fill();
-  c.save(); rr(c, 2.6, .6, 10.8, 5, 1); c.clip(); for (const yy of [1.8, 4]) { el(c, 8, yy, 5.2, .7, '#6a4230'); } c.fillStyle = 'rgba(200,230,255,.3)'; c.fillRect(3, 1, 4, .4); c.restore();
-  rf(c, 13.8, 9, 1.8, 3.4, .6, '#c87a40'); el(c, 14.7, 9.2, 1.2, .6, '#e0a050'); el(c, 14.7, 13, .5, .6, '#7ad0f0');
+  rf(c, .2, -2, 15.6, 14.4, 1.6, '#d8ccc4'); c.fillStyle = '#f4ece6'; c.fillRect(.8, -1.8, 14.4, .5);
+  rr(c, 1.8, -.4, 12.4, 11.6, 1.4); c.fillStyle = '#4e3022'; c.fill();
+  c.save(); rr(c, 1.8, -.4, 12.4, 11.6, 1.4); c.clip();
+  for (const yy of [2, 6, 10]) { el(c, 8, yy + .5, 6, 1, '#3e241a'); el(c, 8, yy, 5.6, .8, '#6a4230'); }
+  c.fillStyle = 'rgba(200,230,255,.3)'; c.fillRect(2.6, .6, 4, .4); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(1.8, -.4, 12.4, 1);
+  c.restore();
+  rf(c, 13.6, 9.6, 1.8, 3.4, .6, '#c87a40'); el(c, 14.5, 9.8, 1.2, .6, '#e0a050'); el(c, 14.5, 13.6, .5, .6, '#7ad0f0');
 };
 FX.plot = null;
 

@@ -139,6 +139,8 @@ addEventListener('DOMContentLoaded', () => {
   // Touch / mouse controls.
   G.touch = matchMedia('(pointer: coarse)').matches;
   addEventListener('pointerdown', e => { if (e.pointerType === 'touch') G.touch = true; }, { capture: true });
+  // The orb button shows the real Terra Orb art.
+  if (G.orbImage) { const ob = document.querySelector('#pad .orb'); if (ob) try { ob.style.background = `url(${G.orbImage('terra').toDataURL()}) center / contain no-repeat`; } catch (e) { /* keep the CSS fallback */ } }
   // Thumbstick: the knob follows the finger; the strongest axis past a small dead zone is held as a direction.
   const stick = document.getElementById('stick');
   if (stick) {

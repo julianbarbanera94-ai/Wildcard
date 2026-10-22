@@ -176,12 +176,13 @@ G.homeUse.refinery = async function (b) {
 
 // ---- Forge ------------------------------------------------------------------------------------------
 const FORGE_NAME = ['', 'Workbench', 'Forge', 'Master Forge'];
+const an = w => (/^[AEIOU]/i.test(w) ? 'an ' : 'a ') + w;
 function forgeWhy(r) {
   const S = G.state;
-  if (r.tool && inv.count(outName(r))) return `You already have a ${outName(r)}.`;
+  if (r.tool && inv.count(outName(r))) return `You already have ${an(outName(r))}.`;
   if (r.id === 'can' && inv.count('Big Watering Can')) return 'You already have a Big Watering Can.';
   if (r.lit && !S.flags.lanternLit) return 'This needs the Great Lantern lit.';
-  if (r.vehicle && S.vehicles && (S.vehicles.owned || []).includes(r.vehicle)) return `You already own a ${outName(r)}.`;
+  if (r.vehicle && S.vehicles && (S.vehicles.owned || []).includes(r.vehicle)) return `You already own ${an(outName(r))}.`;
   return null;
 }
 G.homeUse.forge = async function (b) {

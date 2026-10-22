@@ -117,10 +117,11 @@ function updateRoamers() {
     else { r.dir = d; if (r.chasing) { const alt = Math.abs(dx) > Math.abs(dy) ? (dy > 0 ? DOWN : dy < 0 ? UP : -1) : (dx > 0 ? RIGHT : dx < 0 ? LEFT : -1); if (alt >= 0 && roamFree(r, r.x + VEC[alt][0], r.y + VEC[alt][1])) stepEntity(r, alt, speed); } }
   }
 }
-const ORBS = ['Catch Orb', 'Super Orb', 'Ultra Orb'];
+const ORBS = () => Object.keys(G.ITEMS).filter(k => G.ITEMS[k].kind === 'orb');
 // Throw an orb at the nearest roaming creature within 4 steps (one in front of you wins ties); the battle opens with the catch.
 async function throwOrbAt() {
-  const S = G.state, item = ORBS.find(k => S.bag[k] > 0), list = world.map.roamers || [];
+  const S = G.state, list = world.map.roamers || [];
+  let item = ORBS().find(k => S.bag[k] > 0);
   if (!S.party.some(c => c.hp > 0)) { await says('Your team is too tired to battle. Rest first!'); return; }
   if (!item) { await says("You don't have any orbs! The Trading Post sells them."); return; }
   const [fx, fy] = VEC[p.dir]; let target = null, best = 1e9;
@@ -130,11 +131,13 @@ async function throwOrbAt() {
     const score = d + (dx * fx + dy * fy > 0 ? 0 : 3); if (score < best) { best = score; target = r; }
   }
   if (!target) { await says('No wild creature is close enough. Get within a few steps of one, then throw!'); return; }
+  // throw the owned orb that works best on this creature (the cheapest of equals)
+  if (G.orbBonus) item = ORBS().filter(k => S.bag[k] > 0).sort((a, b) => G.orbBonus(b, target.c) - G.orbBonus(a, target.c) || G.ITEMS[a].price - G.ITEMS[b].price)[0];
   const dx = target.x - p.x, dy = target.y - p.y;
   p.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? RIGHT : LEFT) : (dy > 0 ? DOWN : UP);
   target.timer = 99999; target.chasing = false;
   G.audio.sfx('throw');
-  const T = 24; world.thrown = { x0: p.x * 16 + 8, y0: p.y * 16 + 2, x1: target.x * 16 + 8, y1: target.y * 16 + 8, t: 0, T };
+  const T = 24; world.thrown = { x0: p.x * 16 + 8, y0: p.y * 16 + 2, x1: target.x * 16 + 8, y1: target.y * 16 + 8, t: 0, T, style: G.orbStyleOf ? G.orbStyleOf(item) : 'terra' };
   for (let i = 0; i <= T; i++) { world.thrown.t = i; await G.nextFrame(); }
   world.thrown = null; target.alert = 20; G.audio.sfx('wobble'); await G.wait(10);
   const res = await runBattle({ wild: target.c, bg: world.map.bg, throwFirst: item });
@@ -468,7 +471,7 @@ function draw(ctx) {
   G.terrain.drawOverlay(ctx, m, x0, y0, x1, y1, cx, cy, t);
   if (world.thrown) {   // an orb arcing toward a roaming creature
     const o = world.thrown, k = o.t / o.T, x = o.x0 + (o.x1 - o.x0) * k - cx, y = o.y0 + (o.y1 - o.y0) * k - Math.sin(k * Math.PI) * 26 - cy;
-    ctx.save(); ctx.translate(x, y); ctx.rotate(k * 9); G.terrain.drawObject(ctx, 'ball', -8, -9, t, {}); ctx.restore();
+    if (G.drawOrb) G.drawOrb(ctx, o.style || 'terra', x, y, 11, k * 9); else { ctx.save(); ctx.translate(x, y); ctx.rotate(k * 9); G.terrain.drawObject(ctx, 'ball', -8, -9, t, {}); ctx.restore(); }
   }
   for (const h of hooks.overlay) h(ctx, cx, cy, t);
   // Building name plates (map.labels: [{ x, y, text }] with x, y the tile the plate is centred over).

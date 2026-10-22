@@ -25,9 +25,8 @@
   #pad .ab button[data-k="b"] { background: radial-gradient(circle at 35% 30%, #ffb0a8, #ff6a5a 70%); border-color: #d0463c; }
   #pad .ab button[data-k="start"] { height: 30px; align-self: center; border-radius: 999px; font-size: 12px; background: linear-gradient(#8fe8ff, #3cc0e0); border-color: #2a8fb0; }
   #pad .ab button.on { filter: brightness(.92); }
-  #pad .ab button[data-k="orb"] { height: 30px; align-self: center; border-radius: 999px; background: linear-gradient(#ffffff, #ffe9e4); border-color: #ff6a5a; display: grid; place-items: center; }
-  #pad .orb { display: block; width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(#ff5a5a 0 46%, #33334a 46% 54%, #ffffff 54%); box-shadow: inset 0 0 0 2px #33334a; position: relative; }
-  #pad .orb::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px #33334a; }
+  #pad .ab button[data-k="orb"] { height: 30px; align-self: center; border-radius: 999px; background: linear-gradient(#fffaf0, #f1e4c8); border-color: #8a5a2c; display: grid; place-items: center; }
+  #pad .orb { display: block; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 50% 50%, #8af05a 0 22%, #3d5a26 23% 32%, transparent 33%), radial-gradient(circle at 35% 30%, #c9935a, #4a2c14 75%); background-size: contain; background-repeat: no-repeat; background-position: center; }
   /* Virtual thumbstick: drag anywhere inside the ring. */
   #pad .stick { position: relative; width: 132px; height: 132px; touch-action: none; pointer-events: auto; filter: drop-shadow(0 4px 6px rgba(80,60,120,.22)); }
   #pad .stick .ring { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.92), rgba(255,241,216,.85)); border: 3px solid #ffb648; box-shadow: inset 0 -4px 0 rgba(240,150,60,.18); }
@@ -75,6 +74,7 @@
 <script src="js/species/pack-c.js"></script>
 <script src="js/creature.js"></script>
 <script src="js/gfx.js"></script>
+<script src="js/orbart.js"></script>
 <script src="js/terrain.js"></script>
 <script src="js/homeart.js"></script>
 <script src="js/propart.js"></script>

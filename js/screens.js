@@ -38,7 +38,8 @@ function hilite(ctx, x, y, w, h) {
   const bx = x + 2 + Math.sin(G.frameNo / 5), cy = y + h / 2;
   ctx.fillStyle = '#ff6b5a'; ctx.beginPath(); ctx.moveTo(bx, cy - 3); ctx.lineTo(bx + 5, cy); ctx.lineTo(bx, cy + 3); ctx.closePath(); ctx.lineJoin = 'round'; ctx.lineWidth = 1.6; ctx.strokeStyle = '#ff6b5a'; ctx.stroke(); ctx.fill();
 }
-function miniOrb(ctx, x, y, r) {
+function miniOrb(ctx, x, y, r, style) {
+  if (G.drawOrb) { G.drawOrb(ctx, style || 'terra', x, y, r * 2.6, 0); return; }
   ctx.fillStyle = '#3d3352'; ctx.beginPath(); ctx.arc(x, y, r + .6, 0, 7); ctx.fill();
   ctx.fillStyle = '#ff4d5e'; ctx.beginPath(); ctx.arc(x, y, r, Math.PI, 0); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI); ctx.fill();
   ctx.fillStyle = '#3d3352'; ctx.fillRect(x - r, y - .3, r * 2, .6); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r * .35, 0, 7); ctx.fill();
@@ -196,7 +197,7 @@ G.bagScreen = async function (where) {
       const y = 24 + k * 14, i = top + k;
       G.tapZone(92, y - 3, 144, 14, () => { idx = i; G.tapKey('a'); });
       if (i === idx) hilite(ctx, 95, y - 2.5, 139, 12);
-      else if (n !== 'CLOSE') miniOrb(ctx, 100, y + 4, 2);
+      else if (n !== 'CLOSE') { const it = G.ITEMS[n]; if (it && it.kind === 'orb') miniOrb(ctx, 100, y + 4, 2.4, G.orbStyleOf && G.orbStyleOf(n)); else { ctx.fillStyle = '#ffb648'; ctx.beginPath(); ctx.arc(100, y + 4, 1.6, 0, 7); ctx.fill(); } }
       G.text(ctx, n === 'CLOSE' ? 'CLOSE' : n, 108, y);
       if (n !== 'CLOSE') G.text(ctx, 'x' + G.state.bag[n], 230, y, { align: 'right' });
     });

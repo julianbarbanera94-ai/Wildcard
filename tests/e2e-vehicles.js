@@ -22,7 +22,8 @@ fs.mkdirSync(OUT, { recursive: true });
       const txt = await ev(() => G.ui.text ? G.ui.text.lines.join(' ') : null);
       if (txt && seen[seen.length - 1] !== txt) seen.push(txt);
       if (await idleNow()) return seen.join(' | ');
-      if (await ev(() => G.ui.text && G.ui.text.arrow)) await key('z', 50); else await page.waitForTimeout(60);
+      const k = await ev(() => (G.ui.text && G.ui.text.arrow) || (G.ui.layers.length && G.ui.text && G.ui.text.shown >= G.ui.text.lines.join('').length) ? 'z' : G.ui.layers.length && !G.ui.text && G.scene === G.world.scene && G.ui.fade.a === 0 ? 'x' : null);
+      if (k) await key(k, 50); else await page.waitForTimeout(60);
     }
     await shot('timeout'); throw new Error('timeout advancing; saw: ' + seen.join(' | '));
   };
@@ -193,15 +194,35 @@ fs.mkdirSync(OUT, { recursive: true });
   await ev(() => { setup('lanternrest', 49, 9, 1); G.vehicles.grant('bicycle'); G.state.bag['Engine Part'] = 1; G.state.builds.push({ id: 'g1', type: 'garage', map: 'lanternrest', x: 48, y: 6, lvl: 2, rot: 0 }); G.applyBuilds(G.world.map); });
   const s0 = await ev(() => G.vehicles.speed('bicycle'));
   await ev(() => G.runWorld(() => G.homeUse.garage(G.state.builds[0]))); await until(() => G.ui.layers.length >= 2, 3000, 'garage');
-  await key('z'); await page.waitForTimeout(150); await key('ArrowDown'); await key('z');   // BICYCLE > TUNE-UP > YES
+  await key('z'); await page.waitForTimeout(300); await key('ArrowDown'); await key('z');   // BICYCLE > TUNE-UP > YES
   await advance();
   assert.equal(await ev(() => G.vehicles.speed('bicycle')), s0 + .5); assert.equal(await ev(() => G.state.bag['Engine Part'] || 0), 0);
   await ev(() => G.runWorld(() => G.homeUse.garage(G.state.builds[0]))); await until(() => G.ui.layers.length >= 2, 3000, 'garage');
-  await key('z'); await page.waitForTimeout(150); await key('ArrowDown'); await key('ArrowDown'); await key('z');   // PAINT
+  await key('z'); await page.waitForTimeout(300); await key('ArrowDown'); await key('ArrowDown'); await key('z');   // PAINT
   await until(() => G.ui.layers.length >= 2, 3000); await key('ArrowDown'); await page.waitForTimeout(300); await shot('garage-paint'); await key('z');   // BLUE
   await advance();
   assert.equal(await ev(() => G.state.vehicles.paint.bicycle), '#3a78e0');
   step('garage Lv2: tune-up (+0.5 speed for 1 Engine Part) and paint');
+
+  // 8) World map: opened from inside a house it marks the region outside; unvisited places read ???; B closes it
+  await ev(() => { setup('cottage', 4, 4, 1); G.state.visited = { lanternrest: true, sunmeadow: true }; G.state.flags.shard_meadow = true; });
+  await ev(() => G.runWorld(() => G.worldMapScreen()));
+  await until(() => G.vehicles._map && G.scene === G.vehicles._map.scene && G.ui.fade.a === 0, 4000, 'map screen');
+  assert.equal(await ev(() => G.vehicles._map.here), 'lanternrest', 'you are here: Lanternrest (outside the cottage)');
+  await page.waitForTimeout(400); await shot('world-map');
+  assert.match(await ev(() => G.vehicles._map.desc), /hub village/);
+  await key('ArrowLeft'); await page.waitForTimeout(100);
+  assert.equal(await ev(() => G.vehicles._map.nodes[G.vehicles._map.sel].id), 'sunmeadow');
+  assert.match(await ev(() => G.vehicles._map.desc), /windmill.*shard won/);
+  await key('ArrowRight'); await key('ArrowRight'); await page.waitForTimeout(100);
+  assert.equal(await ev(() => G.vehicles._map.nodes[G.vehicles._map.sel].id), 'mirewood');
+  assert.equal(await ev(() => G.vehicles._map.desc), "You haven't been here yet.");
+  await ev(() => { G.vehicles._map; }); await key('ArrowDown'); await page.waitForTimeout(100);
+  assert.equal(await ev(() => G.vehicles._map.nodes[G.vehicles._map.sel].id), 'hollow');
+  assert.match(await ev(() => G.vehicles._map.desc), /Sealed/); await shot('world-map-hollow');
+  await key('x'); await until(() => !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0, 4000, 'map closed');
+  assert.equal(await ev(() => G.world.mapId), 'cottage');
+  step('world map: you-are-here for interiors, ??? for unvisited, Hollow sealed, D-pad descriptions, B closes');
 
   assert.deepEqual(errors, [], 'no page errors');
   console.log('vehicles e2e: all passed');
