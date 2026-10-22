@@ -54,7 +54,7 @@ fs.mkdirSync(OUT, { recursive: true });
   await page.waitForTimeout(200);
   const walk = await ev(() => { place(47, 11, 3); return true; }) && await measure('ArrowRight', 1000);
   await ev(() => place(49, 9, 1)); await page.waitForTimeout(150);
-  await key('z'); await until(() => G.ui.layers.length > 0, 3000, 'structure menu'); await key('z');   // GARAGE
+  await ev(() => G.runWorld(() => G.homeUse.garage(G.state.builds.find(b => b.type === 'garage'))));   // the garage structure's action
   await until(() => G.ui.layers.length >= 2, 3000, 'garage ui'); await page.waitForTimeout(400); await shot('garage');
   await key('z'); await page.waitForTimeout(300); await shot('garage-actions'); await key('z');          // BICYCLE > TAKE OUT
   await advance();
@@ -204,6 +204,87 @@ fs.mkdirSync(OUT, { recursive: true });
   assert.equal(await ev(() => G.state.vehicles.paint.bicycle), '#3a78e0');
   step('garage Lv2: tune-up (+0.5 speed for 1 Engine Part) and paint');
 
+  // 9) Boats: launch from a shore, sail, refuse land, step ashore, re-board, indoors, storage and the shop
+  const sailTo = async (x, y, dirKey, ms) => { await ev(([x, y]) => G.placePlayer(x, y, 3), [x, y]); };
+  await ev(() => { setup('lanternrest', 4, 33, 3); G.vehicles.grant('rowboat'); });
+  assert.equal(await ev(() => G.hooks.prompt.map(f => f(...G.worldApi.facing())).filter(Boolean)[0]), 'Launch boat');
+  await key('z'); t = await advance();
+  assert.match(t, /Launch the rowboat\?/);
+  assert.deepEqual(await ev(() => [G.vehicles.riding(), G.world.p.x, G.world.p.y]), ['rowboat', 5, 33], 'launched onto the water in front of you');
+  await page.waitForTimeout(300); await shot('boat-launch');
+  await ev(() => { G.world.map.roamers = []; });
+  const row = await measure('ArrowRight', 800);
+  assert(row >= 8 && row <= 10 && row < walk, `rowboat frames per tile: ${row} (walking ${walk})`);
+  const bx = await ev(() => G.world.p.x); assert(bx > 8 && await ev(() => G.worldApi.tileAt(G.world.p.x, G.world.p.y)) === 'w', 'sailing on water');
+  await shot('boat-sailing');
+  assert.equal(await ev(() => G.hooks.encRate(.07)), 0, 'no encounters while sailing');
+  // land is refused: sail back to the west shore and push on
+  await ev(() => G.placePlayer(5, 33, 2)); await page.waitForTimeout(100); await key('ArrowLeft', 500); await page.waitForTimeout(200);
+  assert.equal(await ev(() => G.world.p.x), 5, 'the rowboat stays off the land');
+  assert.match(await ev(() => G.vehicles.rideWhy('rowboat') || ''), /riding/);
+  // step ashore (facing the shore, press A), leaving the boat moored; then board again
+  assert.equal(await ev(() => G.hooks.prompt.map(f => f(...G.worldApi.facing())).filter(Boolean)[0]), 'Step ashore');
+  await key('z'); await page.waitForTimeout(250);
+  const ash = await ev(() => ({ r: G.vehicles.riding(), p: [G.world.p.x, G.world.p.y], m: G.state.vehicles.moored }));
+  assert(ash.r === null && ash.p[0] === 4 && ash.m && ash.m.id === 'rowboat' && ash.m.x === 5 && ash.m.y === 33, 'stepped ashore, boat moored: ' + JSON.stringify(ash));
+  await ev(() => G.placePlayer(4, 33, 3)); await page.waitForTimeout(250); await shot('boat-moored');
+  assert.equal(await ev(() => G.hooks.prompt.map(f => f(...G.worldApi.facing())).filter(Boolean)[0]), 'Board rowboat');
+  await key('z'); await page.waitForTimeout(250);
+  assert.deepEqual(await ev(() => [G.vehicles.riding(), G.world.p.x, G.state.vehicles.moored]), ['rowboat', 5, null], 're-boarded the moored boat');
+  // a boat never follows you indoors: the map change moors it where it floats
+  await ev(() => G.loadMap('cottage'));
+  assert.deepEqual(await ev(() => [G.vehicles.riding(), G.state.vehicles.moored && G.state.vehicles.moored.map]), [null, 'lanternrest'], 'moored outside when entering an interior');
+  await ev(() => { setup('cottage', 4, 4, 1); G.vehicles.grant('rowboat'); });
+  assert.match(await ev(() => G.vehicles.rideWhy('rowboat')), /indoors/);
+  assert.equal(await ev(() => G.vehicles.mount('rowboat')), false);
+  // facing land refuses a launch, with the reason
+  await ev(() => { setup('lanternrest', 4, 30, 1); G.vehicles.grant('rowboat'); });
+  assert.match(await ev(() => G.vehicles.rideWhy('rowboat')), /Face open water/);
+  // the faster motorboat
+  await ev(() => { setup('lanternrest', 4, 33, 3); G.vehicles.grant('motorboat'); G.vehicles.mount('motorboat'); G.world.map.roamers = []; });
+  const mot = await measure('ArrowRight', 700);
+  assert(mot > 0 && mot <= 6 && mot < row, `motorboat frames per tile: ${mot} (rowboat ${row})`);
+  await shot('motorboat-sailing');
+  // garage: boats are listed under their own heading; MOOR NEARBY finds the water, or explains
+  await ev(() => { setup('lanternrest', 4, 33, 3); ['bicycle', 'rowboat', 'sailboat'].forEach(G.vehicles.grant); G.state.builds.push({ id: 'g1', type: 'garage', map: 'lanternrest', x: 48, y: 6, lvl: 2, rot: 0 }); });
+  await ev(() => G.runWorld(() => G.homeUse.garage(G.state.builds.find(b => b.type === 'garage')))); await until(() => G.ui.layers.length >= 2, 3000, 'garage');
+  assert.deepEqual(await ev(() => G.vehicles._garage), ['bicycle', 'rowboat', 'sailboat'], 'garage lists the boats');
+  await page.waitForTimeout(300); await shot('garage-boats');
+  await key('ArrowDown'); await page.waitForTimeout(100); await key('z'); await page.waitForTimeout(250); await key('z');   // ROWBOAT > MOOR NEARBY
+  await advance();
+  const mo = await ev(() => G.state.vehicles.moored);
+  assert(mo && mo.id === 'rowboat' && await ev(m => G.worldApi.tileAt(m.x, m.y), mo) === 'w', 'moored on nearby water');
+  await ev(() => { setup('lanternrest', 49, 9, 1); G.vehicles.grant('rowboat'); G.state.builds.push({ id: 'g1', type: 'garage', map: 'lanternrest', x: 48, y: 6, lvl: 2, rot: 0 }); });
+  await ev(() => G.runWorld(() => G.homeUse.garage(G.state.builds.find(b => b.type === 'garage')))); await until(() => G.ui.layers.length >= 2, 3000, 'garage');
+  await key('z'); await page.waitForTimeout(250); await key('z'); t = await advance();
+  assert.match(t, /Moor it at the water instead/); assert.equal(await ev(() => G.state.vehicles.moored), null);
+  // the TRAVEL menu offers boats; the dealership sells the cheap ones; the ferry can ask
+  await ev(() => { setup('lanternrest', 4, 33, 3); G.vehicles.grant('rowboat'); });
+  assert.equal(await ev(() => G.vehicles.ownsBoat()), true);
+  await openTravel('RIDE ROWBOAT'); t = await advance();
+  assert.match(t, /launched the Rowboat/); assert.equal(await ev(() => G.vehicles.riding()), 'rowboat');
+  assert.equal(await ev(() => G.vehicles.shopList().filter(r => r.id.endsWith('boat')).map(r => r.id + ':' + r.price).join()), 'rowboat:1500,motorboat:9000');
+  await ev(() => { setup('shore', 30, 7, 0); G.state.money = 2000; });
+  await talk(() => G.vehicles.buy('rowboat'));
+  assert.deepEqual(await ev(() => [G.state.money, G.vehicles.owned().includes('rowboat'), G.vehicles.ownsBoat()]), [500, true, true]);
+  await ev(() => { G.state.money = 100; });
+  t = await talk(() => G.vehicles.buy('motorboat')); assert.match(t, /You need \$8900 more\./);
+  // forge recipes grant the boats
+  assert.deepEqual(await ev(() => ['rowboat', 'motorboat', 'sailboat'].map(id => { const r = G.RECIPES.forge.find(r => r.id === id); return r && r.vehicle + r.tier; })), ['rowboat1', 'motorboat2', 'sailboat3']);
+  // art sheet of every boat in every direction, drawn with the rider
+  await ev(() => { const c = document.createElement('canvas'); c.id = 'sheet'; c.width = 12 * 40; c.height = 4 * 36 * 1; c.style.cssText = 'position:fixed;left:0;top:0;width:960px;height:288px;background:#5ab8e8;z-index:99;image-rendering:auto';
+    document.body.appendChild(c); const x = c.getContext('2d'); x.fillStyle = '#6cc4f0'; x.fillRect(0, 0, c.width, c.height);
+    const ids = ['rowboat', 'motorboat', 'sailboat']; let n = 0; G.world.p.moving = false;
+    for (const mv of [false, true]) for (const id of ids) for (let d = 0; d < 4; d++) { const col = n % 12, row = Math.floor(n / 12); const ox = col * 40 + 12, oy = row * 36 + 14; n++;
+      const sp = G.homeArt.seat ? null : null; void sp;
+      G.vehicleArt(x, id, d, ox, oy, 100, { moving: mv, layer: 'back' });
+      const st = G.hooks.drawPlayer; void st;
+      x.save(); x.translate(ox, oy); const seat = (G.vehicles._seat || (() => ({ dx: 0, dy: 0 })))(id, d); G.drawChar(x, G.state.style, d, 0, seat.dx, seat.dy, 100, true); x.restore();
+      G.vehicleArt(x, id, d, ox, oy, 100, { moving: mv, layer: 'front' }); } });
+  await page.screenshot({ path: `${OUT}/v-boat-sheet.png`, clip: { x: 0, y: 0, width: 960, height: 290 } });
+  await ev(() => document.getElementById('sheet').remove());
+  step('boats: launch from a shore, speed (rowboat ' + row + ' / motorboat ' + mot + ' frames per tile), land refused, step ashore and re-board, indoors refused, garage BOATS list and MOOR NEARBY, shop, recipes, TRAVEL');
+
   // 8) World map: opened from inside a house it marks the region outside; unvisited places read ???; B closes it
   await ev(() => { setup('cottage', 4, 4, 1); G.state.visited = { lanternrest: true, sunmeadow: true }; G.state.flags.shard_meadow = true; });
   await ev(() => G.runWorld(() => G.worldMapScreen()));
@@ -224,7 +305,7 @@ fs.mkdirSync(OUT, { recursive: true });
   assert.equal(await ev(() => G.world.mapId), 'cottage');
   step('world map: you-are-here for interiors, ??? for unvisited, Hollow sealed, D-pad descriptions, B closes');
 
-  assert.deepEqual(errors, [], 'no page errors');
+  assert.deepEqual(errors, [], 'no page errors: ' + errors.join(' / '));
   console.log('vehicles e2e: all passed');
   await browser.close();
 })().catch(e => { console.error(e); process.exit(1); });

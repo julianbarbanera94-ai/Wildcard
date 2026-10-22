@@ -744,6 +744,7 @@ const api = G.vehicles = {
     return SOLD.map(id => { const V = V$(id), bad = reqList(V.req).filter(r => !r.ok).map(r => r.text);
       return { id, name: V.name, price: V.price, desc: V.desc, why: owns(id) ? `You already own ${a_(id)} ${V.name}.` : bad.length ? `Needs ${bad.join(', ')}.` : null }; });
   },
+  _seat: (id, dir) => seat(id, dir),
   ownsBoat: () => ownedBoats().length > 0,
   boats: () => ownedBoats(),
   buy: (id, o) => buy(id, o),

@@ -118,5 +118,11 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
 (function () {
   const { carveExit, gate } = G.mk, m = G.MAPS.mirewood;
   carveExit(m, 'N', 38, 'sunmeadow', 36, 42); carveExit(m, 'E', 24, 'stonebridge', 1, 22); carveExit(m, 'S', 38, 'tidefall', 30, 1, gate(3, 'TIDEFALL ISLANDS'));
+  // tidy the new exits so they read as roads: the south trail runs down from the shore path, the north trail to the north shore path
+  rect(m, 38, 44, 2, 6, 'p'); rect(m, 38, 1, 2, 7, 'p');
+  scatter(m, 'l', [[37, 46], [40, 46], [37, 3], [40, 3]]); scatter(m, 'f', [[36, 44], [41, 44], [36, 5], [41, 5]]);
+  m.landing = { x: 8, y: 24 };
+  sign(m, 41, 48, 'TIDEFALL ISLANDS\nSouth, past the reeds. A ranger asks for 3 Arena Badges.');
+  sign(m, 36, 2, 'SUNMEADOW\nThe meadow road runs north. East along the boardwalk lies Stonebridge Town.');
 })();
 })();

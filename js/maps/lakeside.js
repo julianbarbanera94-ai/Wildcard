@@ -114,11 +114,10 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
 // ---- interiors ----
 (function () {
   const m = interior('lake_heal', 'HEALING CENTRE', 8, 7, 3);
-  rect(m, 3, 2, 4, 1, 'k'); set(m, 1, 1, 'h'); scatter(m, 'S', [[6, 1]]); rect(m, 5, 4, 2, 1, 'a'); set(m, 1, 5, 't'); set(m, 7, 1, 'P');
+  rect(m, 3, 2, 4, 1, 'k'); set(m, 1, 1, 'h'); rect(m, 5, 4, 2, 1, 'a'); set(m, 1, 5, 't');
   npc(m, 4, 1, DOWN, 'nurse', null, { still: true });
   npc(m, 6, 5, LEFT, 'girl', ['Lakeside nurses never close. Even the fish get a checkup.']);
   for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Heal', fn: () => G.healUI ? G.healUI({ name: 'HEALING CENTRE', free: true }) : G.story.nurse() });
-  m.objs.push({ x: 7, y: 1, fn: () => G.pcMenu() });
   warp(m, 3, 6, 'lakeside', 13, 32, DOWN);
 })();
 (function () {

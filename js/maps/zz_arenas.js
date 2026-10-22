@@ -76,10 +76,10 @@ const ARENAS = {
   lakeside: {
     floor: 'T', wall: 'w', obs: 'w', gap: 'z',
     grid: ['L...........L', '.....OQO.....', '......a......', '......a......', 'wwwwwwzwwwwww',
-      '.............', '..zzzzz1.....', '.wwwwwwwwwwww'.replace('.', 'z'), 'wwzwwwwwwwwww'.replace('w', '.'), 'wwzwwwwwwwwww',
-      '.....2...www.', 'wwwzzzzzzwwww', 'wwwwwwwwzzzww', '.............', 'wwwwwwwwwwzww',
-      '..wwwww.....w', '..wwwww.3ww..', '.............', '.G.........N.'],
-    items: [[12, 5, 'Aqua Orb', 2], [0, 18, 'Super Potion']],
+      '........1....', 'oozzzoooooooo', 'oozoooooooooo', '.............', 'wwzwwwwwwwwww',
+      '.....2...ooo.', 'ooozzzzzzoooo', 'oooooooozzzoo', '.............', 'wwwwwwwwwwzww',
+      '..ooooo.....o', '..ooooo.3o...', '.............', '.G.........N.'],
+    items: [[0, 5, 'Aqua Orb', 2], [0, 18, 'Super Potion']],
     guide: ['Welcome to the Tide Arena! The pools are deeper than they look, so stay on the stepping stones.', 'Water-types love rain but fear Grass and Electric attacks. A good zap goes a long way.'],
     sign: 'LAKESIDE ARENA\nWater-type. Leader: MARLO.',
     leader: { name: 'MARLO', pos: [6, 1], look: 'Water', team: [[88, 20], [53, 21], [47, 22], [42, 22], [34, 23]],
@@ -95,8 +95,8 @@ const ARENAS = {
     floor: 'v', wall: 'w', obs: 'w', gap: 'a', path: 'a',
     grid: ['wwwwwwwwwwwww', 'wwwvvOQOvvwww', 'wwwvvvavvvwww', 'wwwwwwawwwwww', 'wwwwwwawwwwww',
       'wvvvvvavvvvvw', 'wvv1vvvvvv3vw', 'wvvvvwwwvvvvw', 'wwawwwwwwwwww', 'wwawwwwwwwwww',
-      'wvvvvvvvvvvvw', 'wvvwvv2vvwvvw', 'wvvwvvvvvwvvw', 'wvvvvvvvvvvvw', 'wwwwwwwwwwawww'.slice(0, 13),
-      'wwwwwwwwwwawwww'.slice(0, 13), 'wvvvvvvvvvvvw', 'wvvvwvvvwvvvw', 'wvGvvvvvvvNvw'],
+      'wvvvvvvvvvvvw', 'wvvwvv2vvwvvw', 'wvvwvvvvvwvvw', 'wvvvvvvvvvvvw', 'wwwwwwwwwwaww',
+      'wwwwwwwwwwaww', 'wvvvvvvvvvvvw', 'wvvvwvvvwvvvw', 'wvGvvvvvvvNvw'],
     items: [[1, 7, 'Gale Orb', 2], [11, 17, 'Super Potion']],
     guide: ['Welcome to the Gale Arena! The floor is only clouds and feathers, so do not look down.', 'Flying-types soar over most things, but Electric, Ice and Rock attacks bring them right back to earth.'],
     sign: 'DRIFTWOOD ARENA\nFlying-type. Leader: ZEPHYRA.',
@@ -113,10 +113,10 @@ const ARENAS = {
     floor: 'y', wall: 'C', obs: 'r', gap: '.', hallPath: 'a',
     grid: ['L...........L', '.....OQO.....', '......a......', '......a......', 'XXXXXX.XXXXXX',
       '..r.....P.r..', '.P..1.....P..', '...r.PP.r....', '.r.......P.r.', 'XX.XXXXXXXXXX',
-      '...r..P...r..', '.P.....2.P.r.', '...r.P...r...', '.r...P..r..P.', 'XXXXXXXXXX.XX',
+      '...r..P...r..', '.P.....2.P...', '...r.P.....r.', '.r...P..r....', 'XXXXXXXXXX.XX',
       '.P...r...P...', '...r...r...3.', '.r...P.....r.', '.G..P.....N..'],
     pitTo: 6,
-    items: [[12, 5, 'Stone Orb', 2], [1, 15, 'Super Potion']],
+    items: [[12, 5, 'Stone Orb', 2], [0, 15, 'Super Potion']],
     guide: ['Welcome to the Dune Arena! Watch for the soft patches. The sand pits will dump you right back at the door.', 'Ground-types are tough, but Water, Grass and Ice attacks wash them away. Electric will not touch them at all!'],
     sign: 'SANDSREACH ARENA\nGround-type. Leader: OSHA.',
     leader: { name: 'OSHA', pos: [6, 1], look: 'Ground', team: [[121, 28], [144, 29], [118, 29], [111, 30], [122, 31]],
@@ -132,9 +132,9 @@ const ARENAS = {
     floor: 'v', wall: 'B', obs: 'l', alt: 'x', gap: '.',
     gates: { '[': ['y', '#ffd23a', 'YELLOW'], ']': ['c', '#3ae0e8', 'CYAN'], '<': ['m', '#ff5ad0', 'PINK'] }, switches: { '{': 'y', '}': 'c', '(': 'm' },
     grid: ['L...........L', '.....OQO.....', '......a......', '......a......', 'BBBBBB<BBBBBB',
-      '.x...l.....x.', '(..1....l...x', '.x.....x.....', '..l...l..x...', 'BB]BBBBBBBBBB',
+      '.x...l.....x.', '(..1....l...x', '.x.....x.....', '.l....l..x...', 'BB]BBBBBBBBBB',
       '.....2..l...x', 'x...l...l..}.', '.x....x...x..', '..l.....x....', 'BBBBBBBBBB[BB',
-      '.x...l...x...', '{..l...l..3..', '.x...x.....x.', '.G.l.......N.'],
+      '.x...l...x...', '{..l...l3....', '.x...x.....x.', '.G.l.......N.'],
     items: [[12, 7, 'Pulse Orb', 2], [1, 17, 'Super Potion']],
     guide: ['Welcome to the Circuit Arena! Those laser gates are wired to switches. Press the glowing panel in each room to open the way.', 'Electric-types are fast, but Ground-types shrug off their shocks completely.'],
     sign: 'COBALT ARENA\nElectric-type. Leader: RAYNE.',
@@ -144,7 +144,7 @@ const ARENAS = {
     trainers: [
       { id: 1, dir: 3, sight: 3, style: 'clerk', name: 'WATT', cls: 'ENGINEER', team: [[12, 28], [79, 29]], pre: 'Careful, that wiring is live!', win: 'You blew my fuse.', post: 'The pink gate opens from the top room.' },
       { id: 2, dir: 2, sight: 3, style: 'prof', name: 'OHM', cls: 'SCIENTIST', team: [[79, 29], [109, 30], [12, 30]], pre: 'Let us test your resistance!', win: 'Your resistance is impressive.', post: 'The cyan switch is on the right wall.' },
-      { id: 3, dir: 2, sight: 3, style: 'kid', name: 'BOLT', cls: 'TECHNICIAN', team: [[12, 28], [12, 29]], pre: 'I fixed these lights, so now I fix you!', win: 'I will need a recharge.', post: 'The yellow switch is in the first room, left side.' },
+      { id: 3, dir: 3, sight: 3, style: 'kid', name: 'BOLT', cls: 'TECHNICIAN', team: [[12, 28], [12, 29]], pre: 'I fixed these lights, so now I fix you!', win: 'I will need a recharge.', post: 'The yellow switch is in the first room, left side.' },
     ],
   },
   frostmere: {
@@ -152,7 +152,7 @@ const ARENAS = {
     grid: ['L...........L', '.....OQO.....', '......a......', '......a......', 'iiiiii.iiiiii',
       '.i...i...i.i.', '...i.1.i...i.', '.i...i...i...', '.i.i...i...i.', 'ii.iiiiiiiiii',
       '...i...i.i...', '.i.i.i.2...i.', '.i...i...i.i.', '...i.....i...', 'iiiiiiiiii.ii',
-      '.i...i...i...', '...i...i..3..', '.i...i...i.i.', '.G.i.......N.'],
+      '.i...i...i...', '...i...i3....', '.i...i...i.i.', '.G.i.......N.'],
     items: [[12, 5, 'Frost Orb', 2], [0, 16, 'Super Potion']],
     guide: ['Welcome to the Rime Arena! Mind the crystals. They are sharper than they look.', 'Ice-types are brittle. Fire, Fighting, Rock and Steel moves shatter them in a single hit.'],
     sign: 'FROSTMERE ARENA\nIce-type. Leader: ISOLDE.',
@@ -168,10 +168,10 @@ const ARENAS = {
   emberfall: {
     floor: 'c', wall: '!', obs: '!', gap: 'z',
     grid: ['L...........L', '.....OQO.....', '......a......', '......a......', '!!!!!!z!!!!!!',
-      '..!.....!.!..', '.!!.1...!....', '...!.!!....!.', '.!.....!..!..', '!!z!!!!!!!!!!',
-      '..!...!....!.', '.!!.2.!.!!...', '...!...!.....', '.!...!!..!...', '!!!!!!!!!!z!!',
-      '..!.....!....', '.!!...!...3!.', '....!...!.!..', '.G.!.....!N..'],
-    items: [[12, 5, 'Flare Orb', 2], [1, 18, 'Super Potion']],
+      '..o.....o.o..', '.oo.1...o....', '.....o.....o.', '.o.....o..o..', '!!z!!!!!!!!!!',
+      '.o.......o...', '.oo.2.o..o...', '...o.......o.', '.o...oo..o...', '!!!!!!!!!!z!!',
+      '..o.....o....', '.oo...o...3o.', '....o...o.o..', '.G.o.....oN..'],
+    items: [[12, 5, 'Flare Orb', 2], [0, 18, 'Super Potion']],
     guide: ['Welcome to the Magma Arena! Walk the stone paths, because the lava is not for swimming.', 'Fire-types burn hot, but Water, Ground and Rock attacks put them out fast.'],
     sign: 'EMBERFALL ARENA\nFire-type. Leader: PYRRA.',
     leader: { name: 'PYRRA', pos: [6, 1], look: 'Fire', team: [[119, 42], [146, 43], [134, 43], [108, 43], [3, 44], [155, 45]],
@@ -179,7 +179,7 @@ const ARENAS = {
       win: 'AAH! That is a fire! The Magma Badge is yours, and you have earned it!', post: 'Water, Ground and Rock are what I fear. I will be waiting at the crater for our rematch, so stoke your embers!' },
     trainers: [
       { id: 1, dir: 0, sight: 3, style: 'camper', name: 'CINDER', cls: 'FIREWALKER', team: [[145, 39], [117, 40]], pre: 'Walk the coals with me!', win: 'You walk through fire!', post: 'Pyrra is up past the third bridge.' },
-      { id: 2, dir: 2, sight: 3, style: 'hiker', name: 'SLAG', cls: 'SMELTER', team: [[132, 40], [118, 40], [145, 41]], pre: 'Time to forge your resolve!', win: 'You cooled my steel.', post: 'The stones are firm. The lava is not.' },
+      { id: 2, dir: 1, sight: 3, style: 'hiker', name: 'SLAG', cls: 'SMELTER', team: [[132, 40], [118, 40], [145, 41]], pre: 'Time to forge your resolve!', win: 'You cooled my steel.', post: 'The stones are firm. The lava is not.' },
       { id: 3, dir: 2, sight: 3, style: 'boy', name: 'EMBER', cls: 'STOKER', team: [[1, 38], [117, 39], [2, 40]], pre: 'I keep the fires burning, so burn with me!', win: 'My fire went out.', post: 'Do not stop on a hot tile.' },
     ],
   },
@@ -201,7 +201,7 @@ for (const b of G.BADGES) {
     [...row].forEach((c, ix) => {
       const x = ix + 1, y = iy + 1; let ch = c;
       const wallRow = iy === 4 || iy === 9 || iy === 14;
-      if (c === '.') ch = wallRow ? cfg.gap : cfg.floor;
+      if (c === '.') ch = wallRow && cfg.gap !== '.' ? cfg.gap : cfg.floor;
       else if (c === 'X') ch = cfg.wall; else if (c === 'o') ch = cfg.obs; else if (c === ',') ch = cfg.alt || cfg.floor;
       else if (c === 'a' && cfg.path) ch = cfg.path;
       else if (/[123QGN*P]/.test(c)) { ch = c === 'P' ? 'c' : c === 'N' ? 's' : cfg.floor; pos[c] = pos[c] || []; pos[c].push([x, y]); }

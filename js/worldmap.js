@@ -21,9 +21,9 @@ const SPEC = [
   ['verdant', 'island', 300, 108, 3, { tag: 'b', port: [250, 190] }],
   ['mirewood', 'route', 400, 592, 0, { tag: 'b' }],
   ['shore', 'route', 592, 772, 0, { tag: 'b', port: [650, 850] }],
-  ['hollow', 'special', 500, 572, 0, { tag: 't', lantern: true }],
+  ['hollow', 'special', 612, 612, 0, { tag: 'b', lantern: true }],
   ['stonebridge', 'town', 792, 640, 0, { tag: 'b', arena: 'keystone' }],
-  ['whispering', 'route', 1075, 745, 1, { tag: 'b' }],
+  ['whispering', 'route', 1042, 722, 1, { tag: 'b' }],
   ['tidefall', 'island', 240, 800, 3, { tag: 'b', port: [330, 770] }],
   ['moonlit', 'island', 1000, 900, 8, { tag: 'b', port: [920, 900] }],
   ['lakeside', 'town', 690, 352, 0, { tag: 'b', arena: 'tide' }],
@@ -42,13 +42,13 @@ const CAVES = { ridge: [586, 282], evergreen: [392, 318], cloudpeak: [545, 150],
 const SEA_VIA = { 'shore>moonlit': [[760, 880]], 'cobalt>moonlit': [[1240, 800], [1100, 880]], 'driftwood>verdant': [[60, 380], [100, 230]], 'driftwood>tidefall': [[130, 640], [180, 750]], 'frostmere>aurora': [[1250, 30]] };
 const KIND_WORD = { city: 'City', town: 'Town', route: 'Wild area', island: 'Island', special: 'Special place' };
 const BLURB = {
-  lanternrest: 'The hub village around the Great Lantern, with a windmill and farms.',
-  homestead: 'Your own land: build, farm and park your vehicles.',
-  ridge: 'A switchback trail up to the mouth of Glimmer Mine.',
-  sunmeadow: 'Rolling fields, an orchard and a windmill.',
+  lanternrest: 'The hub village around the Great Lantern.',
+  homestead: 'Your own land to build, farm and park on.',
+  ridge: 'A switchback trail up to Glimmer Mine.',
+  sunmeadow: 'Fields, an orchard and a windmill.',
   mirewood: 'A misty marsh of boardwalks and reeds.',
   shore: 'Dunes, tidepools and a lighthouse.',
-  hollow: 'A starlit crystal cavern. Something waits inside.',
+  hollow: 'A starlit crystal cavern.',
   sunhaven: 'A harbour city on the west coast.',
   evergreen: 'Deep old forest with a giant tree.',
   driftwood: 'A fishing port under a tall lighthouse.',
@@ -56,16 +56,16 @@ const BLURB = {
   stonebridge: 'A town of stone bridges and waterfalls.',
   whispering: 'Glowing woods around a crystal pond.',
   tidefall: 'Islets joined by rope bridges.',
-  moonlit: 'A mystical island of glowing purple trees.',
+  moonlit: 'A mystical island of purple trees.',
   lakeside: 'A town of piers on a big lake.',
-  cloudpeak: 'High peaks with switchbacks and a castle on the summit.',
+  cloudpeak: 'High peaks, caves and a summit castle.',
   glacier: 'A snowy pass of frozen ponds and ice caves.',
   frostmere: 'An ice city with a crystal palace.',
   aurora: 'Far northern isles under the aurora.',
-  sandsreach: 'Dunes, ancient ruins and an oasis village.',
+  sandsreach: 'Dunes, old ruins and an oasis village.',
   badlands: 'Red mesas, canyons and caves.',
   emberfall: 'A smoking volcano ringed by lava rivers.',
-  cobalt: 'A big modern port city with a long bridge.',
+  cobalt: 'A modern port city with a long bridge.',
 };
 const PLACES = SPEC.map(([id, kind, x, y, need, o]) => Object.assign({ id, kind, x, y, nx: x / RW, ny: y / RH, need, blurb: BLURB[id] || '', tag: 'b' }, o));
 const BYID = {}; PLACES.forEach(p => BYID[p.id] = p);
@@ -127,6 +127,11 @@ G.worldLockWhy = function (id) {
   if (p.lantern && !lanternLit()) bits.push('the Great Lantern relit');
   return bits.length ? 'Needs ' + bits.join(' and ') + '.' : null;
 };
+G.worldLockShort = function (id) {
+  const p = BYID[id]; if (!p) return '';
+  const bits = []; if (p.need > badges()) bits.push(`LOCKED: ${p.need} BADGE${p.need > 1 ? 'S' : ''} NEEDED (HAVE ${badges()})`); if (p.lantern && !lanternLit()) bits.push(bits.length ? 'AND THE LANTERN RELIT' : 'LOCKED: LANTERN MUST BE RELIT');
+  return bits.join(' ');
+};
 G.worldVisited = id => !!(G.state && G.state.visited && (G.state.visited[id] || (id === 'ridge' && G.state.visited.mine)));
 
 // ---- Painting helpers ---------------------------------------------------------------------------------------------
@@ -151,7 +156,7 @@ const inEll = (x, y, cx, cy, rx, ry) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) *
 const distSeg = (px, py, ax, ay, bx, by) => { const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l)); return Math.hypot(px - ax - t * dx, py - ay - t * dy); };
 
 // ---- Geography (reference pixels) ----------------------------------------------------------------------------------------
-const CONT = [[112, 300], [150, 235], [205, 207], [270, 216], [345, 200], [420, 152], [470, 120], [520, 72], [575, 40], [640, 14], [720, 22], [790, 32], [860, 62], [940, 46], [1030, 40], [1110, 50], [1180, 72], [1250, 104], [1275, 160], [1268, 212], [1312, 236], [1385, 206], [1450, 216], [1496, 266], [1516, 332], [1500, 402], [1516, 462], [1490, 522], [1446, 566], [1400, 592], [1440, 632], [1472, 662], [1442, 688], [1380, 692], [1312, 668], [1242, 692], [1172, 668], [1132, 702], [1126, 736], [1076, 766], [1012, 796], [950, 802], [902, 792], [862, 816], [802, 812], [742, 802], [690, 822], [640, 832], [580, 832], [526, 816], [486, 786], [470, 746], [500, 706], [470, 690], [410, 666], [340, 656], [272, 652], [226, 626], [200, 586], [214, 546], [240, 510], [232, 470], [238, 420], [226, 386], [172, 372], [120, 346]];
+const CONT = [[112, 300], [150, 235], [205, 207], [270, 216], [345, 200], [420, 152], [470, 120], [520, 72], [575, 40], [640, 14], [720, 22], [790, 32], [860, 62], [940, 46], [1030, 40], [1110, 50], [1180, 72], [1250, 104], [1276, 156], [1296, 128], [1345, 116], [1405, 134], [1462, 172], [1500, 230], [1508, 280], [1518, 336], [1500, 402], [1516, 462], [1490, 522], [1446, 566], [1400, 592], [1440, 632], [1472, 662], [1442, 688], [1380, 692], [1312, 668], [1242, 692], [1172, 668], [1138, 704], [1142, 752], [1112, 800], [1040, 818], [960, 806], [902, 792], [862, 816], [802, 812], [742, 802], [690, 822], [640, 832], [580, 832], [526, 816], [486, 786], [470, 746], [500, 706], [470, 690], [410, 666], [340, 656], [272, 652], [226, 626], [200, 586], [214, 546], [240, 510], [232, 470], [238, 420], [226, 386], [172, 372], [120, 346]];
 const ISLANDS = {
   verdant: [[205, 100], [225, 70], [265, 55], [315, 60], [350, 85], [345, 120], [320, 150], [270, 160], [250, 190], [215, 195], [185, 170], [190, 130]],
   driftwood: [[48, 520], [62, 470], [90, 440], [125, 450], [150, 485], [140, 540], [165, 565], [130, 590], [85, 575], [50, 555]],
@@ -159,7 +164,7 @@ const ISLANDS = {
   tidefallB: [[290, 725], [315, 712], [345, 728], [340, 755], [310, 765]],
   tidefallC: [[130, 715], [152, 700], [170, 716], [158, 736], [134, 732]],
   moonlit: [[890, 905], [900, 860], [945, 835], [1010, 830], [1075, 848], [1110, 890], [1085, 940], [1030, 975], [960, 980], [915, 955]],
-  aurora: [[1345, 80], [1365, 50], [1405, 40], [1470, 50], [1500, 85], [1480, 125], [1430, 138], [1375, 128]],
+  aurora: [[1350, 76], [1372, 48], [1410, 40], [1465, 48], [1496, 76], [1478, 108], [1430, 118], [1385, 110]],
   cobaltIsle: [[1425, 646], [1450, 630], [1478, 640], [1488, 668], [1462, 686], [1435, 676]],
   s1: [[40, 310], [58, 295], [75, 312], [60, 330]], s2: [[100, 600], [125, 590], [140, 612], [115, 632]], s3: [[375, 855], [405, 840], [440, 860], [425, 895], [390, 892]],
   s4: [[480, 870], [515, 850], [550, 872], [535, 910], [495, 905]], s5: [[580, 930], [610, 915], [630, 940], [605, 960]], s6: [[610, 985], [632, 975], [640, 1000], [615, 1008]],
@@ -175,7 +180,7 @@ const BIOMES = {
   desert: [[908, 425], [1010, 408], [1100, 432], [1172, 470], [1232, 522], [1205, 592], [1130, 615], [1040, 612], [962, 572], [910, 500]],
   swamp: [[228, 540], [330, 518], [450, 520], [530, 558], [552, 620], [500, 672], [400, 652], [300, 662], [228, 622]],
   mountain: [[470, 150], [530, 70], [600, 28], [700, 22], [800, 50], [850, 110], [840, 190], [790, 245], [720, 262], [630, 250], [545, 255], [480, 215]],
-  hollow: [[455, 535], [520, 530], [560, 570], [535, 612], [480, 610], [445, 575]],
+  hollow: [[568, 574], [632, 566], [672, 604], [652, 648], [596, 650], [558, 614]],
 };
 // rivers: [width, points], from the mountains through Lakeside and Stonebridge to the sea
 const RIVERS = [
@@ -338,8 +343,8 @@ function paintBase(c) {
   });
   // grey cliffs along the fall edges beside the river (south-centre)
   clipLand(() => {
-    for (const [pts] of [[[[760, 600], [775, 640], [770, 700], [780, 770], [760, 810]]], [[[880, 430], [905, 470], [890, 560], [880, 640], [870, 740], [850, 810]]], [[[900, 340], [925, 345], [940, 395], [930, 425]]], [[[480, 700], [560, 715], [640, 700], [700, 720], [760, 740]]], [[[705, 215], [690, 250], [700, 290]]]]) {
-      c.strokeStyle = '#7e7466'; c.lineWidth = 14; smooth(c, pts, false); c.stroke(); c.strokeStyle = '#a89c8a'; c.lineWidth = 7; smooth(c, pts.map(([x, y]) => [x - 3, y - 4]), false); c.stroke();
+    for (const [pts] of [[[[770, 690], [776, 730], [770, 770], [760, 808]]], [[[868, 690], [866, 740], [856, 790]]], [[[900, 345], [925, 352], [934, 392]]]]) {
+      c.strokeStyle = '#7e7466'; c.lineWidth = 9; smooth(c, pts, false); c.stroke(); c.strokeStyle = '#a89c8a'; c.lineWidth = 4; smooth(c, pts.map(([x, y]) => [x - 3, y - 4]), false); c.stroke();
     }
   });
   clipLand(() => {
@@ -369,7 +374,7 @@ function paintBase(c) {
     ell(c, 1330, 142, 20, 7, '#1c1416'); ell(c, 1330, 143, 14, 4.5, '#ff8a2a'); ell(c, 1330, 143, 8, 2.5, '#ffe070');
     c.strokeStyle = '#ff7a20'; c.lineWidth = 3; c.beginPath(); c.moveTo(1322, 148); c.lineTo(1306, 190); c.lineTo(1318, 230); c.moveTo(1338, 148); c.lineTo(1356, 195); c.stroke();
     // smoke plume
-    for (const [x, y, r, a] of [[1328, 120, 16, .9], [1338, 95, 20, .8], [1350, 68, 24, .65], [1362, 42, 26, .5]]) { c.save(); c.globalAlpha = a; circ(c, x, y, r, '#8a7a82'); circ(c, x - 3, y - 3, r * .7, '#b0a2aa'); c.restore(); }
+    for (const [x, y, r, a] of []) { }
     // volcano rocks
     for (let i = 0; i < 30; i++) { const x = 1150 + R() * 340, y = 160 + R() * 180; if (!inPoly(x, y, BIOMES.volcano) || Math.hypot(x - 1330, y - 230) < 80) continue; poly(c, [[x - 10, y + 5], [x - 5, y - 8], [x + 5, y - 10], [x + 11, y + 5]], '#2e2428'); poly(c, [[x - 5, y - 8], [x + 5, y - 10], [x + 2, y - 2], [x - 4, y - 2]], '#54444a'); }
     // moonlit and aurora glows
@@ -378,6 +383,7 @@ function paintBase(c) {
     // tidefall: rope bridges
     c.strokeStyle = '#a07a4a'; c.lineWidth = 3; c.setLineDash([5, 3]); c.beginPath(); c.moveTo(282, 765); c.lineTo(300, 750); c.moveTo(165, 735); c.lineTo(160, 745); c.stroke(); c.setLineDash([]);
   });
+  for (const [x, y, r, a] of [[1332, 112, 15, .9], [1340, 86, 19, .8], [1352, 60, 22, .65], [1368, 36, 24, .5]]) { c.save(); c.globalAlpha = a; circ(c, x, y, r, '#8a7a82'); circ(c, x - 3, y - 3, r * .7, '#b0a2aa'); c.restore(); }
   // bridges over the river
   for (const [x, y, a] of [[832, 490, 0], [868, 330, .1], [800, 662, 0]]) { c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = '#6a5848'; c.fillRect(-26, -7, 52, 14); c.fillStyle = '#d8c8a8'; c.fillRect(-26, -5, 52, 10); c.fillStyle = '#b0a080'; for (let i = -24; i < 24; i += 6) c.fillRect(i, -5, 1.5, 10); c.restore(); }
   // the tidefall bridge between islets
@@ -391,7 +397,7 @@ function paintBase(c) {
     for (const [w, pts] of RIVERS) for (let i = 1; i < pts.length; i++) if (distSeg(x, y, ...pts[i - 1], ...pts[i]) < w * .9 + 10) return true;
     for (const p of PLACES) if (Math.hypot(x - p.x, y - p.y) < (p.kind === 'city' ? 52 : p.kind === 'town' ? 40 : p.kind === 'island' ? 30 : 22)) return true;
     if (Math.hypot(x - 610, y - 455) < 30 || inEll(x, y, 700, 465, 56, 28)) return true;
-    if (Math.hypot(x - 1075, y - 745) < 30 || inEll(x, y, 440, 575, 36, 24)) return true;
+    if (Math.hypot(x - 1100, y - 765) < 36 || inEll(x, y, 440, 575, 36, 24)) return true;
     return false;
   };
   const landOK = (x, y) => { c.save(); let ok = false; for (const L of lands) { if (inPoly(x, y, L)) { ok = true; break; } } c.restore(); return ok; };
@@ -445,7 +451,7 @@ function paintBase(c) {
   for (const [id, [x, y]] of Object.entries(CAVES)) cave(c, x, y, 17);
   // a path of towns: roads
   const roadPts = (a, b, bend) => { const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1; return [[a.x, a.y], [mx - dy / l * bend, my + dx / l * bend], [b.x, b.y]]; };
-  const bendOf = (a, b) => ((a.id.charCodeAt(0) + b.id.charCodeAt(1)) % 5 - 2) * 9;
+  const bendOf = (a, b) => ((a.id.charCodeAt(0) + b.id.charCodeAt(1)) % 5 - 2) * 16 + 8;
   WORLD.roads = WORLD.edges.map(([a, b]) => roadPts(BYID[a], BYID[b], bendOf(BYID[a], BYID[b])));
   for (const pts of WORLD.roads) {
     c.save(); c.strokeStyle = 'rgba(70,50,20,.35)'; c.lineWidth = 6.5; c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); c.quadraticCurveTo(pts[1][0], pts[1][1], pts[2][0], pts[2][1]); c.stroke();
@@ -457,7 +463,7 @@ function paintBase(c) {
   // ---- settlements ----
   settlements(c, R);
   // ---- clouds in the corners, compass, title ----
-  for (const [x, y, s] of [[40, 230, 46], [120, 270, 30], [20, 400, 34], [60, 190, 28], [1500, 530, 40], [1470, 590, 30], [1530, 380, 30], [60, 900, 50], [130, 960, 44], [20, 850, 40], [210, 1010, 36], [830, 1010, 60], [900, 990, 46], [760, 1020, 40], [1080, 1015, 48], [1180, 1005, 30], [1500, 960, 40], [1450, 1000, 50], [480, 20, 30], [40, 10, 28], [980, 0, 26], [1500, 10, 34], [650, 1022, 40]]) cloudPuff(c, x, y, s, .95);
+  for (const [x, y, s] of [[40, 230, 46], [120, 270, 30], [20, 400, 34], [60, 190, 28], [1500, 530, 40], [1470, 590, 30], [1530, 380, 30], [30, 830, 44], [20, 910, 40], [215, 1012, 36], [150, 1000, 30], [830, 1010, 60], [900, 990, 46], [760, 1020, 40], [1080, 1015, 48], [1180, 1005, 30], [1500, 960, 40], [1450, 1000, 50], [480, 20, 30], [40, 10, 28], [980, 0, 26], [1500, 10, 34], [650, 1022, 40]]) cloudPuff(c, x, y, s, .95);
   compass(c, 90, 960, 42); scaleBar(c, 210, 985); title(c, 20, 28);
   // gentle vignette
   c.fillStyle = rad(c, RW / 2, RH / 2, 1000, ['rgba(10,30,70,0)', 'rgba(10,30,70,.28)']); c.fillRect(0, 0, RW, RH);
@@ -489,8 +495,8 @@ function title(c, x, y) {
   c.strokeStyle = '#d8e8ff'; c.lineWidth = 3; c.beginPath(); c.roundRect ? c.roundRect(4, 4, w - 8, h - 8, 19) : c.rect(4, 4, w - 8, h - 8); c.stroke();
   c.strokeStyle = '#ffffff'; c.lineWidth = 3.5; c.lineJoin = 'round'; c.beginPath(); c.moveTo(w / 2 - 44, 40); c.lineTo(w / 2 - 20, 14); c.lineTo(w / 2 - 6, 30); c.lineTo(w / 2 + 10, 8); c.lineTo(w / 2 + 44, 40); c.stroke();
   c.fillStyle = '#fff'; c.font = '900 31px "Trebuchet MS", "Segoe UI", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-  c.save(); c.translate(w / 2, 70); c.scale(1, 1); for (let i = 0, s = 'AURELIS', cw = 27; i < s.length; i++) c.fillText(s[i], (i - 3) * cw, 0); c.restore();
-  c.font = '700 13px "Trebuchet MS", sans-serif'; c.fillStyle = '#cfe0ff'; c.fillText('R E G I O N', w / 2, 88);
+  c.letterSpacing = '5px'; c.fillText('AURELIS', w / 2 + 2, 70); c.letterSpacing = '0px';
+  c.font = '700 13px "Trebuchet MS", sans-serif'; c.fillStyle = '#cfe0ff'; c.letterSpacing = '6px'; c.fillText('REGION', w / 2 + 3, 88); c.letterSpacing = '0px';
   c.restore();
 }
 // Little buildings at every place on the map.
@@ -557,9 +563,9 @@ function settlements(c, R) {
   // aurora ribbons in the sky
   c.save(); c.filter = 'blur(5px)'; for (const [x, col] of [[1360, 'rgba(120,255,200,.45)'], [1400, 'rgba(160,140,255,.5)'], [1440, 'rgba(255,140,220,.4)']]) { const g = lin(c, x, 0, x, 70, [col.replace(/[\d.]+\)$/, '0)'), col, col.replace(/[\d.]+\)$/, '0)')]); c.fillStyle = g; c.beginPath(); c.moveTo(x - 10, 70); c.bezierCurveTo(x - 20, 40, x + 20, 20, x + 10, -5); c.lineTo(x + 40, -5); c.bezierCurveTo(x + 50, 20, x + 10, 40, x + 25, 70); c.closePath(); c.fill(); } c.restore();
   // Hollow: crystal outcrop
-  for (const [dx, dy, h] of [[0, 4, 34], [-14, 10, 22], [14, 8, 24], [-5, -6, 18]]) { const x = 500 + dx, y = 575 + dy; poly(c, [[x - 5, y + 6], [x, y - h], [x + 5, y + 6]], '#c8a8ff'); poly(c, [[x, y - h], [x + 5, y + 6], [x + 1, y + 6]], '#9a78e8'); }
+  for (const [dx, dy, h] of [[0, 4, 34], [-14, 10, 22], [14, 8, 24], [-5, -6, 18]]) { const x = 612 + dx, y = 612 + dy; poly(c, [[x - 5, y + 6], [x, y - h], [x + 5, y + 6]], '#c8a8ff'); poly(c, [[x, y - h], [x + 5, y + 6], [x + 1, y + 6]], '#9a78e8'); }
   // Whispering pond
-  ell(c, 1085, 745, 36, 14, '#8ad8f8'); ell(c, 1085, 744, 26, 9, '#b8f0ff'); for (const [dx, dy] of [[-16, -12], [20, -10], [0, 18]]) poly(c, [[1085 + dx - 4, 745 + dy + 6], [1085 + dx, 745 + dy - 14], [1085 + dx + 4, 745 + dy + 6]], '#c8a8ff');
+  ell(c, 1100, 765, 36, 14, '#8ad8f8'); ell(c, 1100, 764, 26, 9, '#b8f0ff'); for (const [dx, dy] of [[-16, -12], [20, -10], [0, 18]]) poly(c, [[1100 + dx - 4, 765 + dy + 6], [1100 + dx, 765 + dy - 14], [1100 + dx + 4, 765 + dy + 6]], '#c8a8ff');
   // Ridge: switchback trail up to the foothills; Evergreen's great tree
   tree(c, 400, 235, 26, ['#1f7a3c', '#3a9c4a', '#6ac05a']); tree(c, 420, 243, 15, ['#2f8f3c', '#47ad47', '#76cc5a']);
   // cloudpeak's flag
@@ -574,6 +580,320 @@ function baseMap() {
   return baseCache = cn;
 }
 G.worldBase = baseMap;
+
+// ---- Dynamic overlays: fog, locks, pins, tags, service icons ----------------------------------------------------------------
+const SHORT = { homestead: 'HOMESTEAD', verdant: 'VERDANT ISLE', shore: 'TIDEPOOL SHORE', hollow: 'STARLIT HOLLOW', whispering: 'WHISPERING WOODS', moonlit: 'MOONLIT ISLE', ridge: 'THE RIDGE', glacier: 'GLACIER PASS', aurora: 'AURORA ISLES', cobalt: 'COBALT CITY', badlands: 'CRIMSON BADLANDS', cloudpeak: 'CLOUDPEAK', tidefall: 'TIDEFALL', sunhaven: 'SUNHAVEN', sandsreach: 'SANDSREACH', emberfall: 'EMBERFALL', frostmere: 'FROSTMERE', stonebridge: 'STONEBRIDGE', lakeside: 'LAKESIDE', lanternrest: 'LANTERNREST', driftwood: 'DRIFTWOOD', evergreen: 'EVERGREEN', mirewood: 'MIREWOOD', sunmeadow: 'SUNMEADOW' };
+G.worldShort = id => SHORT[id] || (BYID[id] ? BYID[id].name : id);
+const KIND_COL = { city: '#e8504a', town: '#3a9ae8', route: '#f6f0dc', island: '#2cc0b8', special: '#9a5ae0' };
+const FOG_R = { city: 78, town: 64, route: 58, island: 62, special: 46 };
+function fogSprite(r) {
+  return G.kit.cache('wm-fog' + r, 40, 40, x => {
+    x.fillStyle = rad(x, 20, 20, 20, ['rgba(236,244,252,.96)', 'rgba(228,240,252,.9)', 'rgba(220,234,250,0)']); x.fillRect(0, 0, 40, 40);
+    for (const [dx, dy, rr] of [[-5, -3, 8], [4, -5, 9], [7, 3, 7], [-2, 5, 8], [-8, 4, 6]]) { x.fillStyle = 'rgba(255,255,255,.55)'; x.beginPath(); x.arc(20 + dx, 20 + dy, rr, 0, TAU); x.fill(); }
+  }, { pad: 0, qmax: 4 });
+}
+function iconCross(c, x, y, r) { r = r || 3.2; circ2(c, x, y, r, '#ffffff'); circ2(c, x, y, r * .8, '#ff6b8a'); c.fillStyle = '#ffffff'; c.fillRect(x - r * .5, y - r * .15, r, r * .3); c.fillRect(x - r * .15, y - r * .5, r * .3, r); }
+function iconCoin(c, x, y, r) { r = r || 3.2; circ2(c, x, y, r, '#ffffff'); circ2(c, x, y, r * .8, '#f0b030'); circ2(c, x, y, r * .53, '#ffd860'); c.fillStyle = '#b07a10'; c.fillRect(x - r * .11, y - r * .38, r * .22, r * .76); }
+function iconArena(c, x, y, got, r) { r = r || 3.4; c.beginPath(); c.moveTo(x, y - r); c.lineTo(x + r * .8, y); c.lineTo(x, y + r); c.lineTo(x - r * .8, y); c.closePath(); c.fillStyle = got ? '#ffd23a' : '#fff4c8'; c.fill(); c.strokeStyle = got ? '#c88a10' : '#c8a850'; c.lineWidth = .7; c.stroke(); if (got) { c.fillStyle = '#fff'; c.beginPath(); c.moveTo(x - r * .1, y - r * .65); c.lineTo(x + r * .25, y - r * .1); c.lineTo(x - r * .1, y + r * .1); c.closePath(); c.fill(); } }
+function iconAnchor(c, x, y, r) { r = r || 3.2; circ2(c, x, y, r, '#ffffff'); c.strokeStyle = '#2a6ab8'; c.lineWidth = .8; c.beginPath(); c.moveTo(x, y - r * .55); c.lineTo(x, y + r * .5); c.moveTo(x - r * .4, y - r * .2); c.lineTo(x + r * .4, y - r * .2); c.arc(x, y + .1, r * .6, .2, Math.PI - .2); c.stroke(); circ2(c, x, y - r * .62, r * .2, '#2a6ab8'); }
+function iconCave(c, x, y, r) { r = r || 3.2; circ2(c, x, y, r, '#ffffff'); c.fillStyle = '#4a4254'; c.beginPath(); c.moveTo(x - r * .6, y + r * .5); c.quadraticCurveTo(x - r * .6, y - r * .6, x, y - r * .6); c.quadraticCurveTo(x + r * .6, y - r * .6, x + r * .6, y + r * .5); c.closePath(); c.fill(); }
+function iconLock(c, x, y, r) { r = r || 2.6; circ2(c, x, y, r + .5, 'rgba(40,30,60,.35)'); circ2(c, x, y - .1, r, '#ffffff'); circ2(c, x, y - .1, r * .82, '#7a6a9a'); c.strokeStyle = '#ffffff'; c.lineWidth = .65; c.beginPath(); c.arc(x, y - r * .22, r * .34, Math.PI, TAU); c.stroke(); c.fillStyle = '#ffffff'; c.fillRect(x - r * .46, y - r * .22, r * .92, r * .7); }
+function circ2(c, x, y, r, col) { c.beginPath(); c.arc(x, y, Math.max(.01, r), 0, TAU); c.fillStyle = col; c.fill(); }
+G.worldIcons = { cross: iconCross, coin: iconCoin, arena: iconArena, anchor: iconAnchor, cave: iconCave, lock: iconLock };
+function drawPin(c, p, x, y, r, st) {
+  const col = st.fog ? '#aebbd0' : st.dim ? '#a2a8b6' : KIND_COL[p.kind];
+  if (p.kind === 'route') r *= .82;
+  circ2(c, x, y + .9, r + .3, 'rgba(30,40,80,.4)'); circ2(c, x, y, r, '#ffffff');
+  if (p.kind === 'special') { c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .36 : r * .8; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); c.fillStyle = col; c.fill(); }
+  else { circ2(c, x, y, r * .74, col); if (p.kind === 'city') { circ2(c, x, y, r * .4, '#ffffff'); circ2(c, x, y, r * .22, col); } else if (p.kind === 'town') circ2(c, x, y, r * .28, '#ffffff'); else if (p.kind === 'island') { c.fillStyle = '#fff'; c.fillRect(x - r * .09, y - r * .38, r * .18, r * .62); c.fillRect(x - r * .38, y - r * .22, r * .76, r * .14); } }
+  if (st.fog) G.text(c, '?', x, y - 3, { align: 'center', font: G.FONT_S, color: '#fff', shadow: false });
+}
+function tagStyle(p, st) { return st.here ? 'shop' : st.locked ? 'craft' : p.kind === 'city' || p.kind === 'town' ? 'town' : p.kind === 'special' ? 'arena' : 'home'; }
+function drawTag(c, p, x, y, r, st, t) {
+  const text = G.worldShort(p.id) + (st.locked && !st.fog ? '' : '');
+  c.save(); c.font = G.FONT_S || G.FONT; const tw = Math.ceil(c.measureText(text).width) + 10; c.restore();
+  const style = tagStyle(p, st);
+  if (p.tag === 't') G.drawSignPlate(c, text, x, y - r - .5, t, style);
+  else if (p.tag === 'r') G.drawSignPlate(c, text, x + r + 2 + tw / 2, y + 6.5, t, style);
+  else G.drawSignPlate(c, text, x, y + r + 13, t, style);
+}
+function placeState(p, o) {
+  const S = G.state, visited = G.worldVisited(p.id), why = G.worldLockWhy(p.id);
+  const fog = o.fog !== false && !visited && p.id !== o.here;
+  return { fog, locked: !!why && o.locks !== false, here: p.id === o.here, sel: p.id === o.cursor, dim: o.dim ? !!o.dim(p.id) : false, ok: o.ok ? !!o.ok(p.id) : false, visited };
+}
+// The part of the base map that is visible: view { cx, cy, z } in normalised coordinates, z >= 1.
+function viewRect(o) {
+  const z = o && o.view ? Math.max(1, o.view.z) : 1, sw = RW / z, sh = RH / z;
+  let sx = (o && o.view ? o.view.cx : .5) * RW - sw / 2, sy = (o && o.view ? o.view.cy : .5) * RH - sh / 2;
+  sx = Math.max(0, Math.min(RW - sw, sx)); sy = Math.max(0, Math.min(RH - sh, sy));
+  return { sx, sy, sw, sh, z };
+}
+// Screen position of a place (or a point { x, y } in reference pixels) inside the rectangle the map is drawn into.
+G.worldMapXY = function (idOrPt, x, y, w, h, o) {
+  const v = viewRect(o), p = typeof idOrPt === 'string' ? BYID[idOrPt] : idOrPt; if (!p) return null;
+  return [x + (p.x - v.sx) * w / v.sw, y + (p.y - v.sy) * h / v.sh];
+};
+// Draws the illustrated map into (x, y, w, h). opts: t, view, here, cursor, fog, locks, names ('known' | 'all' | 'none'),
+// icons ('all' | 'sel' | 'none'), ferries, clouds, dim(id), ok(id), draw(ctx, P, k) for extra art (boats, planes) above the map.
+G.drawWorldMap = function (ctx, x, y, w, h, o) {
+  o = o || {}; const t = o.t || 0, v = viewRect(o), kx = w / v.sw, ky = h / v.sh, zs = .85 + .15 * v.z;
+  const P = (px, py) => [x + (px - v.sx) * kx, y + (py - v.sy) * ky];
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(baseMap(), v.sx, v.sy, v.sw, v.sh, x, y, w, h);
+  if (o.clouds !== false) for (let i = 0; i < 5; i++) { const e = drawCloudSprite(i % 3), cw = (50 + (i % 3) * 14) * zs, px = ((i * 71 + t * .06 * (1 + i % 2)) % 330) - 45, py = [6, 50, 118, 142, 28][i]; ctx.globalAlpha = .5; ctx.drawImage(e.c, x + px - e.pad, y + py - e.pad, cw + e.pad * 2, cw * 36 / 80 + e.pad * 2); ctx.globalAlpha = 1; }
+  const sts = {};
+  const vis = p => p.x > v.sx - 90 && p.x < v.sx + v.sw + 90 && p.y > v.sy - 90 && p.y < v.sy + v.sh + 90;
+  // fog banks
+  for (const p of PLACES) { const st = sts[p.id] = placeState(p, o); if (st.fog && vis(p)) { const [px, py] = P(p.x, p.y), r = FOG_R[p.kind] * kx * (1 + Math.sin(t / 60 + p.x) * .03), e = fogSprite(p.kind); ctx.globalAlpha = o.fogAlpha === undefined ? .86 : o.fogAlpha; ctx.drawImage(e.c, px - r, py - r * (ky / kx), r * 2, r * 2 * (ky / kx)); ctx.globalAlpha = 1; } }
+  if (o.ferries) for (const f of WORLD.ferries) for (const id of [f.from, f.to]) { const p = BYID[id]; if (p.port && vis(p)) { const [px, py] = P(p.port[0], p.port[1]); iconAnchor(ctx, px, py, 3 * zs); } }
+  if (o.draw) o.draw(ctx, P, kx);
+  const showNames = o.names || 'known', showIcons = o.icons || 'sel';
+  // pins, tags, icons (selected and here last so they sit on top)
+  const order = PLACES.filter(vis).sort((a, b) => (sts[a.id].sel || sts[a.id].here ? 1 : 0) - (sts[b.id].sel || sts[b.id].here ? 1 : 0) || a.y - b.y);
+  for (const p of order) {
+    const st = sts[p.id], [px, py] = P(p.x, p.y), r = (p.kind === 'city' ? 3.5 : 3.1) * zs;
+    if (st.sel) { ctx.strokeStyle = `rgba(70,120,255,${.65 + Math.sin(t / 6) * .3})`; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(px, py, r + 3 + Math.sin(t / 6), 0, TAU); ctx.stroke(); }
+    if (st.ok && !st.sel) { G.kit.drawGlow(ctx, '#fff6a0', px, py, r + 5 + Math.sin(t / 12 + p.x) * 1.2, .8); }
+    if (st.here) { const rr = r + 1 + (t % 50) / 50 * 9; ctx.strokeStyle = `rgba(255,120,60,${1 - (t % 50) / 50})`; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.stroke(); }
+    drawPin(ctx, p, px, py, r, st);
+    if (st.locked && showNames !== 'none-locks') iconLock(ctx, px + r * .95, py - r * .95, 2.3 * zs);
+    const known = !st.fog;
+    if (showNames !== 'none' && (st.sel || st.here || (known && (showNames === 'all' || (showNames === 'known' && st.visited))))) drawTag(ctx, p, px, py, r, st, t);
+    if (showIcons !== 'none' && known && (showIcons === 'all' || st.sel || st.here)) {
+      const sv = G.worldServices(p.id), icons = [];
+      if (sv.heal) icons.push(c => iconCross(c, 0, 0, 2.6)); if (sv.shop) icons.push(c => iconCoin(c, 0, 0, 2.6));
+      if (sv.arena) icons.push(c => iconArena(c, 0, 0, !!(G.state && G.state.flags['badge_' + sv.arena]), 2.8)); if (sv.ferry) icons.push(c => iconAnchor(c, 0, 0, 2.6)); if (sv.cave) icons.push(c => iconCave(c, 0, 0, 2.6));
+      const above = p.tag !== 't', iy = above ? py - r - 4.5 : py + r + 4.5;
+      icons.forEach((f, i) => { ctx.save(); ctx.translate(px + (i - (icons.length - 1) / 2) * 6.6, iy); f(ctx); ctx.restore(); });
+    }
+    if (st.here) { const by = py - r - (showIcons !== 'none' && p.tag !== 't' ? 12 : 4) + Math.sin(t / 7) * 1.4; ctx.fillStyle = '#ff5a4a'; ctx.beginPath(); ctx.arc(px, by - 2.5, 2.6, 0, TAU); ctx.moveTo(px - 2.2, by - 1.2); ctx.lineTo(px, by + 2); ctx.lineTo(px + 2.2, by - 1.2); ctx.fill(); circ2(ctx, px, by - 2.5, 1, '#ffffff'); }
+    if (st.sel) { const by = py - r - (showIcons !== 'none' && p.tag !== 't' ? 13 : 5) - 6 + Math.sin(t / 5) * 1.5; if (!st.here) { ctx.fillStyle = '#3a78ff'; ctx.beginPath(); ctx.moveTo(px - 3, by - 3); ctx.lineTo(px + 3, by - 3); ctx.lineTo(px, by + 1); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = .7; ctx.stroke(); } }
+  }
+  ctx.restore();
+};
+
+// ---- Place info (shared by the map screen) ----------------------------------------------------------------------------------
+G.worldInfo = function (id) {
+  const p = BYID[id]; if (!p) return null;
+  const sv = G.worldServices(id), lv = G.worldLevels(id), S = G.state, why = G.worldLockWhy(id);
+  const bd = sv.arena ? G.worldBadge(sv.arena) : null, got = !!(bd && S && S.flags['badge_' + bd.id]);
+  const bits = []; if (sv.heal) bits.push('healing'); if (sv.shop) bits.push('a shop'); if (sv.arena) bits.push('an Arena'); if (sv.ferry) bits.push('a ferry'); if (sv.cave) bits.push('a cave');
+  const visited = G.worldVisited(id);
+  return { id, name: p.name, kind: p.kind, kindWord: KIND_WORD[p.kind], services: sv, badge: bd, badgeGot: got, levels: lv, locked: why, visited, blurb: p.blurb,
+    desc: p.blurb + (bits.length ? ' Has ' + bits.join(', ') + '.' : '') + (visited ? '' : " You haven't been here yet.") + (why ? ' ' + why : '') };
+};
+// The place whose D-pad direction best matches (nearest in that direction), or the same one.
+function navPick(list, sel, k) {
+  const dir = k.up ? [0, -1] : k.down ? [0, 1] : k.left ? [-1, 0] : k.right ? [1, 0] : null; if (!dir) return sel;
+  const cur = list[sel]; let best = sel, score = 1e9;
+  list.forEach((n, i) => { if (i === sel) return; const dx = n.x - cur.x, dy = n.y - cur.y, along = dx * dir[0] + dy * dir[1], perp = Math.abs(dx * dir[1] - dy * dir[0]); if (along <= 0) return; const sc = along + perp * 3.5; if (sc < score) { score = sc; best = i; } });
+  return best;
+}
+G.worldNav = navPick;
+
+// ---- START > MAP ------------------------------------------------------------------------------------------------------------------
+G.worldMapScreen = async function () {
+  buildGraph();
+  const S = G.state, back = G.scene, here = G.worldPlaceOf(G.world.mapId) || 'lanternrest';
+  const nodes = PLACES.map(p => ({ id: p.id, name: p.name, x: p.nx * 240, y: p.ny * 160 }));
+  let sel = Math.max(0, nodes.findIndex(n => n.id === here)), zoom = false, vz = 1, vcx = .5, vcy = .5, close = false, tapped = -1, t = 0;
+  const api = { here, nodes, desc: '', get sel() { return sel; }, set sel(v) { sel = v; }, get zoomed() { return zoom; }, get zoom() { return vz; }, info: null, lines: [] };
+  const scene = {
+    update() { t++; const tz = zoom ? 2.4 : 1, p = BYID[nodes[sel].id], tx = zoom ? p.nx : .5, ty = zoom ? p.ny : .5; vz += (tz - vz) * .16; vcx += (tx - vcx) * .16; vcy += (ty - vcy) * .16; },
+    draw(ctx) {
+      const id = nodes[sel].id, p = BYID[id], I = api.info = G.worldInfo(id);
+      G.drawWorldMap(ctx, 0, 0, 240, 160, { t, here, cursor: id, view: { cx: vcx, cy: vcy, z: vz }, names: zoom ? 'known' : 'sel', icons: zoom ? 'all' : 'sel', ferries: zoom });
+      nodes.forEach((n, i) => { const [px, py] = G.worldMapXY(n.id, 0, 0, 240, 160, { view: { cx: vcx, cy: vcy, z: vz } }); if (px > -10 && px < 250) G.tapZone(px - 8, py - 8, 16, 16, () => { tapped = i; }); });
+      // info panel (flips to the top when the cursor is in the lower half)
+      const [, cyp] = G.worldMapXY(id, 0, 0, 240, 160, { view: { cx: vcx, cy: vcy, z: vz } }), top = cyp > 82, py0 = top ? 3 : 113, ph = 44;
+      G.frame(ctx, 4, py0, 232, ph, 'light'); G.tapZone(4, py0, 232, ph, () => {});
+      const F = G.FONT_B || G.FONT; ctx.font = F; const nw = ctx.measureText(I.name).width;
+      G.text(ctx, I.name, 12, py0 + 5, { font: F });
+      const pill = (txt, col, x) => { ctx.font = '900 5.5px ' + G.FONT_FAM; const w = ctx.measureText(txt).width + 9; G.kit.pill(ctx, x, py0 + 5.5, w, 8.5, col, txt); return w; };
+      let px2 = 12 + nw + 5; px2 += pill(I.kindWord.toUpperCase(), KIND_COL[I.kind] === '#f6f0dc' ? '#8aa86a' : KIND_COL[I.kind], px2) + 3; if (id === here) pill('YOU ARE HERE', '#ff8a3c', px2);
+      const sm = { font: G.FONT_S, color: '#5a4a66', shadow: false };
+      const l1 = !I.visited ? "You haven't been here yet." : I.blurb; api.desc = I.desc;
+      G.wrap(l1, 165).slice(0, 1).forEach(l => G.text(ctx, l, 12, py0 + 14.5, sm));
+      // services row
+      let sx = 12; const sy = py0 + 24;
+      const svc = (f, label) => { f(ctx, sx + 3, sy + 3); G.text(ctx, label, sx + 8, sy, sm); ctx.font = G.FONT_S; sx += 12 + ctx.measureText(label).width; };
+      if (I.services.heal) svc((c, x, y) => iconCross(c, x, y, 2.8), 'HEAL'); if (I.services.shop) svc((c, x, y) => iconCoin(c, x, y, 2.8), 'SHOP');
+      if (I.services.arena) svc((c, x, y) => iconArena(c, x, y, I.badgeGot, 3), I.badge ? (I.badgeGot ? I.badge.name.toUpperCase() + ' (WON)' : I.badge.name.toUpperCase()) : 'ARENA');
+      if (I.services.ferry) svc((c, x, y) => iconAnchor(c, x, y, 2.8), 'FERRY'); if (I.services.cave) svc((c, x, y) => iconCave(c, x, y, 2.8), 'CAVE');
+      const wl = I.levels ? `WILD LV ${I.levels[0]}-${I.levels[1]}` : I.kind === 'city' || I.kind === 'town' ? 'NO WILD CREATURES' : '';
+      if (wl) G.text(ctx, wl, 230, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false, align: 'right' });
+      if (I.locked) { iconLock(ctx, 15, py0 + 36, 2.4); G.text(ctx, G.worldLockShort(id), 21, py0 + 33, { font: G.FONT_S, color: '#b03a3a', shadow: false }); }
+      else G.text(ctx, I.visited ? 'Open to you.' : 'Open to you, not visited yet.', 12, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false });
+      // buttons
+      G.kit.pill(ctx, 178, py0 + 5.5, 52, 9, '#3a9ae8', G.touch ? 'TAP: ZOOM' : zoom ? 'A: ZOOM OUT' : 'A: ZOOM');
+      G.tapZone(178, py0 + 4, 52, 11, () => { zoom = !zoom; });
+      G.kit.pill(ctx, 178, py0 + 17, 52, 9, '#9a8ea8', G.touch ? 'TAP: CLOSE' : 'B: CLOSE');
+      G.tapZone(178, py0 + 16, 52, 11, () => { close = true; });
+    },
+  };
+  G.worldMap = api; if (G.vehicles) G.vehicles._map = api;
+  G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = scene; await G.fadeTo(0, 8);
+  for (;;) {
+    await G.nextFrame();
+    const k = G.input.pressed;
+    if (tapped >= 0) { if (tapped === sel) zoom = !zoom; else G.audio.sfx('select'); sel = tapped; tapped = -1; continue; }
+    if (close || k.b) break;
+    if (k.a) { zoom = !zoom; G.audio.sfx('select'); }
+    const nx = navPick(nodes, sel, k); if (nx !== sel) { sel = nx; G.audio.sfx('select'); }
+  }
+  G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = back || G.world.scene; G.worldMap = null; if (G.vehicles) G.vehicles._map = null; await G.fadeTo(0, 8);
+};
+
+
+// ---- Ferries ------------------------------------------------------------------------------------------------------------------------
+const says = l => G.worldApi.says(l);
+const dollars = n => '$' + n.toLocaleString('en-US');
+// Ticket price from the distance on the map: $200 to $800, in steps of $50.
+G.ferryPrice = function (a, b) {
+  const A = BYID[a], B = BYID[b]; if (!A || !B) return 200;
+  const d = Math.hypot(A.nx - B.nx, (A.ny - B.ny) / 1.5);
+  return Math.max(200, Math.min(800, Math.round((200 + d / .55 * 600) / 50) * 50));
+};
+// The crossings that leave a place (both directions of every ferry route): { to, price, badges, lantern, why }.
+G.ferryRoutes = function (fromId) {
+  buildGraph();
+  const here = G.worldPlaceOf(fromId) || fromId, out = [];
+  for (const f of WORLD.ferries) {
+    const fwd = f.from === here, rev = f.to === here; if (!fwd && !rev) continue;
+    const to = fwd ? f.to : f.from, need = fwd ? f.badges : 0, lantern = fwd ? f.lantern : false;
+    out.push({ to, name: BYID[to].name, price: G.ferryPrice(here, to), badges: need, lantern, why: ferryWhy(need, lantern) });
+  }
+  return out;
+};
+function ferryWhy(need, lantern) {
+  if (need > badges()) return `The ferry only takes Wardens with ${need} Arena Badges. You have ${badges()}.`;
+  if (lantern && !lanternLit()) return 'The northern waters are sealed. The ferry can\'t sail until the Great Lantern burns again.';
+  return null;
+}
+function boatArt(c, t, ang) {
+  c.save(); c.rotate(ang); const bob = Math.sin(t / 8) * .5;
+  c.fillStyle = 'rgba(20,40,80,.28)'; c.beginPath(); c.ellipse(1, 3.5, 11, 3, 0, 0, TAU); c.fill();
+  c.translate(0, bob);
+  c.fillStyle = '#7a4a2c'; c.beginPath(); c.moveTo(-10, -1); c.lineTo(11, -1); c.quadraticCurveTo(10, 4.5, 6, 5); c.lineTo(-7, 5); c.quadraticCurveTo(-10, 4, -10, -1); c.fill();
+  c.fillStyle = '#e8504a'; c.fillRect(-9.5, -1.6, 20, 1.8); c.fillStyle = '#fff'; c.fillRect(-9.5, -.3, 20, .8);
+  c.fillStyle = '#d8c8a0'; c.fillRect(-5, -6, 8, 5); c.fillStyle = '#6a4a30'; c.fillRect(-5, -7, 8, 1.4); c.fillStyle = '#9fd8ff'; c.fillRect(-3.8, -4.6, 2.2, 2); c.fillRect(-.8, -4.6, 2.2, 2);
+  c.strokeStyle = '#5a4030'; c.lineWidth = .8; c.beginPath(); c.moveTo(4.5, -1); c.lineTo(4.5, -12); c.stroke();
+  c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(5, -11.5); c.quadraticCurveTo(12, -7, 10, -2); c.lineTo(5, -2); c.closePath(); c.fill();
+  c.fillStyle = '#e8504a'; c.beginPath(); c.moveTo(4.2, -12); c.lineTo(-.6, -10.8); c.lineTo(4.2, -9.6); c.fill();
+  c.restore();
+}
+function pathAt(pts, k) {   // point along a polyline at fraction k, with its heading
+  const L = []; let tot = 0; for (let i = 1; i < pts.length; i++) { const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); L.push(d); tot += d; }
+  let d = k * tot, i = 0; while (i < L.length - 1 && d > L[i]) { d -= L[i]; i++; }
+  const f = L[i] ? Math.min(1, d / L[i]) : 0, a = pts[i], b = pts[i + 1];
+  return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f, ang: Math.atan2(b[1] - a[1], b[0] - a[0]), len: tot };
+}
+// Smooth the sea path so the boat turns gently.
+function seaPath(pts) { const out = []; const n = 60; for (let i = 0; i <= n; i++) { const k = i / n, p = pathAt(pts, k); out.push([p.x, p.y]); } return out; }
+async function sail(from, to) {
+  const pts = ferryPath(from, to), A = BYID[from], B = BYID[to], len = pathAt(pts, 0).len, T = Math.max(230, Math.min(420, Math.round(len / 2.3)));
+  const trail = []; let t = 0, k = 0, vcx = A.port ? A.port[0] / RW : A.nx, vcy = A.port ? A.port[1] / RH : A.ny;
+  const scene = {
+    update() { t++; },
+    draw(ctx) {
+      const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, pp = pathAt(pts, Math.max(0, Math.min(1, k)));
+      vcx += (pp.x / RW - vcx) * .12; vcy += (pp.y / RH - vcy) * .12;
+      G.drawWorldMap(ctx, 0, 0, 240, 160, { t, view: { cx: vcx, cy: vcy, z: 2.1 }, here: null, names: 'none', icons: 'none', fog: false, locks: false, clouds: false,
+        draw(c, P, kx) {
+          // wake
+          for (let i = 0; i < trail.length; i++) { const [tx, ty, ta] = trail[i], [sx, sy] = P(tx, ty), a = i / trail.length; c.fillStyle = `rgba(255,255,255,${a * .5})`; c.beginPath(); c.ellipse(sx - Math.cos(pp.ang) * 2, sy - Math.sin(pp.ang) * 2, 1.2 + (1 - a) * 3.4, .8 + (1 - a) * 1.6, pp.ang, 0, TAU); c.fill(); }
+          const [bx, by] = P(pp.x, pp.y); c.save(); c.translate(bx, by); const flip = Math.cos(pp.ang) < 0; c.scale(flip ? -1 : 1, 1); boatArt(c, t, flip ? Math.PI - pp.ang : pp.ang); c.restore();
+          for (const q of [A, B]) { const [qx, qy] = P(q.x, q.y); G.drawSignPlate(c, G.worldShort(q.id), qx, qy - 6, t, q.id === to ? 'shop' : 'home'); }
+        } });
+      // caption + progress
+      G.frame(ctx, 4, 4, 232, 20, 'dark');
+      G.text(ctx, `FERRY: ${G.worldShort(from)} to ${G.worldShort(to)}`, 12, 8, { font: G.FONT_B || G.FONT, color: '#ffffff', shadow: '#0c2a40' });
+      ctx.fillStyle = 'rgba(0,20,40,.5)'; G.kit.rr(ctx, 12, 18, 216, 3, 1.5); ctx.fill(); ctx.fillStyle = '#7ae8ff'; G.kit.rr(ctx, 12, 18, Math.max(2, 216 * k), 3, 1.5); ctx.fill();
+    },
+  };
+  G.worldSail = { scene, get k() { return k; }, from, to };
+  G.scene = scene; G.fadeTo(0, 12);
+  for (let i = 0; i <= T; i++) {
+    k = i / T; const pp = pathAt(pts, k); if (i % 3 === 0) { trail.push([pp.x, pp.y, pp.ang]); if (trail.length > 26) trail.shift(); }
+    if (i === T - 14) G.fadeTo(1, 14, '#000');
+    await G.nextFrame();
+  }
+  G.worldSail = null;
+}
+// A walkable arrival tile: the destination's dock, else its landing spot, else the nearest open ground.
+function arrivalSpot(m) {
+  const W = G.worldApi, ok = (x, y) => x > 0 && y > 0 && x < m.w - 1 && y < m.h - 1 && W.canWalk(x, y) && !W.tileWarp(x, y) && !W.objAt(x, y);
+  const want = m.dock || m.landing || { x: m.w >> 1, y: m.h >> 1 };
+  for (let r = 0; r <= 14; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue; if (ok(want.x + dx, want.y + dy)) return { x: want.x + dx, y: want.y + dy }; }
+  return want;
+}
+// The ticket desk and the crossing. Called by ferry captain NPCs (inside the world's busy loop).
+G.ferry = async function (fromId) {
+  const S = G.state, back = G.world.scene, here = G.worldPlaceOf(fromId) || fromId, routes = G.ferryRoutes(fromId);
+  if (!routes.length) { await says('The ferry is not running yet.'); return false; }
+  await says('FERRY CAPTAIN: Ahoy! Fancy a crossing? Have a look at the ticket board.');
+  let sel = 0, t = 0, result = null, tapped = -1, cancel = false;
+  const scene = {
+    update() { t++; },
+    draw(ctx) {
+      const R = routes[sel], path = ferryPath(here, R.to), A = BYID[here], B = BYID[R.to];
+      const cx = (A.x + B.x) / 2 / RW, cy = (A.y + B.y) / 2 / RH;
+      G.drawWorldMap(ctx, 0, 0, 240, 160, { t, here, cursor: R.to, view: { cx, cy: cy + .08, z: 1.25 }, names: 'sel', icons: 'none', fog: false, locks: true, ferries: true,
+        draw(c, P) { c.save(); c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 1.6; c.setLineDash([3, 3]); c.beginPath(); path.forEach((q, i) => { const [x, y] = P(q[0], q[1]); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); c.restore(); } });
+      // the ticket desk
+      const h = 24 + routes.length * 16, y0 = 160 - h - 3;
+      G.frame(ctx, 4, y0, 232, h, 'light');
+      G.text(ctx, 'FERRY TICKET DESK', 12, y0 + 5, { font: G.FONT_B || G.FONT });
+      G.text(ctx, `Your money: ${dollars(S.money)}   Badges: ${badges()}`, 230, y0 + 6, { font: G.FONT_S, color: '#5a4a66', shadow: false, align: 'right' });
+      routes.forEach((r, i) => {
+        const yy = y0 + 16 + i * 16, on = i === sel;
+        if (on) { ctx.fillStyle = 'rgba(255,200,90,.35)'; G.kit.rr(ctx, 9, yy - 1.5, 222, 15, 3); ctx.fill(); }
+        G.tapZone(9, yy - 1.5, 222, 15, () => { tapped = i; });
+        iconAnchor(ctx, 15, yy + 3.5, 3);
+        G.text(ctx, G.worldShort(r.to), 22, yy, { font: on ? (G.FONT_B || G.FONT) : G.FONT, color: '#3a2a48' });
+        G.text(ctx, dollars(r.price), 228, yy, { font: G.FONT_B || G.FONT, color: S.money >= r.price ? '#2a7a4a' : '#b03a3a', shadow: false, align: 'right' });
+        const req = []; if (r.badges) req.push(`${r.badges} BADGES`); if (r.lantern) req.push('LANTERN RELIT');
+        const txt = req.length ? `Needs ${req.join(' + ')}` : 'Open to all';
+        G.text(ctx, txt, 22, yy + 7.5, { font: G.FONT_S, color: r.why ? '#b03a3a' : '#2a7a4a', shadow: false });
+        if (r.why) iconLock(ctx, 22 + ctx.measureText(txt).width + 6, yy + 10.5, 2);
+      });
+      G.text(ctx, G.touch ? 'TAP: BUY   TAP MAP: BACK' : 'A: BUY TICKET   B: BACK', 12, y0 + h - 8.5, { font: G.FONT_S, color: '#8a7a90', shadow: false });
+      G.tapZone(-999, -999, 2400, 2400, () => { cancel = true; });
+    },
+  };
+  G.ferryDesk = { scene, routes, get sel() { return sel; }, set sel(v) { sel = v; }, here };
+  G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = scene; await G.fadeTo(0, 8);
+  let dest = null;
+  for (;;) {
+    await G.nextFrame(); const k = G.input.pressed;
+    if (tapped >= 0) { if (tapped === sel) k.a = true; else { sel = tapped; G.audio.sfx('select'); } tapped = -1; }
+    if (cancel || k.b) break;
+    if (k.up) { sel = (sel + routes.length - 1) % routes.length; G.audio.sfx('select'); } if (k.down) { sel = (sel + 1) % routes.length; G.audio.sfx('select'); }
+    if (!k.a) continue;
+    const r = routes[sel];
+    if (r.why) { G.audio.sfx('bump'); await says('FERRY CAPTAIN: ' + r.why); continue; }
+    if (S.money < r.price) { G.audio.sfx('bump'); await says(`FERRY CAPTAIN: A ticket to ${G.worldShort(r.to)} is ${dollars(r.price)}, and you only have ${dollars(S.money)}.`); continue; }
+    await G.say(`Buy a ticket to ${G.worldShort(r.to)} for ${dollars(r.price)}?`, { auto: 1 });
+    const yes = await G.yesNo(); G.closeText();
+    if (!yes) continue;
+    S.money -= r.price; G.audio.sfx('buy'); dest = r; break;
+  }
+  G.ferryDesk = null;
+  if (!dest) { await G.fadeTo(1, 8, '#000'); G.scene = back; await G.fadeTo(0, 8); await says('FERRY CAPTAIN: Come back whenever you need to cross!'); return false; }
+  await says(`FERRY CAPTAIN: All aboard! Next stop, ${BYID[dest.to].name}.`);
+  G.audio.sfx('warp'); await G.fadeTo(1, 10, '#000');
+  await sail(here, dest.to);
+  G.ui.fade.a = 1;
+  S.visited = S.visited || {}; S.visited[dest.to] = true;
+  G.loadMap(dest.to);
+  const m = G.world.map, sp = arrivalSpot(m); G.placePlayer(sp.x, sp.y, 0);
+  G.scene = G.world.scene; await G.wait(4); await G.fadeTo(0, 18);
+  G.audio.sfx('select');
+  await says(`The ferry docked at ${m.name}.`);
+  return true;
+};
 
 // @@MORE@@
 })();

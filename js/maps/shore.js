@@ -57,6 +57,10 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   // A wooden pier out into the sea, with a boardwalk spur.
   rect(m, 20, 24, 2, 11, 'z'); rect(m, 22, 32, 4, 2, 'z');
   scatter(m, 'l', [[19, 24], [22, 24]]); scatter(m, 'd', [[9, 24], [38, 25], [25, 12], [57, 13]]);
+  // the ferry dock at the end of the pier: boats to Moonlit Island leave from here
+  m.dock = { x: 20, y: 34 }; m.landing = { x: 30, y: 4 };
+  npc(m, 21, 34, LEFT, 'old', null, { still: true, style: { hair: '#d8d8d8', skin: '#e8c098', shirt: '#2a6ab0', pants: '#304060', hat: '#f0f0f0' }, talk: () => G.ferry ? G.ferry('shore') : G.story.says('The ferry is not running yet.') });
+  scatter(m, 'l', [[19, 33], [22, 34]]);
 
   // The lighthouse on a rocky point in the south-east, with a cliff ridge behind it.
   blob(m, 53, 29, 6, 4, 'y', null, .1);
@@ -93,7 +97,7 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   // -- Shore Row: a Healing Post, Tidewheel Market and Tidewheel Motors along the grass strip by the road --
   building(m, 24, 3, 5, 'R', 2); building(m, 33, 3, 5, 'R', 2); building(m, 39, 3, 7, 'Q', 3);
   scatter(m, 'y', [[42, 6], [34, 6], [27, 6]]); scatter(m, 'l', [[23, 5], [46, 5]]); scatter(m, 'f', [[29, 5], [38, 5], [29, 4], [38, 4]]);
-  m.labels = [{ x: 26, y: 3, text: 'HEALING POST', style: 'heal' }, { x: 35, y: 3, text: 'TIDEWHEEL MARKET', style: 'shop' }, { x: 42, y: 3, text: 'TIDEWHEEL MOTORS', style: 'craft' }];
+  m.labels = [{ x: 26, y: 3, text: 'HEALING POST', style: 'heal' }, { x: 35, y: 3, text: 'TIDEWHEEL MARKET', style: 'shop' }, { x: 42, y: 3, text: 'TIDEWHEEL MOTORS', style: 'craft' }, { x: 21, y: 23, text: 'FERRY PIER', style: 'home' }];
   warp(m, 26, 5, 'shoreheal', 3, 5, UP); warp(m, 35, 5, 'market', 3, 5, UP); warp(m, 42, 5, 'motors', 4, 6, UP);
 
   warp(m, 30, 0, 'stonebridge', 27, 42, UP); warp(m, 31, 0, 'stonebridge', 28, 42, UP);   // the north road leads to Stonebridge Town
