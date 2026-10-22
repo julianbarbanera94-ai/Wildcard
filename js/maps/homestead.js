@@ -31,8 +31,8 @@ const says = t => G.story.says(t);
   // Entrance road from the south edge up to the front yard.
   rect(m, 27, 31, 2, 13, 'p'); rect(m, 22, 31, 10, 1, 'p');
   // A small pond east of the road (fresh water for the watering can).
-  blob(m, 36.5, 35, 2.6, 1.9, 'w', null, .05);
-  scatter(m, 'r', [[34, 33], [39, 37]]); set(m, 38, 33, 'u');
+  blob(m, 36.5, 35.5, 3.4, 2.6, 'w', null, .05);
+  scatter(m, 'r', [[33, 32], [40, 39]]); set(m, 39, 32, 'u');
   // Trees, bushes, stumps and a boulder to gather from right away.
   scatter(m, '#', [[17, 25], [16, 28], [39, 25], [38, 28], [18, 38], [35, 40]]);
   scatter(m, 'n', [[16, 24], [40, 27], [17, 40]]);
@@ -50,7 +50,7 @@ const says = t => G.story.says(t);
   npc(m, 31, 35, LEFT, 'mom', null, { roam: 1, talk: () => neighbour() });
 
   // ---- Deed 2: lake, flower meadow, boulder field ----
-  blob(m, 13, 15, 5.5, 3.6, 'w', null, .12);
+  blob(m, 13, 15, 7, 4.6, 'w', null, .12);
   rect(m, 12, 15, 2, 1, 'g'); set(m, 13, 14, 'g');          // a reedy islet you can see but not reach
   scatter(m, 'u', [[12, 15]]); scatter(m, 'd', [[8, 12], [19, 18]]); scatter(m, 'r', [[18, 12], [7, 17]]);
   blob(m, 10, 31, 3.5, 4.5, 'f', ['g']);                     // west meadow

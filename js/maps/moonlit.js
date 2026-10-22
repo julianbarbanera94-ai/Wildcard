@@ -20,6 +20,24 @@ function path(m, pts, ch = 'p', w = 2) {
 }
 const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, item: name, ball: true }, qty ? { qty } : {}));
 
+// Make sure every person, item and sign can be reached on foot: cut a trail of grass through any trees in the way.
+function ensureReach(m, sx, sy) {
+  const solid = (x, y) => G.TILES[m.t[y][x]].solid, key = (x, y) => y * m.w + x;
+  for (const o of m.npcs.concat(m.objs)) if (solid(o.x, o.y)) set(m, o.x, o.y, 'g');
+  const flood = () => { const seen = new Set([key(sx, sy)]), q = [[sx, sy]]; while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= m.w || ny >= m.h || seen.has(key(nx, ny))) continue; const blocked = solid(nx, ny) || m.objs.some(b => b.ball && b.x === nx && b.y === ny) || m.npcs.some(n => !n.trainer && n.x === nx && n.y === ny); if (!blocked) { seen.add(key(nx, ny)); q.push([nx, ny]); } } } return seen; };
+  for (const o of m.npcs.concat(m.objs)) {
+    let seen = flood();
+    if ([[0, 0], [0, 1], [0, -1], [1, 0], [-1, 0]].some(([dx, dy]) => seen.has(key(o.x + dx, o.y + dy)))) continue;
+    // walk straight towards the start until we meet reachable ground, clearing as we go
+    let x = o.x, y = o.y;
+    for (let i = 0; i < 200 && !seen.has(key(x, y)); i++) {
+      if (Math.abs(sx - x) > Math.abs(sy - y)) x += Math.sign(sx - x); else y += Math.sign(sy - y);
+      if (m.t[y][x] === 'w' || m.t[y][x] === 'i') continue;
+      if (solid(x, y)) set(m, x, y, 'g');
+    }
+  }
+}
+
 const m = newMap('moonlit', 'MOONLIT ISLAND', 44, 38, 'w', { music: 'cave', biome: 'mystic',
   enc: wild(['Psychic', 'Ghost', 'Fairy', 'Dragon'], 45, 52, { pick: 8 }) });
 m.landing = { x: 21, y: 24 };
@@ -87,6 +105,7 @@ m.dock = { x: 21, y: 34 };
 npc(m, 25, 24, LEFT, 'elder', ['KEEPER ULA: I tend the grove. The island has asked me not to say more.', 'Stay on the paths if the grass looks hungry.'], { still: true });
 npc(m, 18, 22, RIGHT, 'kid', ['I came on the ferry to see the glowing trees. Then they glowed back.'], { roam: 1 });
 npc(m, 10, 10, DOWN, 'old', ['Fireflies live here all year. They never leave.'], { roam: 1 });
+ensureReach(m, 21, 24);
 const fl = (x, y) => { if (G.TILES[m.t[y][x]].solid) set(m, x, y, 'g'); };
 m.npcs.forEach(n => fl(n.x, n.y)); m.objs.forEach(o => fl(o.x, o.y));
 m.labels = [{ x: 22, y: 31, text: 'MOONLIT PIER', style: 'home' }];

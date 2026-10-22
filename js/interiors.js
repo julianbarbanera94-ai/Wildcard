@@ -211,7 +211,7 @@ function buildBarn(b) {
     pen(1, 1); pen(4, 1); pen(7, 1); pen(10, 1);
     hay(3, 1); milk(6, 1); hay(9, 1);
     trough(5, 4, 3); stall(1, 4); stall(10, 4); R.prop('rug', 4, 5, 5, 2, { flat: true });
-    farmhand(9, 4, LEFT); R.prop('lamp', 3, 5); R.prop('plant', 9, 6); hay(1, 6); hay(11, 6);
+    farmhand(9, 4, LEFT); R.prop('lamp', 3, 5); R.prop('plant', 8, 6); hay(1, 6); hay(11, 6);
   } else {
     R.windows([[3, 1], [6, 1], [9, 1], [12, 1]]);
     pen(1, 1); pen(4, 1); pen(7, 1); pen(10, 1); pen(1, 5); pen(12, 5);

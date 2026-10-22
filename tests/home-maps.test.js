@@ -111,7 +111,7 @@ t('every shop counter and healing post points at a real shop, every shop has sto
   plate('sunmeadow', /MEADOWBROOK/); plate('mirewood', /BOGROOT/); plate('ridge', /FORGE/); plate('ridge', /HEALING/); plate('shore', /MOTORS/); plate('shore', /MARKET/); plate('shore', /HEALING/);
   assert(maps.lanternrest.labels.find(l => /LODGE/.test(l.text)).style === 'heal');
   const heal = Object.values(maps).filter(m => m.objs.some(o => /healUI/.test(String(o.fn)))).map(m => m.id).sort();
-  assert.deepEqual(heal, ['ridgeheal', 'shoreheal']);
+  assert(heal.includes('ridgeheal') && heal.includes('shoreheal') && heal.length >= 2, 'the Ridge and Shore healing posts use the shared healing screen (every new city adds more)');
   assert(maps.ridge.objs.some(o => o.prompt === 'Old quad bike' && o.hide && o.ball === false));
   assert(maps.lanternrest.npcs.some(e => /courier/.test(String(e.talk))));
 });

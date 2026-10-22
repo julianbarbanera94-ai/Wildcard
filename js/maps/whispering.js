@@ -20,6 +20,24 @@ function path(m, pts, ch = 'p', w = 2) {
 }
 const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, item: name, ball: true }, qty ? { qty } : {}));
 
+// Make sure every person, item and sign can be reached on foot: cut a trail of grass through any trees in the way.
+function ensureReach(m, sx, sy) {
+  const solid = (x, y) => G.TILES[m.t[y][x]].solid, key = (x, y) => y * m.w + x;
+  for (const o of m.npcs.concat(m.objs)) if (solid(o.x, o.y)) set(m, o.x, o.y, 'g');
+  const flood = () => { const seen = new Set([key(sx, sy)]), q = [[sx, sy]]; while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= m.w || ny >= m.h || seen.has(key(nx, ny))) continue; const blocked = solid(nx, ny) || m.objs.some(b => b.ball && b.x === nx && b.y === ny) || m.npcs.some(n => !n.trainer && n.x === nx && n.y === ny); if (!blocked) { seen.add(key(nx, ny)); q.push([nx, ny]); } } } return seen; };
+  for (const o of m.npcs.concat(m.objs)) {
+    let seen = flood();
+    if ([[0, 0], [0, 1], [0, -1], [1, 0], [-1, 0]].some(([dx, dy]) => seen.has(key(o.x + dx, o.y + dy)))) continue;
+    // walk straight towards the start until we meet reachable ground, clearing as we go
+    let x = o.x, y = o.y;
+    for (let i = 0; i < 200 && !seen.has(key(x, y)); i++) {
+      if (Math.abs(sx - x) > Math.abs(sy - y)) x += Math.sign(sx - x); else y += Math.sign(sy - y);
+      if (m.t[y][x] === 'w' || m.t[y][x] === 'i') continue;
+      if (solid(x, y)) set(m, x, y, 'g');
+    }
+  }
+}
+
 const m = newMap('whispering', 'WHISPERING WOODS', 64, 48, 'g', { music: 'route', biome: 'mystic', bg: 'grass',
   enc: wild(['Fairy', 'Ghost', 'Psychic', 'Bug'], 16, 22, { pick: 8, only: [24, 44, 73] }) });
 m.landing = { x: 33, y: 22 };
@@ -35,7 +53,7 @@ for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
 // open glades: meadow floor in the middle band
 const glade = (x, y, w, h) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const X = x + i, Y = y + j; if (hash(X, Y) > .06 || i % (w - 1) === 0 && j % (h - 1) === 0) set(m, X, Y, 'g'); } };
 rect(m, 2, 17, 60, 17, 'g');
-for (let y = 17; y < 34; y++) for (let x = 2; x < 62; x++) if (hash(x, y) < .1) set(m, x, y, hash(y, x) < .5 ? '#' : 'u');
+for (let y = 17; y < 34; y++) for (let x = 2; x < 62; x++) if (hash(x, y) < .22) set(m, x, y, hash(y, x) < .5 ? '#' : (hash(x, y) < .1 ? 'n' : 'u'));
 glade(24, 4, 20, 12); glade(2, 36, 18, 10); glade(24, 36, 14, 10); glade(46, 4, 14, 11); glade(6, 4, 14, 11);
 
 // -- tall grass patches (kept off the routes) --
@@ -120,4 +138,5 @@ npc(m, 46, 30, DOWN, 'girl', ['The crystal pond sings when you step close. Try i
 edgeExit(m, 'W', 24, 'stonebridge', 54, 22);
 edgeExit(m, 'E', 24, 'cobalt', 1, 30, gate(4, 'COBALT CITY'));
 edgeExit(m, 'N', 32, 'sandsreach', 34, 50, gate(2, 'SANDSREACH DESERT'));
+ensureReach(m, 1, 24);
 })();
