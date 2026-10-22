@@ -19,6 +19,10 @@ Open `index.html` in a browser, or serve the folder (`python3 -m http.server`) a
 
 On phones and tablets a thumbstick (drag to walk) and A, B, MENU and ORB buttons appear, and the title says *Tap A to start*.
 
+## Save slots
+
+There are three save slots. On the title screen, CONTINUE loads the game you saved most recently, LOAD GAME lets you pick a slot, and NEW GAME asks which slot to use (and checks before overwriting one). START → SAVE saves to your current slot, or SAVE TO ANOTHER SLOT makes a copy. Saves from older versions are slot 1.
+
 ## Test Mode
 
 START → SETTINGS → TEST MODE, then enter the password (`abc610`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), every quest done and every region at Hero reputation; **Fly Anywhere** (any creature carries you to any place; Unlock Everything turns it on), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
@@ -180,6 +184,7 @@ node tests/e2e-vehicles.js                     # garage, riding rules, parking, 
 node tests/e2e-mapview.js                       # map and flight picker on a phone: full screen, zoom, touch pan
 node tests/e2e-quests.js                        # quests, journal, reputation, rewards once, Test Mode completes all
 node tests/e2e-access.js                        # badges, reputation or permits; Leader scaling; land from reputation
+node tests/e2e-slots.js                         # three save slots: continue, load, new game, save to another slot
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles

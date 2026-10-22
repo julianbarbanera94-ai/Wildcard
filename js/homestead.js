@@ -35,7 +35,7 @@ G.migrateState = function (S) {
 };
 const uid = () => Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
 { const ns = G.newState; G.newState = () => { const S = ns(); S.home = { deed: 1, v: 2, seen: 1 }; return G.migrateState(S); }; }
-{ const lg = G.loadGame; G.loadGame = () => G.migrateState(lg()); }
+{ const lg = G.loadGame; G.loadGame = n => G.migrateState(lg(n)); }
 
 // ---- Structure API ---------------------------------------------------------------------------
 const def = b => DEF[b.type];

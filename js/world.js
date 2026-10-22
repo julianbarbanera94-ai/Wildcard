@@ -26,16 +26,23 @@ const hooks = G.hooks = {
 G.newState = () => ({
   name: 'HERO', style: G.PLAYER_STYLE, party: [], box: [], bag: {}, money: 3000, map: 'cottage', x: 4, y: 4, dir: UP, flags: {}, dex: {}, frames: 0, v: 2,
 });
-G.saveGame = function () {
-  const S = G.state, w = G.world; S.map = w.mapId; S.x = w.p.x; S.y = w.p.y; S.dir = w.p.dir;
-  try { localStorage.setItem('wildcard-save-v2', JSON.stringify(S)); return true; } catch (e) { return false; }
+// Three save slots. Slot 1 keeps the original key, so older saves load as slot 1.
+G.SLOTS = 3; G.slot = 1;
+const slotKey = n => n > 1 ? 'wildcard-save-v2-' + n : 'wildcard-save-v2';
+G.saveGame = function (n) {
+  const S = G.state, w = G.world; S.map = w.mapId; S.x = w.p.x; S.y = w.p.y; S.dir = w.p.dir; S.savedAt = Date.now();
+  if (n) G.slot = n;
+  try { localStorage.setItem(slotKey(G.slot), JSON.stringify(S)); return true; } catch (e) { return false; }
 };
+G.deleteSlot = n => { try { localStorage.removeItem(slotKey(n)); } catch (e) {} };
+// The slot saved most recently (for CONTINUE), or 0 when there are no saves.
+G.latestSlot = function () { let best = 0, t = -1; for (let n = 1; n <= G.SLOTS; n++) { const s = G.loadGame(n); if (s && (s.savedAt || 0) > t) { t = s.savedAt || 0; best = n; } } return best; };
 // Saves quietly when the player leaves the app, but only while the overworld is idle (never mid-battle or mid-dialogue).
 G.autosave = function () {
   if (G.state && G.world.map && G.scene === G.world.scene && !G.world.busy && !G.ui.layers.length && G.state.flags.starter) G.saveGame();
 };
-G.loadGame = function () {
-  try { const s = JSON.parse(localStorage.getItem('wildcard-save-v2')); return s && s.v === 2 ? s : null; } catch (e) { return null; }
+G.loadGame = function (n) {
+  try { const s = JSON.parse(localStorage.getItem(slotKey(n || G.slot))); return s && s.v === 2 ? s : null; } catch (e) { return null; }
 };
 
 // ---- World runtime ---------------------------------------------------------

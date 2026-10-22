@@ -116,18 +116,21 @@ G.androidBack = function () {
 
 async function main() {
   G.scene = title; G.audio.music('town');
-  const save = G.loadGame();
   for (;;) {
     await G.nextFrame();
     if (!(G.input.pressed.a || G.input.pressed.start)) continue;
     G.audio.sfx('select'); title.prompt = false;
-    const items = save ? ['CONTINUE', 'NEW GAME'] : ['NEW GAME'];
-    const c = await G.choose(items, { x: 84, y: 112, cancel: false, minW: 50 });
-    if (save && c === 0) { await begin(save, false); return; }
-    if (!save || c === 1) {
-      if (save && !(await G.yesNo({ right: 236, bottom: 156 }))) { title.prompt = true; continue; }
-      await begin(G.newState(), true); return;
-    }
+    const last = G.latestSlot(), any = last > 0;
+    const items = any ? ['CONTINUE', 'LOAD GAME', 'NEW GAME'] : ['NEW GAME'];
+    const c = await G.choose(items, { x: 84, y: 104, cancel: false, minW: 50 });
+    const pick = items[c];
+    // CONTINUE: the game saved most recently, in whichever slot
+    if (pick === 'CONTINUE') { G.slot = last; await begin(G.loadGame(last), false); return; }
+    if (pick === 'LOAD GAME') { const n = await G.pickSlot('load'); if (n) { G.slot = n; await begin(G.loadGame(n), false); return; } title.prompt = true; continue; }
+    // NEW GAME: with no saves it goes in slot 1; otherwise choose a slot
+    const n = any ? await G.pickSlot('new') : 1;
+    if (!n) { title.prompt = true; continue; }
+    G.slot = n; await begin(G.newState(), true); return;
   }
 }
 

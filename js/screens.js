@@ -354,6 +354,47 @@ G.shopMenu = async function () {
   pop(money); await G.say('Please come again!'); G.closeText();
 };
 
+// ---- Save slots -------------------------------------------------------------
+// Summary of a slot for the picker, or null when it's empty.
+G.slotInfo = function (n) {
+  const S = G.loadGame(n); if (!S) return null;
+  const t = Math.floor((S.frames || 0) / 3600), badges = (G.BADGES || []).filter(b => S.flags && S.flags['badge_' + b.id]).length;
+  const m = G.MAPS[S.map], caught = Object.values(S.dex || {}).filter(v => v > 1).length;
+  return { name: S.name, badges, caught, time: `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`, place: m ? m.name : '', party: (S.party || []).map(c => c.id).slice(0, 6), when: S.savedAt || 0 };
+};
+// Pick a slot: mode 'load' (empty slots can't be picked), 'new' or 'save'. Returns the slot number or 0.
+G.pickSlot = async function (mode) {
+  let idx = Math.max(0, (G.slot || 1) - 1);
+  const infos = []; for (let n = 1; n <= G.SLOTS; n++) infos.push(G.slotInfo(n));
+  const title = mode === 'load' ? 'LOAD WHICH GAME?' : mode === 'new' ? 'START A NEW GAME IN' : 'SAVE TO WHICH SLOT?';
+  const card = push({ draw(ctx) {
+    G.frame(ctx, 4, 4, 140, 132, 'light'); G.text(ctx, title, 12, 8, { font: G.FONT_B || G.FONT });
+    infos.forEach((I, i) => { const y = 22 + i * 37, on = i === idx;
+      K.rr(ctx, 9, y, 130, 33, 6); ctx.fillStyle = on ? 'rgba(247,132,63,.22)' : 'rgba(200,188,212,.18)'; ctx.fill();
+      if (on) { K.rr(ctx, 9, y, 130, 33, 6); ctx.strokeStyle = '#f7843f'; ctx.lineWidth = 1; ctx.stroke(); }
+      G.text(ctx, `SLOT ${i + 1}` + (G.slot === i + 1 && mode === 'save' ? ' (CURRENT)' : ''), 14, y + 3, { font: G.FONT_S, color: '#f7843f', shadow: false });
+      if (!I) { G.text(ctx, 'EMPTY', 14, y + 13, { color: '#9a8ea8', shadow: false }); return; }
+      G.text(ctx, I.name, 14, y + 11, { font: G.FONT_B || G.FONT }); G.text(ctx, I.time, 134, y + 11, { align: 'right', font: G.FONT_S, color: '#5a4a66', shadow: false });
+      G.text(ctx, `${I.place}  ·  ${I.badges} BADGE${I.badges === 1 ? '' : 'S'}  ·  DEX ${I.caught}`, 14, y + 22, { font: G.FONT_S, color: '#5a4a66', shadow: false });
+      if (G.drawCreatureMini) I.party.slice(0, 3).forEach((id, k) => { try { G.drawCreatureMini(ctx, id, 100 + k * 13, y + 9, 11, 0, false, 0); } catch (e) {} });
+    });
+  } });
+  let res = 0;
+  for (;;) {
+    const labels = infos.map((I, i) => `SLOT ${i + 1}`).concat(['BACK']);
+    const c = await G.choose(labels, { right: 236, y: 4, index: idx, minW: 56, onMove: i => { idx = Math.min(i, G.SLOTS - 1); } });
+    if (c < 0 || c === G.SLOTS) break; idx = c;
+    const I = infos[c];
+    if (mode === 'load' && !I) { G.audio.sfx('bump'); continue; }
+    if (mode !== 'load' && I && !(mode === 'save' && G.slot === c + 1)) {
+      await G.say(`Slot ${c + 1} holds ${I.name}'s game (${I.time}). Overwrite it?`, { auto: 1 });
+      const ok = await G.yesNo(); G.closeText(); if (!ok) continue;
+    }
+    res = c + 1; break;
+  }
+  pop(card); return res;
+};
+
 // ---- Start menu -----------------------------------------------------------
 G.startMenu = async function () {
   const S = G.state;
@@ -387,7 +428,9 @@ G.startMenu = async function () {
       await G.waitA(); pop(l);
       if (G.badgeCase && G.input.pressed.a) await G.badgeCase();
     } else if (ch === 4) {
-      if (await (async () => { await G.say('Would you like to save the game?', { auto: 1 }); return G.yesNo(); })()) { if (G.saveGame()) { G.audio.sfx('levelup'); await G.say(`${S.name} saved the game.`); } else await G.say('Saving failed! Storage may be full or disabled.'); }
+      const how = await G.choose([`SAVE (SLOT ${G.slot})`, 'SAVE TO ANOTHER SLOT', 'CANCEL'], { right: 236, y: 4, minW: 70 });
+      const n = how === 0 ? G.slot : how === 1 ? await G.pickSlot('save') : 0;
+      if (n) { if (G.saveGame(n)) { G.audio.sfx('levelup'); await G.say(`${S.name} saved the game in slot ${n}.`); } else await G.say('Saving failed! Storage may be full or disabled.'); }
       G.closeText();
     } else if (ch === 5) await G.settingsMenu();
   }
