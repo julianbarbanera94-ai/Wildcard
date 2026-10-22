@@ -45,15 +45,17 @@ Notes:
 You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Great Lantern has kept the wild creatures of the vale calm for 300 years. It is dying, and the legendary **Wildcard** that guards the vale has vanished.
 
 1. Wake up in your cottage, meet Elder Wren at the Hearth Shrine, and wake a **Bondling** (your starter) from its hearth stone. It follows you around the map from then on. Press A facing it to talk to it.
-2. The village has four roads, and you can take them in any order:
-   - **West, Sunmeadow:** open grassland and the easiest region. Warden Hazel holds the Meadow Ember Shard.
-   - **East, Mirewood Marsh:** boardwalks and marsh grass with bug and poison creatures. Warden Bog holds the Marsh Ember Shard. Fisher Moll has a side quest.
-   - **North, the Ridge and Glimmer Mine:** the hardest region. Warden Kade holds the Mine Ember Shard.
-   - **South, Tidepool Shore:** optional, with hidden items, rare creatures in the dune grass, and Moll's lost lantern.
+2. **The Aurelis region** (START → MAP shows it all): Lanternrest is the hub, and 17 more places lie around it, each with its own look, wild creatures, trainers and items.
+   - **West:** Sunmeadow, Sunhaven City (harbour), Evergreen Forest, Driftwood Port (lighthouse and ferry) and Verdant Isle.
+   - **South:** Stonebridge Town (bridges and waterfalls), Mirewood Marsh, Whispering Woods, Tidepool Shore, Tidefall Islands and Moonlit Island.
+   - **North:** the Ridge and Glimmer Mine, Lakeside Town, Cloudpeak Mountains (a summit castle for the story later), Glacier Pass, Frostmere City and the Aurora Isles.
+   - **East:** Sandsreach Desert, Crimson Badlands, Emberfall Volcano and Cobalt City (with a long bridge to a lighthouse island).
+   - Every town has a Healing Centre, its own shop and an **Arena**.
 3. Wild creatures roam the map. Bold ones notice you and give chase, shy ones scurry off, curious ones mill about. Bump into one (or press A on it) to battle, or get within a few steps and **throw an orb** at it (ORB button / `C`): the battle opens with that capture attempt, and if it breaks free you fight it. More hide in the tall grass. Weaken them and throw an orb from the BAG to catch them. Sleep and poison improve your odds. Trainers will spot you and walk up for a battle.
 4. **Your homestead**: take the road north out of Lanternrest's north-east plot. You own a little cabin and the land around it; see *Homestead* below.
-5. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
-6. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
+5. **Arenas and badges:** each of 8 cities has an Arena with a themed puzzle, trainers and a Leader who gives a Badge, prize money and 5 orbs of their type. Beating the Leaders in order: Mason (Stonebridge, Rock), Ferna (Sunhaven, Grass), Marlo (Lakeside, Water), Zephyra (Driftwood, Flying), Osha (Sandsreach, Ground), Rayne (Cobalt, Electric), Isolde (Frostmere, Ice) and Pyrra (Emberfall, Fire). **Badges open the world:** 1 opens Evergreen Forest and Whispering Woods; 2 Driftwood Port and Sandsreach; 3 Cloudpeak, Tidefall and Verdant Isle; 4 Cobalt City and the Badlands; 5 Glacier Pass and Frostmere; 6 Emberfall; 8 Moonlit Island and (with the Lantern relit) the Aurora Isles. The Warden Card shows your badges (A opens the badge case).
+6. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
+7. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
 
 ## Homestead
 
@@ -81,6 +83,7 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
   - Tiles regrow after 150 steps.
 - **Your land grows with your progress**: the homestead starts as a small yard, and every Arena badge you earn (every town you open) clears more land at 1, 3, 5 and 7 badges. The Land Office board shows where you stand.
 - **Enterable buildings**: the shed, nursery, barn, healing station, refinery, forge, garage and greenhouse all have a door and a furnished interior to walk into, which grow as you upgrade them.
+- **Boats**: craft a rowboat, motorboat or sailboat at the forge (or buy the first two at Tidewheel Motors). Face water and press A to launch; step ashore at any beach or pier. Boats stay on water, and boat owners sail the ferry routes for free.
 - **Vehicles**: the **Garage** stores them, and START → TRAVEL lets you ride or get off.
   - **Bicycle**: land, not tall grass. Craft it or buy it.
   - **Scooter**: roads only. A courier quest in Lanternrest.
@@ -90,7 +93,9 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
   - **Helicopter**: flies between landing spots. It needs a Garage Lv3 and a Helipad.
   - Vehicles park themselves outside when you go indoors.
 - **Flying**: START → TRAVEL → FLY, with an evolved Flying-type creature at Lv18+. Pick any place you've visited on the vale map.
-- **Map**: START → MAP shows the whole vale, where you are, what you've visited, and the healers, shops and wardens in each region.
+- **Map**: START → MAP is an illustrated map of Aurelis showing where you are, what you've visited, what is still locked and why, and the healers, shops and Arenas of each place. Flying and the helicopter pick their destination on the same map.
+- **Ferries**: the docks at Driftwood Port, Tidepool Shore, Cobalt City and Frostmere sail to Verdant Isle, Tidefall, Moonlit Island and the Aurora Isles for a ticket (or free in your own boat), once you have the badges.
+- **Creatures on the map move like what they are**: winged ones hover and flap, bunnies and frogs hop, ghosts drift, serpents weave, and everything else walks, or runs when hurrying.
 - **Towns**: every service has a name plate.
   - Lanternrest: General Store, Builder's Yard, Warden Lodge (healing).
   - Sunmeadow: Meadowbrook Seeds.
@@ -125,6 +130,10 @@ js/world.js         overworld runtime: movement, follower, roaming creatures, tr
 js/economy.js       item catalogue (materials, tools, seeds, crops, food) and inventory helpers (G.inv)
 js/orbart.js        the ten capture orbs: art and catch bonuses
 js/structures.js    every buildable structure: levels, costs, requirements, perks (data)
+js/interiors.js     walkable interiors for the shed, nursery, barn, healing station, refinery, forge, garage and greenhouse
+js/worldmap.js      the illustrated Aurelis map, ferries and flight destinations
+js/arenas.js        badge art, the badge case, award sequence and arena puzzles (arena data in js/maps/zz_arenas.js)
+docs/WORLD.md       the Aurelis world contract (maps, exits, gates, arenas), with the reference image docs/world-reference.png
 js/homestead.js     building framework: placement, upgrades, move/rotate/remove, land deeds, nursery, healing station, save migration
 js/homeart.js       structure and crop art          js/propart.js   furniture and vehicle art
 js/farm.js          days, energy, plots and crops, barn, sprinklers, greenhouse
@@ -158,7 +167,10 @@ node tests/e2e-homestead.js                    # build menu, invalid placement, 
 node tests/e2e-farm.js                         # crops, watering, withering, sprinklers, days, energy, gathering, barn
 node tests/e2e-craft.js                        # refinery jobs, forge, kitchen, storage, treats, furniture
 node tests/e2e-towns.js                        # shops (D-pad and touch), selling, healing centres, homestead road
-node tests/e2e-vehicles.js                     # garage, riding rules, parking, buying, flight, helicopter, quests, world map
+node tests/e2e-vehicles.js                     # garage, riding rules, parking, buying, boats, flight, helicopter, quests
+node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
+node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles
+node tests/e2e-interiors.js                    # walking into every building, its handlers, upgrades, moving and saving inside
 ```
 
 The end-to-end tests drive the real game with keyboard input in headless Chromium. Set `PW` to the playwright module path, `CHROME` to a Chromium binary and `OUT` to a folder for screenshots if the defaults don't apply.

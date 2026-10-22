@@ -65,7 +65,8 @@ const OUT = process.env.OUT || '/tmp';
   const blocked = s => ev(s => G.world.map.block.has(s.x + ',' + (s.y + 1)), s);
   assert.equal(await ev(() => G.state.builds.filter(b => b.type !== 'house').length), 1); assert.equal(m0, 20000 - 800); assert(await blocked(spot), 'station footprint is solid');
   await ev(s => { G.state.party[0].hp = 1; G.placePlayer(s.x, s.y + 2, 1); }, spot); await page.waitForTimeout(150);
-  await key('z'); await until(() => G.ui.layers.length > 0, 3000); await key('z');            // HEALING
+  await ev(() => G.runWorld(() => G.homeUse.station(G.state.builds.find(b => b.type === 'station'))));   // HEALING (used from inside the clinic in the game)
+  await until(() => G.ui.layers.length > 0, 4000, 'heal screen');
   for (let i = 0; i < 12 && await ev(() => G.state.party[0].hp !== G.state.party[0].stats.hp); i++) { await key('z', 50); await page.waitForTimeout(250); }   // HEAL TEAM
   await idle();
   assert(await ev(() => G.state.party[0].hp === G.state.party[0].stats.hp), 'station heals'); await shot('station');
@@ -76,7 +77,7 @@ const OUT = process.env.OUT || '/tmp';
       if (A.canPlace('nursery', x, y) && G.worldApi.canWalk(x + 1, y + 2)) { G.state.builds.push({ id: 'n1', type: 'nursery', map: G.world.mapId, x, y }); G.applyBuilds(G.world.map); G.placePlayer(x + 1, y + 2, 1); return; } } });
   await page.waitForTimeout(150);
   const lv0 = await ev(() => G.state.party[1].lvl);
-  await key('z'); await until(() => G.ui.layers.length > 0, 3000); await key('z');            // NURSERY
+  await ev(() => G.runWorld(() => G.homeUse.nursery(G.state.builds.find(b => b.id === 'n1'))));   // NURSERY
   await until(() => G.ui.layers.length > 0 && G.ui.text, 5000, 'nursery menu'); await key('z');   // LEAVE A CREATURE
   await until(() => G.ui.layers.length > 0 && !G.ui.text, 5000, 'party screen'); await key('ArrowRight'); await key('z');   // pick slot 2
   await advance(() => G.ui.layers.length > 0 && G.ui.text && G.ui.text.lines.join(' ').includes('Nursery: 1/'), 8000, 'nursery menu again'); await page.waitForTimeout(200); await key('ArrowDown'); await key('z');   // DONE
@@ -84,7 +85,7 @@ const OUT = process.env.OUT || '/tmp';
   assert.equal(await ev(() => G.state.party.length), 1); assert(await ev(() => G.state.builds.find(b => b.id === 'n1').pets.length === 1));
   await page.waitForTimeout(1200); await shot('nursery');
   await ev(() => { G.state.steps = (G.state.steps || 0) + 400; });                              // pretend we walked 400 steps
-  await key('z'); await advance(() => G.ui.layers.length > 0, 8000, 'manage menu'); await key('z');   // NURSERY
+  await ev(() => G.runWorld(() => G.homeUse.nursery(G.state.builds.find(b => b.id === 'n1'))));   // NURSERY
   await advance(() => G.ui.layers.length > 0 && G.ui.text && G.ui.text.lines.join(' ').includes('Nursery:'), 8000, 'nursery menu'); await key('z');   // TAKE <creature>
   await idle();
   const lv1 = await ev(() => G.state.party[1].lvl);

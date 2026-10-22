@@ -181,13 +181,14 @@ fs.mkdirSync(OUT, { recursive: true });
   await ev(() => { G.loadMap('lanternrest'); const S = G.state; S.builds.push({ id: 'barn1', type: 'barn', map: 'lanternrest', x: 47, y: 3, lvl: 2, rot: 0 }); G.home.refresh(); G.placePlayer(48, 6, 1); });
   await page.waitForTimeout(200);
   const kind = await ev(() => G.SPECIES[G.state.party[1].id].types[0]);
-  await key('z'); await menuOpen(); await key('z');                       // BARN (use label)
+  const useBarn = () => ev(() => G.runWorld(() => G.homeUse.barn(G.state.builds.find(b => b.id === 'barn1'))));   // the barn is used from inside now; tests/e2e-interiors.js covers the real door
+  await useBarn();                                                          // BARN
   await menuOpen(); await page.waitForTimeout(150); await shot('barn-empty'); await key('z');   // MOVE A CREATURE IN
   await menuOpen(); await key('z');                                     // FROM YOUR PARTY
   await menuOpen(); await key('ArrowRight'); await key('z');            // second creature
   await advance(() => G.ui.layers.length > 0 && !G.ui.text, 8000, 'back in barn list');
   assert.equal(await ev(() => G.state.builds.find(b => b.id === 'barn1').animals.length), 1); assert.equal(await ev(() => G.state.party.length), 1);
-  await key('z'); await menuOpen(); await key('z'); await menuOpen(); await key('z');   // try to move the last one in
+  await key('z'); await menuOpen(); await key('z'); await menuOpen(); await key('z');   // (the barn menu is still open) try to move the last one in
   await advance(() => window.__said.some(s => /at least one other healthy/.test(s)), 8000);
   await advance(() => G.ui.layers.length > 0 && !G.ui.text, 8000);
   assert.equal(await ev(() => G.state.party.length), 1, 'the last healthy creature stays');

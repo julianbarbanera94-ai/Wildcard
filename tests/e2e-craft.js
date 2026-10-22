@@ -39,11 +39,11 @@ fs.mkdirSync(OUT, { recursive: true });
 
   // 1) refinery: start a job through the structure menu, inputs consumed only when it starts, done after enough frames
   await ev(() => { G.state.bag.Wood = 3; });
-  await key('z'); await listUp(); await key('z');                    // REFINERY from the structure menu
+  await ev(() => G.runWorld(() => G.homeUse.refinery(G.state.builds.find(b => b.id === 'ref'))));   // REFINERY (used from inside the building in the game)
   await listUp(); await page.waitForTimeout(150); await shot('refinery');
   await key('x'); await idle();
   assert.equal(await bag('Wood'), 3, 'opening and leaving consumes nothing');
-  await key('z'); await listUp(); await key('z'); await listUp();
+  await ev(() => G.runWorld(() => G.homeUse.refinery(G.state.builds.find(b => b.id === 'ref')))); await listUp();
   await key('z');                                                      // Plank x2 (first recipe)
   await page.waitForTimeout(200);
   assert.equal(await ev(() => G.state.builds.find(b => b.id === 'ref').jobs.length), 1, 'job started'); assert.equal(await bag('Wood'), 0, 'inputs taken when started');
@@ -75,7 +75,8 @@ fs.mkdirSync(OUT, { recursive: true });
   // 2) forge: craft a tool, fail with missing ingredients (nothing consumed), tools are owned once
   await ev(() => { G.state.bag.Wood = 5; G.state.bag.Stone = 3; });
   await ev(() => G.placePlayer(53, 5, 1)); await page.waitForTimeout(100);
-  await key('z'); await listUp(); await key('z'); await listUp(); await page.waitForTimeout(150); await shot('forge');
+  await ev(() => G.runWorld(() => G.homeUse.forge(G.state.builds.find(b => b.id === 'forge'))));   // FORGE (used from inside the building in the game)
+  await listUp(); await page.waitForTimeout(150); await shot('forge');
   await key('z'); await advance(() => window.__said.some(s => /crafted 1 Axe/.test(s)), 8000); await listUp();
   assert.equal(await bag('Axe'), 1); assert.equal(await bag('Wood'), 0); assert.equal(await bag('Stone'), 0);
   assert(await ev(() => G.homeActive(G.state.builds.find(b => b.id === 'forge'))), 'forge sparks after crafting');
@@ -86,7 +87,8 @@ fs.mkdirSync(OUT, { recursive: true });
   await key('ArrowUp'); await ev(() => { G.state.bag.Wood = 5; G.state.bag.Stone = 3; }); await key('z');
   await advance(() => window.__said.some(s => /already have an Axe/.test(s)), 8000); await listUp();
   assert.equal(await bag('Wood'), 5, 'a tool is owned once');
-  await key('ArrowDown'); await key('ArrowDown'); await key('ArrowDown'); await key('ArrowDown'); await key('ArrowDown'); await page.waitForTimeout(150); await shot('forge-locked');
+  for (let i = 0; i < 6; i++) await key('ArrowDown');   // past the six tier-1 recipes (the Rowboat joined them) to the first tier-2 one
+  await page.waitForTimeout(150); await shot('forge-locked');
   await key('z'); await advance(() => window.__said.some(s => /Forge \(Lv2\)/.test(s)), 8000); await listUp();
   await key('x'); await idle();
   // bicycle (tier 2) through the vehicles API, if it is there
