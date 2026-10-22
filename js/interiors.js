@@ -258,7 +258,7 @@ function buildStation(b) {
     R.prop('lamp', 7, 5);
   } else {
     R.windows([[1, 1], [3, 2], [8, 2]]);
-    counter(3, 2, 4); nurse(2, 1); cabinet(1, 1); R.prop('monitor', 3, 1, 1, 1, { prompt: 'Monitor', say: 'SPA LOG: unlimited heals, fainted creatures revived, crystal tonic on tap.' });
+    counter(3, 2, 4); nurse(2, 1); cabinet(1, 1); R.prop('monitor', 4, 4, 1, 1, { prompt: 'Monitor', say: 'SPA LOG: unlimited heals, fainted creatures revived, crystal tonic on tap.' });
     R.prop('healer', 7, 1, 1, 1, healerO); R.prop('healer', 8, 1, 1, 1, healerO); R.prop('healer', 9, 1, 1, 1, healerO);
     bed(6, 3); bed(7, 3); bed(8, 3); bed(5, 3);
     R.prop('rug', 1, 4, 4, 3, { flat: true });
@@ -300,7 +300,7 @@ function buildRefinery(b) {
     conv(1, 3, 2); conv(4, 3, 2); panel(7, 3, 3); conv(11, 3, 2);
     kiln(1, 5); boiler(11, 5); tank(4, 5, 4); pipe(3, 5); pipe(5, 5); pipe(10, 5);
     R.prop('crates', 1, 7, 1, 1, { say: 'Crates of raw materials, waiting for their turn.', prompt: 'Crates' }); R.prop('crates', 12, 7, 1, 1, { say: 'Crates of finished goods.', prompt: 'Crates' });
-    R.prop('lamp', 2, 7); R.prop('lamp', 11, 7);
+    R.prop('lamp', 4, 7); R.prop('lamp', 9, 7);
   }
   R.sign(Math.floor(dims[0] / 2), SIGN(b), 'craft');
   R.m.dyn = (items, t) => {

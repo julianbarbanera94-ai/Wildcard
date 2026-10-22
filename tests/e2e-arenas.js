@@ -54,8 +54,10 @@ const OUT = process.env.OUT || '/tmp';
 
   // 1) screenshots of every arena interior (and its Leader's end of the hall)
   for (const b of data) {
-    await ev(c => { G.loadMap('arena_' + c); G.placePlayer(7, 12, 1); G.scene = G.world.scene; G.world.banner = null; }, b.city); await page.waitForTimeout(500);
-    await shot('arena-' + b.city);
+    for (const [k, y] of [['top', 4], ['mid', 11], ['bot', 17]]) {
+      await ev(([c, y]) => { G.loadMap('arena_' + c); G.placePlayer(7, y, 1); G.scene = G.world.scene; G.world.banner = null; }, [b.city, y]); await page.waitForTimeout(450);
+      await shot(`arena-${b.city}-${k}`);
+    }
   }
   step('arena screenshots taken');
 

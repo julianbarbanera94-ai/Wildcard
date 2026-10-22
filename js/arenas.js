@@ -37,8 +37,8 @@ function drawBadge(ctx, i, x, y, r, earned, t, mini) {
   if (!mini) { ctx.beginPath(); shape(ctx, x + .5, y + 1.2, r); ctx.fillStyle = 'rgba(30,16,50,.35)'; ctx.fill(); }
   ctx.beginPath(); shape(ctx, x, y, r);
   if (earned) {
+    ctx.lineWidth = (mini ? .6 : Math.max(.8, r * .1)) * 2; ctx.strokeStyle = shade(col, .5); ctx.stroke();   // outline first, so overlapping petals show no inner lines
     ctx.fillStyle = K.lin(ctx, x, y - r, x, y + r, [shade(col, 1.45), col, shade(col, .78)]); ctx.fill();
-    ctx.lineWidth = mini ? .6 : Math.max(.8, r * .1); ctx.strokeStyle = shade(col, .5); ctx.stroke();
     if (!mini) {
       ctx.save(); ctx.beginPath(); shape(ctx, x, y, r); ctx.clip();
       ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(x - r * .25, y - r * .45, r * .7, r * .3, -.5, 0, TAU); ctx.fill();
@@ -46,8 +46,8 @@ function drawBadge(ctx, i, x, y, r, earned, t, mini) {
       ctx.globalAlpha = 1; EMBLEM[b.type](ctx, x, y, r * .9, b.type === 'Rock' || b.type === 'Ground' ? '#fff3d0' : b.type === 'Grass' ? '#ffe45a' : '#ffffff');
     }
   } else {
+    ctx.lineWidth = (mini ? .5 : Math.max(.7, r * .08)) * 2; ctx.strokeStyle = '#3e3956'; ctx.stroke();
     ctx.fillStyle = K.lin(ctx, x, y - r, x, y + r, ['#8a84a4', '#6c6688', '#554f70']); ctx.fill();
-    ctx.lineWidth = mini ? .5 : Math.max(.7, r * .08); ctx.strokeStyle = '#3e3956'; ctx.stroke();
     if (!mini) { ctx.globalAlpha = .55; EMBLEM[b.type](ctx, x, y, r * .9, '#47425f'); }
   }
   ctx.restore(); ctx.globalAlpha = 1;

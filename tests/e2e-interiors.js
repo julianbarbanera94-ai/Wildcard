@@ -30,7 +30,7 @@ const OUT = process.env.OUT || '/tmp';
   await ev(() => {
     window.T = {
       fresh() {
-        G.state = G.newState(); G.migrateState(G.state); const S = G.state; S.flags.starter = true; S.home.deed = 5; S.money = 99999;
+        G.state = G.newState(); G.migrateState(G.state); const S = G.state; S.flags.starter = true; S.home.deed = 5; S.home.seen = 5; S.money = 99999;
         S.party.length = 0; S.party.push(G.makeCreature(1, 12), G.makeCreature(4, 10));
         Object.assign(S.bag, { Wood: 30, Stone: 30, Plank: 20, 'Iron Ingot': 5 });
         window.__hits = []; G.loadMap('homestead'); G.placePlayer(27, 40, 1); G.scene = G.world.scene;
