@@ -124,7 +124,7 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   scatter(m, 'u', [[15, 24], [16, 24], [34, 24], [35, 24], [17, 17], [18, 17], [20, 13], [24, 13]]);
   scatter(m, 'd', [[41, 12], [14, 29], [33, 35]]);
   // a flowerbed and statue in the middle of the plaza, a market row of crates and benches
-  rect(m, 23, 19, 4, 3, 'f'); scatter(m, 'O', [[24, 20], [25, 20]]); scatter(m, 'l', [[22, 19], [27, 19], [22, 22], [27, 22]]);
+  rect(m, 23, 19, 4, 3, 'f'); scatter(m, 'O', [[24, 20], [25, 20]]); scatter(m, 'l', [[22, 19], [22, 22]]);
   scatter(m, 'x', [[17, 24], [18, 24], [32, 24]]); scatter(m, 'd', [[19, 18], [31, 18]]);
   rect(m, 38, 12, 1, 1, 'F'); rect(m, 43, 24, 11, 1, 'F'); rect(m, 43, 28, 1, 1, 'f');
   // flowering banks on the plaza edge

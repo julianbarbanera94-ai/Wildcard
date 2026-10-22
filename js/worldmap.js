@@ -807,7 +807,7 @@ async function sail(from, to, boat) {
         draw(c, P, kx) {
           // wake
           for (let i = 0; i < trail.length; i++) { const [tx, ty, ta] = trail[i], [sx, sy] = P(tx, ty), a = i / trail.length; c.fillStyle = `rgba(255,255,255,${a * .5})`; c.beginPath(); c.ellipse(sx - Math.cos(pp.ang) * 2, sy - Math.sin(pp.ang) * 2, 1.2 + (1 - a) * 3.4, .8 + (1 - a) * 1.6, pp.ang, 0, TAU); c.fill(); }
-          const [bx, by] = P(pp.x, pp.y); c.save(); c.translate(bx, by); const flip = Math.cos(pp.ang) < 0; c.scale(flip ? -1 : 1, 1); boatArt(c, t, flip ? Math.PI - pp.ang : pp.ang); c.restore();
+          const [bx, by] = P(pp.x, pp.y); c.save(); c.translate(bx, by); const flip = Math.cos(pp.ang) < 0; c.scale(flip ? -1 : 1, 1); boatArt(c, t, Math.sin(flip ? Math.PI - pp.ang : pp.ang) * .3); c.restore();
           for (const q of [A, B]) { const [qx, qy] = P(q.x, q.y); G.drawSignPlate(c, G.worldShort(q.id), qx, qy - 6, t, q.id === to ? 'shop' : 'home'); }
         } });
       // caption + progress
