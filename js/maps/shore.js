@@ -148,4 +148,9 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   m.npcs.push({ x: 19, y: 5, dir: DOWN, creature: 25, still: true, id: 'joker', hide: () => G.state.flags.jokerGone, talk: () => G.story.joker() });
   warp(m, 18, 31, 'lanternrest', 52, 39, DOWN); warp(m, 19, 31, 'lanternrest', 53, 39, DOWN);
 })();
+// Landing spots for flight and the helicopter on the maps that predate them (walkable, checked again at runtime).
+(function () {
+  const L = { lanternrest: [29, 25], sunmeadow: [64, 20], ridge: [24, 46], hollow: [19, 27] };
+  for (const [id, [x, y]] of Object.entries(L)) if (G.MAPS[id] && !G.MAPS[id].landing) G.MAPS[id].landing = { x, y };
+})();
 })();
