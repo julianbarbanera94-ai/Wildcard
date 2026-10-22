@@ -101,6 +101,8 @@ function unlockEverything() {
   // fly anywhere: every outdoor place counts as visited, and the FLY ANYWHERE option is on
   for (const m of Object.values(G.MAPS)) if (m.outdoor) S.visited[m.id] = true;
   S.energy = G.farm && G.farm.energyMax ? G.farm.energyMax() : 100;
+  // every quest finished (rewards given once) and every region's reputation at HERO
+  if (G.quest) { for (const q of G.quest.all()) G.quest.start(q.id, true); G.quest.completeAll(); G.rep.max(); }
   if (G.home && G.world.map) G.home.refresh();
 }
 
@@ -110,7 +112,7 @@ async function testMenu() {
   for (;;) {
     const items = ['UNLOCK EVERYTHING', ...OPTIONS.map(([k, n]) => `${n}: ${S.cheats[k] ? 'ON' : 'OFF'}`), 'ADD CREATURE', 'HEAL TEAM', 'TEST MODE OFF', 'BACK'];
     const c = await G.choose(items, { x: 4, y: 4, rowH: 12, index: idx, minW: 100 }); if (c < 0 || c === items.length - 1) break; idx = c;
-    if (c === 0) { unlockEverything(); S.options = S.options || {}; for (const [k] of OPTIONS) S.cheats[k] = true; G.audio.sfx('levelup'); await say(['Everything is unlocked!', 'The Dex is complete, all three shards are placed and the Great Lantern is lit (the Hollow Gate is open), every item and material is at 99, and all the infinite options are on.', 'Your homestead owns all its land, and every vehicle is yours.']); }
+    if (c === 0) { unlockEverything(); S.options = S.options || {}; for (const [k] of OPTIONS) S.cheats[k] = true; G.audio.sfx('levelup'); await say(['Everything is unlocked!', 'The Dex is complete, all three shards are placed and the Great Lantern is lit (the Hollow Gate is open), every item and material is at 99, and all the infinite options are on.', 'Your homestead owns all its land, and every vehicle is yours.', 'Every quest is complete and every region knows you as a HERO.']); }
     else if (c <= OPTIONS.length) { const k = OPTIONS[c - 1][0]; S.cheats[k] = !S.cheats[k]; G.audio.sfx('select'); }
     else if (c === OPTIONS.length + 1) {
       const id = await pickSpecies(); if (id < 0) continue;

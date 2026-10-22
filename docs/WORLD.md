@@ -253,3 +253,11 @@ All of them blend with their neighbours like the existing tiles. Owners may use 
 - Every owner keeps `node tests/maps.test.js` and `node tests/logic.test.js` passing for their maps.
 - Region owners take screenshots of each of their maps and look at them: use `G.state = G.newState(); G.migrateState(G.state); G.state.flags.starter = true; G.loadMap(id); G.placePlayer(x, y, 0); G.scene = G.world.scene;` and a wide viewport.
 - Scratch files go in `/tmp/claude-0/<owner>/`. Chromium is at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, Playwright at `/opt/node-tools/node_modules/playwright`.
+
+## 9. Quests and reputation (js/quests.js, js/story.js)
+
+- A quest is data: `G.quest.def({ id, cat, title, giver, desc, start(S), steps: [{ id, text, done(S), at, count(S) }], reward })`. Categories: main, side, discovery, people, research, home.
+- Steps are checked about three times a second, and every finished step is skipped, so a quest stays right when things happen early or out of order. `at` (a place id, or a function of the state) puts a marker on the world map.
+- Rewards (`money`, `items`, `rep`, `flags`, `fn`) go through `G.grantOnce(key)` and are paid exactly once per save.
+- Reputation: `G.rep.add(region, n)`, regions west, south, north, east and vale (`G.regionOf(placeId)`), 0 to 100.
+- Save fields: `S.quests`, `S.rep`, `S.once`, `S.journal`. Test Mode's UNLOCK EVERYTHING completes every quest and sets every region to 100.

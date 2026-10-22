@@ -680,6 +680,8 @@ G.drawWorldMap = function (ctx, x, y, w, h, o) {
     if (st.here) { const rr = r + 1 + (t % 50) / 50 * 9; ctx.strokeStyle = `rgba(255,120,60,${1 - (t % 50) / 50})`; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.stroke(); }
     drawPin(ctx, p, px, py, r, st);
     if (st.locked && showNames !== 'none-locks') iconLock(ctx, px + r * .95, py - r * .95, 2.3 * zs);
+    const qm = o.markers && o.markers[p.id];   // journal markers: gold for the story lead, blue for other quests
+    if (qm) { const mx = px - r * 1.1, my = py - r * 1.2 + Math.sin(t / 9 + p.x) * .8, mr = 2.6 * zs; circ2(ctx, mx, my, mr + .6, '#ffffff'); circ2(ctx, mx, my, mr, qm === 'main' ? '#f7a33f' : '#3a9ae8'); ctx.fillStyle = '#fff'; ctx.fillRect(mx - mr * .14, my - mr * .6, mr * .28, mr * .75); ctx.fillRect(mx - mr * .14, my + mr * .3, mr * .28, mr * .28); }
     const known = !st.fog;
     if (showNames !== 'none' && (st.sel || st.here || (known && (showNames === 'all' || (showNames === 'known' && st.visited))))) drawTag(ctx, p, px, py, r, st, t);
     if (showIcons !== 'none' && known && (showIcons === 'all' || st.sel || st.here)) {
@@ -757,7 +759,7 @@ G.worldMapScreen = async function () {
     update() { t++; nav.update(sel); },
     draw(ctx) {
       const W = G.W, H = G.H, zoom = nav.zoom, id = nodes[sel].id, I = api.info = G.worldInfo(id);
-      G.drawWorldMap(ctx, 0, 0, W, H, { t, here, cursor: id, view: nav.view(), names: zoom ? 'known' : 'sel', icons: zoom ? 'all' : 'sel', ferries: zoom });
+      G.drawWorldMap(ctx, 0, 0, W, H, { t, here, cursor: id, view: nav.view(), names: zoom ? 'known' : 'sel', icons: zoom ? 'all' : 'sel', ferries: zoom, markers: G.quest ? G.quest.markers() : null });
       nav.touch(i => { tapped = i; });
       // info panel (flips to the top when the cursor is in the lower half)
       const cyp = nav.xy(id)[1], top = cyp > H * .55, pw = Math.min(W - 8, 232), x0 = (W - pw) / 2, ph = 44, py0 = top ? 3 : H - ph - 3;
@@ -779,6 +781,8 @@ G.worldMapScreen = async function () {
       if (wl) G.text(ctx, wl, x0 + pw - 2, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false, align: 'right' });
       if (I.locked) { iconLock(ctx, L + 3, py0 + 36, 2.4); G.text(ctx, G.worldLockShort(id), L + 9, py0 + 33, { font: G.FONT_S, color: '#b03a3a', shadow: false }); }
       else G.text(ctx, I.visited ? 'Open to you.' : 'Open to you, not visited yet.', L, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false });
+      const qs = G.quest ? G.quest.all().map(q => [q, G.quest.step(q.id)]).filter(([, s]) => s && s.at === id) : [];
+      if (qs.length && S.journal && S.journal.markers !== false) { const [q, s] = qs[0]; G.text(ctx, '! ' + s.text, L, py0 + ph + 1, { font: G.FONT_S, color: '#fff', shadow: '#000' }); }
       // buttons
       const bx = x0 + pw - 54;
       G.kit.pill(ctx, bx, py0 + 5.5, 52, 9, '#3a9ae8', G.touch ? (zoom ? 'TAP: ZOOM OUT' : 'TAP: ZOOM') : zoom ? 'A: ZOOM OUT' : 'A: ZOOM');

@@ -21,7 +21,7 @@ On phones and tablets a thumbstick (drag to walk) and A, B, MENU and ORB buttons
 
 ## Test Mode
 
-START → SETTINGS → TEST MODE, then enter the password (`abc610`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), **Fly Anywhere** (any creature carries you to any place; Unlock Everything turns it on), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
+START → SETTINGS → TEST MODE, then enter the password (`abc610`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), every quest done and every region at Hero reputation; **Fly Anywhere** (any creature carries you to any place; Unlock Everything turns it on), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
 
 ## Android APK
 
@@ -56,6 +56,10 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
 5. **Arenas and badges:** each of 8 cities has an Arena with a themed puzzle, trainers and a Leader who gives a Badge, prize money and 5 orbs of their type. Beating the Leaders in order: Mason (Stonebridge, Rock), Ferna (Sunhaven, Grass), Marlo (Lakeside, Water), Zephyra (Driftwood, Flying), Osha (Sandsreach, Ground), Rayne (Cobalt, Electric), Isolde (Frostmere, Ice) and Pyrra (Emberfall, Fire). **Badges open the world:** 1 opens Evergreen Forest and Whispering Woods; 2 Driftwood Port and Sandsreach; 3 Cloudpeak, Tidefall and Verdant Isle; 4 Cobalt City and the Badlands; 5 Glacier Pass and Frostmere; 6 Emberfall; 8 Moonlit Island and (with the Lantern relit) the Aurora Isles. The Warden Card shows your badges (A opens the badge case).
 6. Rest for free at the Warden Lodge, store spare creatures in its PC, and shop at the Trading Post.
 7. Bring all three shards to the **Great Lantern** tower and place them on the pedestals. When the Lantern relights, the **Hollow Gate** in the southeast opens, and the Wildcard, **Joker**, waits inside.
+
+## Journal, quests and reputation
+
+START → JOURNAL lists everything you're doing in one place: STORY, QUESTS, FINDS, PEOPLE, CREATURES and HOME, plus REP (how well each region knows you: Stranger, Known, Friend, Trusted, Hero). Quests notice what you've already done, so you can do things in any order. Markers on the map (gold for the story, blue for the rest) can be turned off in the journal. Beating an Arena Leader and winning a shard raise your reputation in that region. Quest rewards are given once only.
 
 ## Homestead
 
@@ -170,6 +174,7 @@ node tests/e2e-craft.js                        # refinery jobs, forge, kitchen, 
 node tests/e2e-towns.js                        # shops (D-pad and touch), selling, healing centres, homestead road
 node tests/e2e-vehicles.js                     # garage, riding rules, parking, buying, boats, flight, helicopter, quests
 node tests/e2e-mapview.js                       # map and flight picker on a phone: full screen, zoom, touch pan
+node tests/e2e-quests.js                        # quests, journal, reputation, rewards once, Test Mode completes all
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles
