@@ -78,7 +78,7 @@ const OUT = process.env.OUT || '/tmp';
         return null;
       },
       go(id, x, y) { const s = T.faceSpot(id, x, y); if (!s) throw new Error('no spot at ' + x + ',' + y); G.placePlayer(s.px, s.py, s.dir); return s; },
-      obj(id, prompt, nth) { const m = G.MAPS[id]; const l = m.objs.filter(o => (typeof o.prompt === 'function' ? o.prompt() : o.prompt) === prompt); return l[nth || 0] || null; },
+      obj(id, prompt, nth) { const m = G.MAPS[id]; const l = m.objs.filter(o => (typeof o.prompt === 'function' ? o.prompt() : o.prompt) === prompt && T.faceSpot(id, o.x, o.y)); return l[nth || 0] || null; },
       spy(use) { const o = G.homeUse[use]; if (o._spy) return; const f = async b => { window.__hits.push(use + ':' + b.id); return o(b); }; f._spy = true; f._orig = o; G.homeUse[use] = f; },
       unspy() { for (const k of Object.keys(G.homeUse)) if (G.homeUse[k]._spy) G.homeUse[k] = G.homeUse[k]._orig; },
     };
