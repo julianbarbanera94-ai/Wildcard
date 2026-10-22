@@ -135,7 +135,10 @@ const hash = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.54
 })();
 // ---- World expansion exits (docs/WORLD.md) ----
 (function () {
-  const { carveExit, gate } = G.mk, m = G.MAPS.ridge;
-  carveExit(m, 'N', 36, 'cloudpeak', 24, 58, gate(3, 'CLOUDPEAK MOUNTAINS')); carveExit(m, 'E', 40, 'lakeside', 1, 24);
+  const { carveExit, gate, rect: rect_ } = G.mk, m = G.MAPS.ridge;
+  // North exit moved east to x 46 (the old x 36 ran through the Forge); it climbs the lookout shelf. East exit moved down to the
+  // foot of the ridge (y 45) so it no longer cuts the whole cliff band.
+  carveExit(m, 'N', 46, 'cloudpeak', 24, 58, gate(3, 'CLOUDPEAK MOUNTAINS')); carveExit(m, 'E', 45, 'lakeside', 1, 24);
+  rect_(m, 46, 5, 2, 1, 'p');
 })();
 })();

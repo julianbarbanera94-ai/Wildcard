@@ -44,7 +44,7 @@ const p = world.p;
 // The lead creature trails one tile behind the player. It steps into the tile the player just left.
 const fol = world.f = { x: 0, y: 0, tx: 0, ty: 0 };
 function leadCreature() { const P = G.state && G.state.party; if (!P || !P.length) return null; return P[0].hp > 0 ? P[0] : (P.find(c => c.hp > 0) || null); }
-function followBegin() { if (Math.abs(fol.x - p.x) + Math.abs(fol.y - p.y) > 1) { fol.x = p.x; fol.y = p.y; } fol.tx = p.x; fol.ty = p.y; }
+function followBegin() { if (Math.abs(fol.x - p.x) + Math.abs(fol.y - p.y) > 1) { fol.x = p.x; fol.y = p.y; } fol.tx = p.x; fol.ty = p.y; const dx = fol.tx - fol.x, dy = fol.ty - fol.y; if (dx || dy) fol.dir = dx > 0 ? RIGHT : dx < 0 ? LEFT : dy > 0 ? DOWN : UP; }
 function followEnd() { fol.x = fol.tx; fol.y = fol.ty; }
 const says = async lines => { for (const l of [].concat(lines)) await G.say(l); G.closeText(); };
 const flags = () => G.state.flags;
@@ -172,7 +172,7 @@ G.placePlayer = (x, y, dir) => {
 const tileWarp = (x, y) => world.map.warps.some(w => w.x === x && w.y === y);
 
 async function stepEntity(e, d, speed, noFollow) {
-  speed = speed || 1; e.dir = d; e.moving = true; const [dx, dy] = VEC[d];
+  speed = speed || 1; e.dir = d; e.moving = true; e.run = speed >= .75; const [dx, dy] = VEC[d];
   if (e === p && !noFollow) followBegin();
   e.tx = e.x + dx; e.ty = e.y + dy;
   for (let prog = speed; prog <= 16; prog += speed) { e.ox = dx * prog; e.oy = dy * prog; e.frame = prog < 8 ? (e.alt ? 1 : 2) : 0; await G.nextFrame(); }
@@ -460,12 +460,13 @@ function draw(ctx) {
     const prog = Math.max(Math.abs(p.ox), Math.abs(p.oy)), fx = fol.x * 16 + (fol.tx - fol.x) * prog - cx, fy = fol.y * 16 + (fol.ty - fol.y) * prog - cy;
     const st = G.SPECIES[lead.id].look.stage || 1, size = 18 + st * 3, moving = prog > 0 && prog < 16;
     const hop = moving ? Math.abs(Math.sin(prog / 16 * Math.PI * 2)) * 2 : (Math.sin(t / 22) > .85 ? 1 : 0);
-    items.push({ y: fy + cy + 16.25 - .5, draw: c => { G.drawCreatureMini(c, lead.id, fx, fy, size, t, moving, hop); grassAt(c, fx, fy, Math.round((fx + cx) / 16), Math.round((fy + cy) / 16), t); } });
+    const run = !!(G.input.held.b && !(G.vehicles && G.vehicles.riding && G.vehicles.riding())), fdir = fol.dir === undefined ? DOWN : fol.dir;
+    items.push({ y: fy + cy + 16.25 - .5, draw: c => { G.drawCreatureMini(c, lead.id, fx, fy, size, t, moving, hop, { run, dir: fdir }); grassAt(c, fx, fy, Math.round((fx + cx) / 16), Math.round((fy + cy) / 16), t); } });
   }
   for (const r of m.roamers || []) {
     const x = r.x * 16 + r.ox - cx, y = r.y * 16 + r.oy - cy; if (x < -24 || x > G.W + 8 || y < -24 || y > G.H + 8) continue;
     const size = 15 + (G.SPECIES[r.c.id].look.stage || 1) * 3, pr = Math.abs(r.ox) + Math.abs(r.oy), hop = r.moving ? Math.abs(Math.sin(pr / 16 * Math.PI * 2)) * 2.5 : 0;
-    items.push({ y: r.y * 16 + r.oy + 16.15, draw: c => { G.drawCreatureMini(c, r.c.id, x, y, size, t + r.x * 13, r.moving, hop); grassAt(c, x, y, Math.round((r.x * 16 + r.ox) / 16), Math.round((r.y * 16 + r.oy) / 16), t); if (r.alert > 0) G.drawBubble(c, x, y, t); } });
+    items.push({ y: r.y * 16 + r.oy + 16.15, draw: c => { G.drawCreatureMini(c, r.c.id, x, y, size, t + r.x * 13, r.moving, hop, { run: r.run, dir: r.dir }); grassAt(c, x, y, Math.round((r.x * 16 + r.ox) / 16), Math.round((r.y * 16 + r.oy) / 16), t); if (r.alert > 0) G.drawBubble(c, x, y, t); } });
   }
   if (world.extraDraw) world.extraDraw(items, cx, cy, t);
   for (const h of hooks.draw) h(items, cx, cy, t);

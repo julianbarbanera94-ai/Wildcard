@@ -1343,15 +1343,53 @@ G.drawChar = function (ctx, style, dir, frame, x, y, t, noShadow) {
   ctx.drawImage(fr, x + 8 - w / 2, y + 15 - h * .96 - bob, w, h);
 };
 // drawCreatureMini: a small creature (follower / roaming wild / the Joker) whose tile top-left is (x, y); size is its drawn height.
-G.drawCreatureMini = function (ctx, id, x, y, size, t, moving, hop) {
-  t = t || 0; hop = hop || 0;
-  const S = sprites(id), blink = !moving && ((t + id * 53) % 210) < 7, img = blink ? S.k : S.f;
-  let sx = 1, sy = 1;
-  if (moving) { const k = Math.min(1, Math.abs(hop) / 2); sy = .9 + k * .16; sx = 1.08 - k * .12; }
-  else { const b = Math.sin(t / 20 + id) * .025; sy = 1 + b; sx = 1 - b * .7; }
-  const lift = Math.max(0, hop), sh = 1 - Math.min(.35, lift * .08);
-  ctx.fillStyle = `rgba(30,40,60,${.22 * sh})`; ctx.beginPath(); ctx.ellipse(x + 8, y + 15, size * .3 * sh, size * .085 * sh + .6, 0, 0, TAU); ctx.fill();
+// How a species gets around on the map (decided from its types and art):
+//   fly    winged creatures hover above the ground and flap       float  ghosts, clouds and jellies drift
+//   hop    bunnies, frogs, slimes, mushrooms and fish bounce       slither  serpents and worms weave along
+//   walk   everything else steps along (and runs when hurrying)
+const FLY_WINGS = new Set(['bird', 'big', 'moth', 'bat', 'fairy', 'dragon', 'ice', 'leaf']);
+const HOP_IDS = new Set([49, 50, 59, 60, 70, 71, 72, 85, 86, 87]);   // bunnies, frogs, kangaroos
+const locoCache = {};
+G.locomotion = function (id) {
+  if (locoCache[id]) return locoCache[id];
+  const sp = G.SPECIES[id], a = C[id] || (G.CREATURE_ART && G.CREATURE_ART[id]) || {}, types = sp ? sp.types : [];
+  let m = 'walk';
+  if (types.includes('Flying') || FLY_WINGS.has(a.wing) || a.body === 'bird') m = 'fly';
+  else if (a.float || a.body === 'wisp' || a.body === 'cloud' || a.body === 'jelly' || types.includes('Ghost')) m = 'float';
+  else if (a.body === 'serpent') m = 'slither';
+  else if (HOP_IDS.has(id) || a.ear === 'bunny' || a.body === 'drop' || a.body === 'blob' || a.body === 'shroom' || a.body === 'fish') m = 'hop';
+  return locoCache[id] = m;
+};
+// A small creature on the map whose tile top-left is (x, y); size is its drawn height.
+// opts (all optional): { run: hurrying, dir: 0 down 1 up 2 left 3 right }. `hop` is kept for old callers and ignored.
+G.drawCreatureMini = function (ctx, id, x, y, size, t, moving, hop, opts) {
+  t = t || 0; opts = opts || {};
+  const S = sprites(id), loco = G.locomotion(id), run = !!opts.run, dir = opts.dir === undefined ? 0 : opts.dir;
+  const blink = !moving && loco !== 'fly' && ((t + id * 53) % 210) < 7, img = blink ? S.k : S.f;
+  const lean = dir === 3 ? 1 : dir === 2 ? -1 : 0;
+  let lift = 0, rot = 0, sx = 1, sy = 1, dx = 0, dust = false;
+  if (loco === 'fly') {   // always airborne: hover, flap, lean into the flight
+    lift = 3.6 + Math.sin(t / 15 + id) * 1.4 + (moving ? 1.2 : 0);
+    const f = Math.sin(t * (moving ? (run ? .8 : .6) : .3) + id);
+    sx = 1 + f * .05; sy = 1 - f * .035; rot = moving ? lean * (run ? .16 : .1) : Math.sin(t / 40 + id) * .03;
+  } else if (loco === 'float') {
+    lift = 2.4 + Math.sin(t / 22 + id) * 1.3; rot = (moving ? lean * .09 : 0) + Math.sin(t / 32 + id) * .035; sy = 1 + Math.sin(t / 26 + id) * .025; sx = 1 - (sy - 1) * .7;
+  } else if (loco === 'hop') {
+    if (moving) { const p = ((t * (run ? .05 : .033) + id * .17) % 1), s = Math.sin(p * Math.PI); lift = s * (run ? 5.4 : 3.8); sy = .86 + s * .2; sx = 1.12 - s * .16; rot = lean * s * .08; }
+    else { const b = Math.sin(t / 20 + id) * .03; sy = 1 + b; sx = 1 - b * .7; }
+  } else if (moving) {   // walk, run or slither: two steps per tile, a rocking body, a little dust when hurrying
+    const ph = t * (run ? .66 : .42) + id, st = Math.sin(ph), slither = loco === 'slither';
+    lift = Math.abs(st) * (run ? 1.7 : 1.05) * (slither ? .4 : 1);
+    rot = st * (slither ? .13 : run ? .09 : .06) + lean * (run ? .1 : .035);
+    sx = 1 + Math.cos(ph * 2) * .025; sy = 1 - Math.cos(ph * 2) * .02; if (slither) dx = Math.sin(ph) * 1.6;
+    dust = run && Math.abs(st) < .25;
+  } else { const b = Math.sin(t / 20 + id) * .025; sy = 1 + b; sx = 1 - b * .7; }
+  const sh = Math.max(.55, 1 - lift * .07), gx = x + 8 + dx, gy = y + 15;
+  ctx.fillStyle = `rgba(30,40,60,${.22 * sh})`; ctx.beginPath(); ctx.ellipse(gx, gy, size * .3 * sh, size * .085 * sh + .6, 0, 0, TAU); ctx.fill();
+  if (dust) { ctx.fillStyle = 'rgba(255,250,240,.55)'; const bx = gx - (dir === 3 ? 4 : dir === 2 ? -4 : 0), by = gy - (dir === 1 ? 4 : dir === 0 ? -1 : 0); for (const [ox, oy, r] of [[-2, 0, 1.6], [1.5, -1.2, 1.2], [3, .4, 1]]) { ctx.beginPath(); ctx.arc(bx + ox, by + oy, r, 0, TAU); ctx.fill(); } }
   const w = size * sx, h = size * sy;
-  ctx.drawImage(img, x + 8 - w / 2, y + 15.4 - h * .955 - hop, w, h);
+  ctx.save(); ctx.translate(gx, gy + .4 - lift); if (rot) ctx.rotate(rot);
+  ctx.drawImage(img, -w / 2, -h * .955, w, h);
+  ctx.restore();
 };
 })();
