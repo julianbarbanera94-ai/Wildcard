@@ -43,7 +43,7 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   building(m, 16, 21, 5, 'Q', -1); building(m, 6, 21, 5, 'R', -1); building(m, 47, 21, 5, 'Q', -1); building(m, 37, 21, 5, 'R', -1);   // boathouses with doors toward the road
   set(m, 18, 23, 'D');
   scatter(m, 'd', [[15, 19], [16, 19], [43, 19], [46, 19], [21, 20], [24, 20], [33, 20], [36, 20]]);
-  scatter(m, 'l', [[13, 14], [14, 14], [44, 14], [45, 14], [22, 17], [35, 17]]);
+  scatter(m, 'l', [[22, 17], [35, 17]]);
   // plaza avenue and the Arena
   rect(m, 20, 26, 2, 14, '%'); rect(m, 33, 26, 2, 14, '%'); rect(m, 20, 32, 15, 4, '%');
   building(m, 23, 29, 9, 'U', 4);                                   // Lakeside Arena, door (27,31)
@@ -91,7 +91,7 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   npc(m, 45, 25, DOWN, 'bug', ['The boathouses hold canoes. Nobody is allowed to borrow them. I tried.'], { roam: 1 });
   npc(m, 30, 37, LEFT, 'mom', ['Our town keeps the Healing Centre open all night. Anyone may rest here.'], { roam: 1 });
   npc(m, 40, 27, DOWN, 'clerk', ['The Marina stocks Aqua Orbs. Water creatures love the shiny ones.'], { still: true });
-  npc(m, 12, 37, RIGHT, 'camper', ['Frostmere is far east past Glacier Pass. Cold, so cold.'], { roam: 1 });
+  npc(m, 13, 37, RIGHT, 'camper', ['Frostmere is far east past Glacier Pass. Cold, so cold.'], { roam: 1 });
   npc(m, 51, 38, DOWN, 'old', ['At night the lake mirrors the stars. I come out here every evening.'], { roam: 1 });
   npc(m, 29, 42, UP, 'boy', ['I am saving for a Pulse Orb. The Marina sells them!'], { roam: 1 });
 

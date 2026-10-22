@@ -31,7 +31,7 @@ const H = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
   scatter(m, 'N', [[23, 3], [24, 3], [39, 3], [40, 3], [30, 1], [33, 1], [27, 5], [36, 5], [24, 5], [39, 5]]);
   rect(m, 31, 6, 2, 1, 'D');
   rect(m, 18, 7, 28, 2, 'g'); rect(m, 31, 7, 2, 7, '%');
-  scatter(m, 'l', [[29, 7], [34, 7], [30, 8], [33, 8]]); rect(m, 20, 7, 3, 2, 'f'); rect(m, 41, 7, 3, 2, 'f'); scatter(m, 'r', [[19, 7], [45, 8], [18, 8]]);
+  scatter(m, 'l', [[30, 7], [33, 7]]); rect(m, 20, 7, 3, 2, 'f'); rect(m, 41, 7, 3, 2, 'f'); scatter(m, 'r', [[19, 7], [45, 8], [18, 8]]);
   sign(m, 28, 8, 'CLOUDPEAK CASTLE\nThe gates are shut until a later chapter.');
 
   // switchback trails
@@ -56,7 +56,7 @@ const H = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
   scatter(m, 'r', [[11, 54], [22, 54], [43, 55], [47, 50], [2, 50], [10, 56], [59, 49], [58, 57]]);
   rect(m, 12, 48, 6, 1, 'f'); rect(m, 27, 56, 3, 1, 'f');
   sign(m, 26, 56, 'CLOUDPEAK MOUNTAINS\nStone stairs, hanging bridges and thin air. The castle on the summit has been shut for ages.');
-  m.objs.push({ x: 2, y: 55, id: 'cloudpeak_pot', item: 'Super Potion', ball: true });
+  m.objs.push({ x: 4, y: 55, id: 'cloudpeak_pot', item: 'Super Potion', ball: true });
   trainer(m, 'cloudpeak_hiker1', 34, 52, UP, 'hiker', { name: 'GRIT', cls: 'MOUNTAINEER', sight: 2, team: [[14, 26], [129, 27], [141, 28]], pre: 'Fresh legs! Let us see if they last past the first ledge.', win: 'My knees hold, but my team does not.', post: 'Take the east switchback. The rock is firmer there.', prize: 1700 });
   npc(m, 27, 55, DOWN, 'camper', ['This is the foothill. Real Cloudpeak starts at the first cliff.', 'Wild Rock and Flying creatures live in the long grass.'], { roam: 1 });
 
@@ -82,7 +82,7 @@ const H = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
   m.objs.push({ x: 61, y: 23, id: 'cloudpeak_frost', item: 'Frost Orb', ball: true });
   sign(m, 59, 19, 'GLACIER PASS\nEast: snow, ice and a very cold wind. Five badges to pass.');
   trainer(m, 'cloudpeak_ice1', 55, 19, DOWN, 'lass', { name: 'NORA', cls: 'SKIER', sight: 1, team: [[57, 29], [36, 30], [147, 31]], pre: 'Practising for the winter slopes! Join in?', win: 'Slippery!', post: 'The Pass beyond is all snow.', prize: 1850 });
-  npc(m, 30, 22, DOWN, 'old', ['A little stream runs from the top waterfall to this pool. Listen, you can hear it!'], { still: true });
+  npc(m, 28, 22, DOWN, 'old', ['A little stream runs from the top waterfall to this pool. Listen, you can hear it!'], { still: true });
 
   // ---- T4: the high shelf below the summit stair, a second cave and the stone stair ----
   rect(m, 14, 15, 12, 2, 'G'); rect(m, 34, 15, 4, 2, 'G'); rect(m, 44, 15, 6, 2, 'G'); rect(m, 22, 11, 8, 1, 'g');
