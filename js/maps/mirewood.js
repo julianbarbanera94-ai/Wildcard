@@ -16,7 +16,8 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   rect(m, 30, 41, 6, 1, 'w'); rect(m, 52, 41, 4, 1, 'w'); rect(m, 22, 8, 3, 1, 'w'); rect(m, 64, 8, 10, 1, 'w'); rect(m, 66, 7, 6, 1, 'w');
   rect(m, 14, 16, 1, 5, 'g'); rect(m, 14, 28, 2, 4, 'g');
   border(m, '#');
-  warp(m, 0, 24, 'lanternrest', 58, 24, LEFT); warp(m, 0, 25, 'lanternrest', 58, 25, LEFT);
+  const g2 = G.mk.gate(2, 'DRIFTWOOD PORT');   // the west road now leads to Driftwood Port
+  warp(m, 0, 24, 'driftwood', 50, 22, LEFT, g2); warp(m, 0, 25, 'driftwood', 50, 23, LEFT, g2);
   rect(m, 0, 24, 1, 2, 'p');
 
   // -- west woods: entry path, sign, a hidden pond and the north-west build clearing (3..10, 3..10) --
@@ -112,5 +113,10 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   npc(m, 1, 5, RIGHT, 'bug', ['Glowcaps glow because they drink moonlight. That is what Granny Bogroot says, anyway.', 'Mix two of them with a spoon of Honey at a Forge and you get a Herb Salve.']);
   for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Shop', fn: () => G.openShop ? G.openShop('apothecary') : G.story.says('The apothecary is closed for now.') });
   warp(m, 3, 6, 'mirewood', 6, 22, DOWN);
+})();
+// ---- World expansion exits (docs/WORLD.md) ----
+(function () {
+  const { carveExit, gate } = G.mk, m = G.MAPS.mirewood;
+  carveExit(m, 'N', 38, 'sunmeadow', 36, 42); carveExit(m, 'E', 24, 'stonebridge', 1, 22); carveExit(m, 'S', 38, 'tidefall', 30, 1, gate(3, 'TIDEFALL ISLANDS'));
 })();
 })();

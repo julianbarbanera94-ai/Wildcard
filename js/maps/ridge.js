@@ -133,4 +133,9 @@ const hash = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.54
   // ore-bearing boulders along the cave walls (Iron Ore and Coal with a Pickaxe), clear of the routes
   scatter(m, 'r', [[15, 47], [24, 46], [7, 28], [31, 27], [8, 38], [31, 40], [14, 36], [8, 19], [37, 14], [30, 19], [31, 48]]);
 })();
+// ---- World expansion exits (docs/WORLD.md) ----
+(function () {
+  const { carveExit, gate } = G.mk, m = G.MAPS.ridge;
+  carveExit(m, 'N', 36, 'cloudpeak', 24, 58, gate(3, 'CLOUDPEAK MOUNTAINS')); carveExit(m, 'E', 40, 'lakeside', 1, 24);
+})();
 })();

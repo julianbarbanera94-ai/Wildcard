@@ -96,7 +96,7 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   m.labels = [{ x: 26, y: 3, text: 'HEALING POST', style: 'heal' }, { x: 35, y: 3, text: 'TIDEWHEEL MARKET', style: 'shop' }, { x: 42, y: 3, text: 'TIDEWHEEL MOTORS', style: 'craft' }];
   warp(m, 26, 5, 'shoreheal', 3, 5, UP); warp(m, 35, 5, 'market', 3, 5, UP); warp(m, 42, 5, 'motors', 4, 6, UP);
 
-  warp(m, 30, 0, 'lanternrest', 28, 50, UP); warp(m, 31, 0, 'lanternrest', 29, 50, UP);
+  warp(m, 30, 0, 'stonebridge', 27, 42, UP); warp(m, 31, 0, 'stonebridge', 28, 42, UP);   // the north road leads to Stonebridge Town
 })();
 (function () {
   const m = interior('shoreheal', 'SHORE HEALING POST', 8, 7, 3);

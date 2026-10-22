@@ -44,5 +44,67 @@ function trainer(m, id, x, y, dir, style, t) {
 }
 
 
-G.mk = { maps, newMap, set, rect, border, scatter, building, interior, warp, npc, sign, trainer, ST, DOWN, UP, LEFT, RIGHT };
+
+// ---- World-expansion helpers (docs/WORLD.md) -----------------------------------
+// A badge gate for a warp's `need`: blocks until the player holds n badges (G.badgeGate comes from js/maps/zz_arenas.js).
+const gate = (n, place) => () => { if (!G.state.flags.starter) return 'It is not safe beyond the lamplight without a Bondling.'; return G.badgeGate ? G.badgeGate(n, place) : null; };
+// A 2-wide exit on a map edge. edge 'N'|'S'|'W'|'E'; at = first tile along the edge; (ax, ay) = arrival of the first tile on `to`.
+function edgeExit(m, edge, at, to, ax, ay, need, along) {
+  // `along`: which way the second arrival tile steps ('x' or 'y'); by default the same way as this edge runs
+  along = along || (edge === 'N' || edge === 'S' ? 'x' : 'y');
+  for (let k = 0; k < 2; k++) {
+    const tx = ax + (along === 'x' ? k : 0), ty = ay + (along === 'y' ? k : 0);
+    if (edge === 'N') warp(m, at + k, 0, to, tx, ty, UP, need);
+    if (edge === 'S') warp(m, at + k, m.h - 1, to, tx, ty, DOWN, need);
+    if (edge === 'W') warp(m, 0, at + k, to, tx, ty, LEFT, need);
+    if (edge === 'E') warp(m, m.w - 1, at + k, to, tx, ty, RIGHT, need);
+  }
+}
+// Encounter table from creature types: base forms that have any of `types` (weight 8, or `w`), plus evolved forms
+// rarely (weight 2) when the level range is high enough. `pick` limits how many species; `only` adds ids by hand.
+function wild(types, lo, hi, o) {
+  o = o || {};
+  const all = Object.values(G.SPECIES), pre = new Set(all.filter(s => s.evo).map(s => s.evo[1]));
+  const legend = new Set([25, 153, 154, 155, 156]);
+  const fits = s => !legend.has(s.id) && s.types.some(t => types.includes(t));
+  const base = all.filter(s => fits(s) && !pre.has(s.id));
+  const evo = all.filter(s => fits(s) && pre.has(s.id) && hi >= 18);
+  const seedOf = id => ((id * 2654435761) ^ (lo * 97 + hi)) >>> 0, byHash = (a, b) => seedOf(a.id) - seedOf(b.id);
+  const n = o.pick || 7, b = base.sort(byHash).slice(0, n), e = evo.sort(byHash).slice(0, Math.max(1, n >> 2));
+  const tab = b.map(s => [s.id, lo, hi, o.w || 8]).concat(e.map(s => [s.id, Math.max(lo, hi - 4), hi, 2]));
+  for (const id of o.only || []) if (!tab.some(t => t[0] === id)) tab.push([id, lo, hi, 3]);
+  return tab;
+}
+// A placeholder outdoor map: grass in a ring of trees with dirt paths from every exit to the middle.
+// exits: [[edge, at, to, ax, ay, need?], ...]. Region owners replace these with real maps (same id, size and exits).
+function stubMap(id, name, w, h, exits, o) {
+  const m = newMap(id, name, w, h, 'g', Object.assign({ music: 'route' }, o));
+  border(m, '#'); rect(m, 1, 1, w - 2, 1, '#'); rect(m, 1, h - 2, w - 2, 1, '#'); rect(m, 1, 1, 1, h - 2, '#'); rect(m, w - 2, 1, 1, h - 2, '#');
+  const cx = w >> 1, cy = h >> 1;
+  for (const [edge, at] of exits) {
+    if (edge === 'N' || edge === 'S') { rect(m, at, Math.min(cy, edge === 'N' ? 0 : cy), 2, edge === 'N' ? cy + 1 : h - cy, 'p'); rect(m, Math.min(at, cx), cy, Math.abs(at - cx) + 2, 2, 'p'); }
+    else { rect(m, Math.min(cx, edge === 'W' ? 0 : cx), at, edge === 'W' ? cx + 1 : w - cx, 2, 'p'); rect(m, cx, Math.min(at, cy), 2, Math.abs(at - cy) + 2, 'p'); }
+  }
+  for (const [edge, at, to, ax, ay, need, along] of exits) edgeExit(m, edge, at, to, ax, ay, need, along);
+  m.landing = { x: cx, y: cy }; m.stub = true;
+  return m;
+}
+
+// Cut a 2-wide path in from a map edge until it meets open ground (water becomes a bridge), then add the exit.
+function carveExit(m, edge, at, to, ax, ay, need, along) {
+  const solid = (x, y) => { const c = m.t[y] && m.t[y][x]; return !c || (G.TILES[c] && G.TILES[c].solid); };
+  const step = edge === 'N' ? [0, 1] : edge === 'S' ? [0, -1] : edge === 'W' ? [1, 0] : [-1, 0];
+  let x = edge === 'E' ? m.w - 1 : edge === 'W' ? 0 : at, y = edge === 'S' ? m.h - 1 : edge === 'N' ? 0 : at, open = 0;
+  for (let i = 0; i < Math.max(m.w, m.h) / 2 && open < 2; i++) {
+    const cells = edge === 'N' || edge === 'S' ? [[x, y], [x + 1, y]] : [[x, y], [x, y + 1]];
+    const wasOpen = i > 1 && cells.every(([cx, cy]) => !solid(cx, cy));
+    if (wasOpen) open++; else { open = 0; for (const [cx, cy] of cells) set(m, cx, cy, m.t[cy][cx] === 'w' ? 'V' : 'p'); }
+    x += step[0]; y += step[1];
+  }
+  edgeExit(m, edge, at, to, ax, ay, need, along);
+}
+// Ferry routes (dock to dock; each map in a route sets m.dock to a walkable tile): [from, to, badges].
+const FERRIES = [['driftwood', 'verdant', 3], ['driftwood', 'tidefall', 3], ['shore', 'moonlit', 8], ['cobalt', 'moonlit', 8], ['frostmere', 'aurora', 8]];
+G.mk_FERRIES = FERRIES;
+G.mk = { FERRIES, maps, newMap, set, rect, border, scatter, building, interior, warp, npc, sign, trainer, ST, DOWN, UP, LEFT, RIGHT, gate, edgeExit, carveExit, wild, stubMap };
 })();

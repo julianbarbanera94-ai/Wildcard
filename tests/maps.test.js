@@ -46,6 +46,7 @@ t('everything in the world is reachable on foot from the start (trainers treated
     const [id, x, y] = queue.pop(); const m = maps[id]; (reached[id] = reached[id] || new Set()).add(x + ',' + y);
     const w = m.warps.find(w => w.x === x && w.y === y);
     if (w) { const k = key(w.to, w.tx, w.ty); if (!seen.has(k)) { seen.add(k); queue.push([w.to, w.tx, w.ty]); } }
+    if (m.dock && m.dock.x === x && m.dock.y === y) for (const [a, b] of G.mk.FERRIES) for (const [f, to] of [[a, b], [b, a]]) if (f === id && maps[to] && maps[to].dock) { const k = key(to, maps[to].dock.x, maps[to].dock.y); if (!seen.has(k)) { seen.add(k); queue.push([to, maps[to].dock.x, maps[to].dock.y]); } }
     for (const [dx, dy] of VEC) { const nx = x + dx, ny = y + dy, k = key(id, nx, ny); if (!seen.has(k) && !blocked(m, nx, ny)) { seen.add(k); queue.push([id, nx, ny]); } }
   }
   for (const m of Object.values(maps)) {
@@ -65,10 +66,12 @@ t('story chain exists: starter orbs, three shard holders, tower pedestals, Joker
   for (const m of Object.values(maps)) for (const e of m.npcs) if (e.trainer) for (const [id, l] of e.trainer.team) assert(G.SPECIES[id] && l >= 1, `${e.trainer.id}: bad team entry`);
 });
 t('regions are connected back to the hub both ways', () => {
-  for (const r of ['sunmeadow', 'mirewood', 'ridge', 'shore']) {
+  for (const r of ['sunmeadow', 'ridge', 'stonebridge', 'sandsreach']) {
     assert(maps.lanternrest.warps.some(w => w.to === r), `hub has no exit to ${r}`); assert(maps[r].warps.some(w => w.to === 'lanternrest'), `${r} has no way back`);
   }
   assert(maps.ridge.warps.some(w => w.to === 'mine') && maps.mine.warps.some(w => w.to === 'ridge'));
+  // every warp between two outdoor maps has a way back
+  for (const m of Object.values(maps)) if (m.outdoor) for (const w of m.warps) if (maps[w.to] && maps[w.to].outdoor && w.to !== 'homestead' && m.id !== 'homestead') assert(maps[w.to].warps.some(b => b.to === m.id), `${m.id} -> ${w.to} has no way back`);
 });
 t('species habitats name real encounter maps, and every species can be obtained', () => {
   assert.deepEqual(G.badHabitats, [], 'habitats pointing at maps without encounter tables');

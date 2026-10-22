@@ -139,4 +139,9 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   for (let x = 3; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Shop', fn: () => G.openShop ? G.openShop('seeds') : G.story.says('The seed stand is closed for now.') });
   warp(m, 3, 6, 'sunmeadow', 61, 18, DOWN);
 })();
+// ---- World expansion exits (docs/WORLD.md) ----
+(function () {
+  const { carveExit, gate } = G.mk, m = G.MAPS.sunmeadow;
+  carveExit(m, 'W', 20, 'sunhaven', 62, 24); carveExit(m, 'N', 36, 'evergreen', 46, 50, gate(1, 'EVERGREEN FOREST')); carveExit(m, 'S', 36, 'mirewood', 38, 1);
+})();
 })();

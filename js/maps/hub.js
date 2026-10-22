@@ -127,11 +127,14 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
   const need = () => G.state.flags.starter ? null : 'LANTERN WARDEN: Hold on! It is not safe beyond the lamplight without a Bondling. Elder Wren is waiting for you at the Hearth Shrine.';
   warp(m, 15, 7, 'lodge', 5, 6, UP); warp(m, 7, 15, 'cottage', 4, 5, UP); warp(m, 39, 6, 'shrine', 5, 7, UP); warp(m, 29, 21, 'tower', 6, 8, UP); warp(m, 43, 30, 'post', 3, 6, UP);
   warp(m, 0, 24, 'sunmeadow', 70, 20, LEFT, need); warp(m, 0, 25, 'sunmeadow', 70, 21, LEFT, need);
-  warp(m, 59, 24, 'mirewood', 1, 24, RIGHT, need); warp(m, 59, 25, 'mirewood', 1, 25, RIGHT, need);
+  // the east road now leads into Sandsreach Desert (2 badges); Mirewood is reached from Sunmeadow and Stonebridge
+  const g2 = G.mk.gate(2, 'SANDSREACH DESERT');
+  warp(m, 59, 24, 'sandsreach', 1, 24, RIGHT, g2); warp(m, 59, 25, 'sandsreach', 1, 25, RIGHT, g2);
   warp(m, 28, 0, 'ridge', 24, 50, UP, need); warp(m, 29, 0, 'ridge', 25, 50, UP, need);
   warp(m, 50, 0, 'homestead', 27, 42, UP, need); warp(m, 51, 0, 'homestead', 28, 42, UP, need);
   warp(m, 23, 6, 'yard', 3, 6, UP);
-  warp(m, 28, 51, 'shore', 30, 1, DOWN, need); warp(m, 29, 51, 'shore', 31, 1, DOWN, need);
+  // the south road now leads to Stonebridge Town (Tidepool Shore lies beyond it)
+  warp(m, 28, 51, 'stonebridge', 27, 1, DOWN, need); warp(m, 29, 51, 'stonebridge', 28, 1, DOWN, need);
   const gate = () => G.state.flags.lanternLit ? null : 'The archway is sealed by a faint, flickering light. Relight the Great Lantern first.';
   warp(m, 52, 38, 'hollow', 18, 30, UP, gate); warp(m, 53, 38, 'hollow', 19, 30, UP, gate);
 

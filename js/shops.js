@@ -303,6 +303,9 @@ function wrapS(s, w) {
   return out;
 }
 
+// Shops defined by the region map files (they load before this file) as G.SHOPS_EXTRA = { id: def }.
+Object.assign(G.SHOPS, G.SHOPS_EXTRA || {});
+
 G.openShop = async function (id) {
   const shop = G.SHOPS[id];
   if (!shop) { await says('This shop is closed.'); return; }

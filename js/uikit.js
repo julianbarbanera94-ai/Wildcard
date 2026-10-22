@@ -208,7 +208,7 @@ G.drawMenu = function (ctx, m) {
 // ---- World labels and hints ------------------------------------------------------
 // A name plate centred at (cx, y) in screen units: a rounded board with the building's name.
 // style: 'shop' (default warm wood), 'heal' (pink cross), 'home' (green), 'craft' (slate).
-const PLATE = { shop: ['#fff6e0', '#c88a3c', '#6a4210'], heal: ['#fff0f4', '#ff6b8a', '#9a2a48'], home: ['#f0ffe8', '#5fae3f', '#2a5a1a'], craft: ['#eef2fa', '#6a7ea8', '#26304a'] };
+const PLATE = { shop: ['#fff6e0', '#c88a3c', '#6a4210'], heal: ['#fff0f4', '#ff6b8a', '#9a2a48'], home: ['#f0ffe8', '#5fae3f', '#2a5a1a'], craft: ['#eef2fa', '#6a7ea8', '#26304a'], arena: ['#fff4d0', '#d89a1a', '#6a3a08'], town: ['#eef8ff', '#3a8ad8', '#123a6a'] };
 G.drawSignPlate = function (ctx, text, cx, y, t, style) {
   const [bg, rim, ink] = PLATE[style] || PLATE.shop, f = G.FONT_S || G.FONT;
   ctx.save(); ctx.font = f; const w = Math.ceil(ctx.measureText(text).width) + 10, h = 10, x = Math.round(cx - w / 2), yy = Math.round(y - h - 2);
