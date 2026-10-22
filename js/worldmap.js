@@ -733,7 +733,7 @@ G.worldMapScreen = async function () {
       G.tapZone(178, py0 + 16, 52, 11, () => { close = true; });
     },
   };
-  G.worldMap = api; if (G.vehicles) G.vehicles._map = api;
+  api.scene = scene; G.worldMap = api; if (G.vehicles) G.vehicles._map = api;
   G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = scene; await G.fadeTo(0, 8);
   for (;;) {
     await G.nextFrame();

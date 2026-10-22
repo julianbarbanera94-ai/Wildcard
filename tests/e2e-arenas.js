@@ -36,6 +36,8 @@ const OUT = process.env.OUT || '/tmp';
 
   // a strong party (Lv100) and a fresh badge slate
   await ev(() => { const S = G.state; S.flags.starter = true; S.party.length = 0; S.party.push(G.makeCreature(154, 100), G.makeCreature(155, 100), G.makeCreature(153, 100)); S.cheats = { on: true, god: true }; S.money = 1000;
+    const best = Object.keys(G.MOVES).filter(k => G.MOVES[k].pow > 0 && !G.MOVES[k].recoil).sort((x, y) => G.MOVES[y].pow - G.MOVES[x].pow)[0];   // one big attack, so battles end fast
+    S.party.forEach(c => { c.moves = [{ id: best, pp: 99 }]; });
     for (const b of G.BADGES) delete S.flags['badge_' + b.id]; });
 
   // 0) data: 8 badges, every arena has a Leader, 2-3 trainers, unique ids and teams of the right type at the WORLD.md levels

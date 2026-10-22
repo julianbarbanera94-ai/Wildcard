@@ -285,25 +285,12 @@ fs.mkdirSync(OUT, { recursive: true });
   await ev(() => document.getElementById('sheet').remove());
   step('boats: launch from a shore, speed (rowboat ' + row + ' / motorboat ' + mot + ' frames per tile), land refused, step ashore and re-board, indoors refused, garage BOATS list and MOOR NEARBY, shop, recipes, TRAVEL');
 
-  // 8) World map: opened from inside a house it marks the region outside; unvisited places read ???; B closes it
-  await ev(() => { setup('cottage', 4, 4, 1); G.state.visited = { lanternrest: true, sunmeadow: true }; G.state.flags.shard_meadow = true; });
+  // 8) The world map moved to js/worldmap.js (its own tests): just check it opens and B closes it
+  await ev(() => { setup('cottage', 4, 4, 1); });
   await ev(() => G.runWorld(() => G.worldMapScreen()));
-  await until(() => G.vehicles._map && G.scene === G.vehicles._map.scene && G.ui.fade.a === 0, 4000, 'map screen');
-  assert.equal(await ev(() => G.vehicles._map.here), 'lanternrest', 'you are here: Lanternrest (outside the cottage)');
-  await page.waitForTimeout(400); await shot('world-map');
-  assert.match(await ev(() => G.vehicles._map.desc), /hub village.*healing/);
-  await key('ArrowLeft'); await page.waitForTimeout(100);
-  assert.equal(await ev(() => G.vehicles._map.nodes[G.vehicles._map.sel].id), 'sunmeadow');
-  assert.match(await ev(() => G.vehicles._map.desc), /windmill.*Ember Shard won/);
-  await key('ArrowRight'); await key('ArrowRight'); await page.waitForTimeout(100);
-  assert.equal(await ev(() => G.vehicles._map.nodes[G.vehicles._map.sel].id), 'mirewood');
-  assert.equal(await ev(() => G.vehicles._map.desc), "You haven't been here yet.");
-  await ev(() => { G.vehicles._map; }); await key('ArrowDown'); await page.waitForTimeout(100);
-  assert.equal(await ev(() => G.vehicles._map.nodes[G.vehicles._map.sel].id), 'hollow');
-  assert.match(await ev(() => G.vehicles._map.desc), /Sealed/); await shot('world-map-hollow');
+  await until(() => G.scene !== G.world.scene && G.ui.fade.a === 0, 4000, 'map screen'); await page.waitForTimeout(300); await shot('world-map');
   await key('x'); await until(() => !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0, 4000, 'map closed');
-  assert.equal(await ev(() => G.world.mapId), 'cottage');
-  step('world map: you-are-here for interiors, ??? for unvisited, Hollow sealed, D-pad descriptions, B closes');
+  step('world map opens from anywhere and B closes it');
 
   assert.deepEqual(errors, [], 'no page errors: ' + errors.join(' / '));
   console.log('vehicles e2e: all passed');

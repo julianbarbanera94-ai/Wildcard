@@ -273,7 +273,7 @@ function paintLane(c, a) {
 // Waterfall face (drawn over a water-class tile): rock walls on each side, falling water, foam where it lands, lip on top.
 function paintFall(c, dm, below, above, v, fi) {
   const F = (CB.cliff || MPAL.E).f, n = dm & 1, e = dm & 2, s = dm & 4, w = dm & 8;
-  const L = w ? 0 : 2.4, Rr = e ? 16 : 13.6;
+  const L = w ? 0 : 3, Rr = e ? 16 : 13;
   c.fillStyle = lg(c, 0, 0, 0, 16, F[0], F[1], F[2]); c.fillRect(0, 0, 16, 16);
   c.save(); c.beginPath(); c.rect(L, 0, Rr - L, 16); c.clip();
   c.fillStyle = lg(c, 0, 0, 0, 16, '#d8f6ff', '#9ce2f6', '#6cc8ea'); c.fillRect(L, 0, Rr - L, 16);
@@ -292,8 +292,15 @@ function paintFall(c, dm, below, above, v, fi) {
     c.fillStyle = lg(c, 0, 10, 0, 16, 'rgba(255,255,255,0)', 'rgba(255,255,255,.7)'); c.fillRect(L, 10, Rr - L, 6);
   }
   c.restore();
-  if (!w) { c.fillStyle = lg(c, 0, 0, 3, 0, F[2], F[1]); c.fillRect(0, 0, L + .6, 16); c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(.4, 0, .6, 16); c.fillStyle = 'rgba(20,10,30,.25)'; c.fillRect(L - .3, 0, .5, 16); }
-  if (!e) { c.fillStyle = lg(c, 13, 0, 16, 0, F[1], F[2]); c.fillRect(Rr - .6, 0, 16 - Rr + .6, 16); c.fillStyle = 'rgba(20,10,30,.25)'; c.fillRect(Rr - .2, 0, .5, 16); }
+  const wall = (x, wd, left) => {
+    c.save(); rr(c, x, -.5, wd, 17, left ? [1.6, 0, 0, 1.6] : [0, 1.6, 1.6, 0]); c.clip();
+    c.fillStyle = lg(c, x, 0, x + wd, 0, left ? F[2] : F[1], left ? F[1] : F[2]); c.fillRect(x, 0, wd, 16);
+    c.strokeStyle = 'rgba(40,20,20,.28)'; c.lineWidth = .5; for (const yy of [4.5, 9, 13]) { c.beginPath(); c.moveTo(x, yy); c.lineTo(x + wd, yy + (left ? .4 : -.4)); c.stroke(); }
+    c.fillStyle = 'rgba(255,255,255,.22)'; c.fillRect(left ? x + .5 : x + wd - 1.3, 0, .8, 16);
+    c.fillStyle = 'rgba(20,10,30,.3)'; c.fillRect(left ? x + wd - .6 : x, 0, .6, 16); c.restore();
+  };
+  if (!w) wall(-.2, L + .4, true);
+  if (!e) wall(Rr - .2, 16 - Rr + .4, false);
 }
 function paintDeck(c, ms, horiz, overWater) {   // boardwalk / bridge planks; ms = 4-bit same mask
   const n = ms & 1, e = ms & 2, s = ms & 4, w = ms & 8, I = 1.2;
@@ -1239,20 +1246,23 @@ function paintCastle(c, o, fi) {
   const S = CB.castle || ['#c4c0d2', '#a4a0b8', '#77738e', '#dcd8ea'], tw = o.tower, x0 = tw ? 1 : (o.l ? 0 : .5), x1 = tw ? 15 : (o.r ? 16 : 15.5), top = o.u ? 0 : 5, R = rng(o.v * 11 + o.ri * 3 + 5);
   const snow = CB.psnow || CB.tsnow;
   if (!o.u) {
-    c.fillStyle = lg(c, 0, -2, 0, 5, S[3], S[0]); rr(c, x0 - (tw ? .8 : 0), -1.8, x1 - x0 + (tw ? 1.6 : 0), 7, [o.l ? 0 : 1.6, o.r ? 0 : 1.6, 0, 0]); c.fill();
+    c.fillStyle = lg(c, 0, 1, 0, 5.4, S[1], S[2]); rr(c, x0 - (tw ? .8 : 0), 1.2, x1 - x0 + (tw ? 1.6 : 0), 4.6, [o.l ? 0 : 1.2, o.r ? 0 : 1.2, 0, 0]); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(x0, 1.2, x1 - x0, .5);
     const nM = tw ? 4 : 3, mw = tw ? 3 : 3.6;
     for (let i = 0; i < nM; i++) {
-      const mx = tw ? -.4 + i * 4.3 : 1 + i * 5.2 - (o.l ? 0 : 0);
-      c.fillStyle = S[2]; rr(c, mx + .3, -.2, mw, 6, [.9, .9, 0, 0]); c.fill();
-      c.fillStyle = lg(c, mx, 0, mx + mw, 0, S[3], S[0], S[1]); rr(c, mx, -.9, mw, 6, [.9, .9, 0, 0]); c.fill();
-      c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(mx + .3, -.9, mw - .6, .6);
-      if (snow) { rr(c, mx - .1, -1.5, mw + .2, 1.5, .7); c.fillStyle = '#f6fafe'; c.fill(); }
+      const mx = tw ? -.4 + i * 4.3 : 1 + i * 5.2;
+      c.fillStyle = S[2]; rr(c, mx + .5, -1.2, mw, 7, [1, 1, 0, 0]); c.fill();
+      c.fillStyle = lg(c, mx, 0, mx + mw, 0, S[3], S[0], S[1]); rr(c, mx, -2, mw, 7.2, [1, 1, 0, 0]); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(mx + .3, -2, mw - .6, .6);
+      c.fillStyle = 'rgba(50,46,80,.35)'; c.fillRect(mx, 4.4, mw, .8);
+      if (snow) { rr(c, mx - .1, -2.7, mw + .2, 1.8, .8); c.fillStyle = '#f6fafe'; c.fill(); }
     }
+    c.fillStyle = 'rgba(40,36,70,.3)'; c.fillRect(x0, 5.2, x1 - x0, .9);
   }
   if (tw) c.fillStyle = lg(c, 1, 0, 15, 0, S[2], S[1], S[0], S[3], S[1], S[2]); else c.fillStyle = lg(c, 0, top, 0, 16, S[0], S[1]);
   c.fillRect(x0, top, x1 - x0, 16 - top);
   c.save(); c.beginPath(); c.rect(x0, top, x1 - x0, 16 - top); c.clip();
-  c.strokeStyle = 'rgba(60,56,90,.3)'; c.lineWidth = .45;
+  c.strokeStyle = 'rgba(50,46,84,.42)'; c.lineWidth = .5;
   for (let yy = 4; yy < 17; yy += 4) { c.beginPath(); c.moveTo(0, yy + .5); c.lineTo(16, yy + .5); c.stroke(); const off = ((yy / 4 + o.ri) % 2) * 2.6; for (let xx = off; xx < 17; xx += 5.2) { c.beginPath(); c.moveTo(xx, yy - 3.5); c.lineTo(xx, yy + .5); c.stroke(); } }
   c.fillStyle = 'rgba(255,255,255,.14)'; for (let i = 0; i < 5; i++) c.fillRect(R() * 13, ((R() * 3) | 0) * 4 + .8, 4, 2.4);
   if (!tw && !o.l) { c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(x0, top, 1, 16); } if (!tw && !o.r) { c.fillStyle = 'rgba(30,20,60,.22)'; c.fillRect(x1 - 1.4, top, 1.4, 16); }
@@ -1450,6 +1460,110 @@ const mod = (a, b) => ((a % b) + b) % b;
 
 let lastCx = 0, lastCy = 0;
 
+// ---- Biome ambience (snow, dust, embers, fireflies, aurora, waterfall mist, lava glow) -------------
+const wispSprite = () => make('wisp', 24, 6, c => { c.save(); c.translate(12, 3); c.scale(12, 3); c.beginPath(); c.arc(0, 0, 1, 0, TAU); c.fillStyle = rgr(c, 0, 0, 1, 'rgba(255,240,200,.9)', 'rgba(255,240,200,0)'); c.fill(); c.restore(); });
+const auroraSprite = () => make('aurora', 240, 80, c => {
+  const cols = [[90, 255, 170], [60, 220, 220], [150, 120, 255]];
+  for (let x = 0; x < 240; x += .8) {
+    const w = .5 + .5 * Math.sin(x / 19) * Math.sin(x / 7.3 + 1.2), h = 26 + 34 * (.5 + .5 * Math.sin(x / 31 + 2)), k = .5 + .5 * Math.sin(x / 41), col = cols[0].map((v, i) => v + (cols[2][i] - v) * k);
+    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, `rgba(${col},0)`); g.addColorStop(.35, `rgba(${col},${.5 * w})`); g.addColorStop(.7, `rgba(${cols[1]},${.22 * w})`); g.addColorStop(1, `rgba(${cols[1]},0)`);
+    c.fillStyle = g; c.fillRect(x, 4 + 6 * Math.sin(x / 23), .9, h);
+  }
+});
+function fxLoop(ctx, W, H, n, seed, cx, par, f) { for (let i = 0; i < n; i++) f(i, hash(i, 1, seed), hash(i, 2, seed), hash(i, 3, seed)); }
+function biomeFx(ctx, m, s, B, cx, cy, t, x0, y0, x1, y1) {
+  const W = G.W, H = G.H;
+  if (B.tint) { ctx.fillStyle = B.tint; ctx.fillRect(0, 0, W, H); }
+  const ov = B.ov; if (!ov) return;
+  for (let q = 0; q < ov.length; q++) {
+    const e = ov[q];
+    if (e === 'snow') {
+      const P = glowSprite('#ffffff', 1);
+      for (let i = 0; i < 52; i++) {
+        const a = hash(i, 1, 31), b = hash(i, 2, 31), sp = .25 + hash(i, 3, 31) * .35, z = i % 3, sz = 1.4 + z * .7;
+        const px = mod(a * 997 + Math.sin(t / 55 + i) * 6 + t * .1 * (1 + z * .3) - cx * (.5 + z * .2), W + 20) - 10, py = mod(b * 613 + t * sp * (.8 + z * .3) - cy * .5, H + 20) - 10;
+        ctx.globalAlpha = .55 + .3 * z / 2; ctx.drawImage(P, px - sz, py - sz, sz * 2, sz * 2);
+      }
+      ctx.globalAlpha = 1;
+    } else if (e === 'dust') {
+      const P = wispSprite(), M = glowSprite('#fff0c8', 1);
+      for (let i = 0; i < 9; i++) {
+        const a = hash(i, 1, 41), b = hash(i, 2, 41), sp = .25 + hash(i, 3, 41) * .4;
+        const px = mod(a * 1013 + t * sp - cx * .8, W + 80) - 40, py = mod(b * 700 + Math.sin(t / 90 + i * 2) * 6 - cy * .8, H + 20) - 10;
+        ctx.globalAlpha = .1 + .1 * Math.sin(t / 50 + i * 3) ** 2; ctx.drawImage(P, px, py, 40 + (i % 3) * 14, 7);
+      }
+      for (let i = 0; i < 16; i++) {
+        const a = hash(i, 4, 41), b = hash(i, 5, 41);
+        const px = mod(a * 911 + t * (.35 + (i % 4) * .12) - cx * .9, W + 20) - 10, py = mod(b * 577 + Math.sin(t / 30 + i) * 4 - cy * .9, H + 20) - 10;
+        ctx.globalAlpha = .4; ctx.drawImage(M, px - 1, py - 1, 2.2, 2.2);
+      }
+      ctx.globalAlpha = 1;
+    } else if (e === 'embers') {
+      const P = glowSprite('#ff9a3a', 1), A = glowSprite('#9a8f9a', .9);
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 30; i++) {
+        const a = hash(i, 1, 51), b = hash(i, 2, 51), sp = .3 + hash(i, 3, 51) * .5, sz = 1.2 + hash(i, 4, 51) * 1.8;
+        const px = mod(a * 911 + Math.sin(t / 40 + i * 1.7) * 7 - cx * .8, W + 20) - 10, py = H + 10 - mod(b * 500 + t * sp, H + 30);
+        ctx.globalAlpha = (.5 + .5 * Math.sin(t / 9 + i * 2)) * .85; ctx.drawImage(P, px - sz, py - sz, sz * 2, sz * 2);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      for (let i = 0; i < 16; i++) {
+        const a = hash(i, 5, 51), b = hash(i, 6, 51), sp = .12 + hash(i, 7, 51) * .15;
+        const px = mod(a * 877 + Math.sin(t / 70 + i) * 10 + t * .06 - cx * .6, W + 20) - 10, py = mod(b * 600 + t * sp - cy * .6, H + 20) - 10;
+        ctx.globalAlpha = .35; ctx.drawImage(A, px - 1.2, py - 1.2, 2.4, 2.4);
+      }
+      ctx.globalAlpha = 1;
+    } else if (e === 'fireflies') {
+      const cols = B.flies || ['#c8ff9a', '#9ae8ff', '#ffe08a'];
+      for (let i = 0; i < 18; i++) {
+        const a = hash(i, 6, 9), b = hash(i, 7, 9);
+        const px = mod(a * 911 + Math.sin(t / 140 + i * 1.3) * 40 + t * .05 - cx, W + 40) - 20, py = mod(b * 577 + Math.cos(t / 120 + i * 2.1) * 30 - t * .04 - cy, H + 40) - 20;
+        const al = .35 + .65 * Math.max(0, Math.sin(t / 37 + i * 2.4)); if (al < .4) continue;
+        ctx.globalAlpha = al; ctx.drawImage(glowSprite(cols[i % cols.length], .9), px - 3, py - 3, 6, 6);
+      }
+      ctx.globalAlpha = 1;
+    } else if (e === 'sparkle') {
+      const P = starSprite();
+      for (let i = 0; i < 14; i++) {
+        const cyc = ((t + i * 37) / 80) | 0, life = ((t + i * 37) % 80) / 80, sz = Math.sin(life * PI) * 5;
+        if (sz < .4) continue;
+        ctx.globalAlpha = .9; ctx.drawImage(P, hash(i, cyc, 61) * W - sz / 2, hash(i, cyc, 62) * H - sz / 2, sz, sz);
+      }
+      ctx.globalAlpha = 1;
+    } else if (e === 'aurora') {
+      const A = auroraSprite(), P = starSprite();
+      ctx.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < 2; k++) { ctx.globalAlpha = .55 + .25 * Math.sin(t / 90 + k * 2); ctx.drawImage(A, -20 + Math.sin(t / 240 + k * 1.7) * 14 - k * 30, -4 + k * 6 + Math.sin(t / 130 + k) * 3, W + 60, 54 + 8 * k); }
+      ctx.globalCompositeOperation = 'source-over';
+      for (let i = 0; i < 14; i++) { const sz = 2.2 + 2.4 * Math.max(0, Math.sin(t / 30 + i * 2.7)); ctx.globalAlpha = .8; ctx.drawImage(P, hash(i, 1, 71) * W - sz / 2, hash(i, 2, 71) * H * .55 - sz / 2, sz, sz); }
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+// Mist where a waterfall lands and the glow around lava; both walk a short per-map list of special tiles.
+function specialFx(ctx, s, cx, cy, t, x0, y0, x1, y1) {
+  const f = s.fx, m = s.mref; let n = 0, glow = null;
+  for (let i = 0; i < f.length; i += 3) {
+    const x = f[i], y = f[i + 1], ch = f[i + 2];
+    if (x < x0 - 1 || x > x1 + 1 || y < y0 - 1 || y > y1 + 1) continue;
+    const sx = x * 16 - cx, sy = y * 16 - cy;
+    if (ch === '@') {
+      if (m.t[y + 1] && m.t[y + 1][x] === '@') continue;
+      const P = puffSprite();
+      for (let k = 0; k < 5; k++) {
+        const u = (t / 80 + k / 5 + hash(x, k, 5)) % 1, sz = 5 + u * 8;
+        ctx.globalAlpha = (1 - u) * .55 * Math.min(1, u * 5); ctx.drawImage(P, sx + 1.5 + k * 3 + Math.sin(t / 25 + k * 2) * 1.6 - sz / 2, sy + 15 - u * 13 - sz / 2, sz, sz);
+      }
+      ctx.globalAlpha = 1;
+    } else if (ch === '!' && n < 60) {
+      if (!glow) { glow = glowSprite('#ff7a28', .9); ctx.globalCompositeOperation = 'lighter'; }
+      n++; ctx.globalAlpha = .38 + .14 * Math.sin(t / 21 + x * 1.7 + y); ctx.drawImage(glow, sx - 10, sy - 10, 36, 36);
+    }
+  }
+  if (glow) ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+}
+
 // ---- Public API ---------------------------------------------------------------------
 G.terrain = {
   drawGround(ctx, m, x0, y0, x1, y1, cx, cy, t) {
@@ -1512,14 +1626,16 @@ G.terrain = {
     ctx.drawImage(make('front' + ch + v + '#' + fi, 24, 23, c => { c.translate(4, 6); paintTuft(c, ch, v, fi, true); }), x - 4, y - 6, 24, 23);
   },
   drawOverlay(ctx, m, x0, y0, x1, y1, cx, cy, t) {
-    const s = mapState(m), W = G.W, H = G.H;
-    if (s.amb === 1) {
+    const s = mapState(m), W = G.W, H = G.H, B = s.bio; useBio(B); s.mref = m;
+    if (s.fx.length) specialFx(ctx, s, cx, cy, t, x0, y0, x1, y1);
+    if (s.amb === 1 && B.petals) {
+      const leaf = B.petals === 'leaf';
       for (let i = 0; i < 14; i++) {
         const a = hash(i, 1, 9), b = hash(i, 2, 9), sp = .18 + hash(i, 3, 9) * .2;
         const px = mod(a * 997 + t * sp - cx, W + 40) - 20, py = mod(b * 613 + t * sp * .45 - cy + Math.sin(t / 47 + i) * 8, H + 30) - 15;
-        ctx.drawImage(petalFrame(((t / 9 + i * 3) | 0) & 7, i % 4 === 0 ? 1 : 0), px, py, 4, 4);
+        ctx.drawImage(petalFrame(((t / 9 + i * 3) | 0) & 7, leaf || i % 4 === 0 ? 1 : 0), px, py, 4, 4);
       }
-      for (let i = 0; i < 4; i++) {
+      if (!leaf) for (let i = 0; i < 4; i++) {
         const a = hash(i, 4, 9), b = hash(i, 5, 9);
         const px = mod(a * 811 + Math.sin(t / 170 + i * 2) * 70 + t * .12 - cx, W + 60) - 30, py = mod(b * 517 + Math.sin(t / 97 + i * 3) * 26 - cy, H + 40) - 20 + Math.sin(t / 11 + i) * 2.5;
         ctx.drawImage(butterFrame(BUTTER[i], ((t / 5 + i) | 0) & 1), px, py, 7, 5.2);
@@ -1527,10 +1643,11 @@ G.terrain = {
     }
     if (s.amb === 0 || s.amb === 1) {   // sparkles on visible water
       const P = starSprite(); let n = 0;
-      for (let y = y0; y <= y1 && n < 24; y++) for (let x = x0; x <= x1 && n < 24; x++) {
+      const SN = B.sparkN || 24, SP = B.sparkP || .12;
+      for (let y = y0; y <= y1 && n < SN; y++) for (let x = x0; x <= x1 && n < SN; x++) {
         if (m.t[y][x] !== 'w') continue;
         const off = hash(x, y, 3) * 90, cyc = ((t + off) / 90) | 0;
-        if (hash(x, y, cyc) > .12) continue;
+        if (hash(x, y, cyc) > SP) continue;
         const life = ((t + off) % 90) / 90, sz = Math.sin(life * PI) * 4.5;
         if (sz < .3) continue; n++;
         ctx.drawImage(P, x * 16 - cx + 3 + hash(x, cyc, 7) * 10 - sz / 2, y * 16 - cy + 3 + hash(y, cyc, 8) * 10 - sz / 2, sz, sz);
@@ -1547,6 +1664,7 @@ G.terrain = {
       }
       ctx.globalAlpha = 1;
     }
+    if (B !== BASE) biomeFx(ctx, m, s, B, cx, cy, t, x0, y0, x1, y1);
     if (s.amb === 3) {   // indoor dust motes in the light
       for (let i = 0; i < 8; i++) {
         const a = hash(i, 8, 9), b = hash(i, 9, 9);
