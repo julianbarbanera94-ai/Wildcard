@@ -46,7 +46,7 @@ const OUT = process.env.OUT || '/tmp';
   assert.match(await ev(() => window.__said.join(' ')), /VESPER: I am Vesper/);
   step('Chapter 1: the Ashen Wardens fight for Vesper; after both, Vesper speaks from the bridge');
   // 3) the guardian: answer each mood correctly
-  const GOOD = { trembles: 1, sniffs: 2, 'slow step': 0, growls: 1 };
+  const GOOD = { trembles: 1, sniffs: 2, 'slow step': 0, growls: 1 };   // STAY STILL, OFFER FOOD, STEP CLOSER, STAY STILL
   await ev(() => { G.placePlayer(44, 37, 0); window.__said.length = 0; }); await page.waitForTimeout(300); await shot('guardian');
   await key('z', 400);
   for (let i = 0; i < 80 && !(await ev(() => G.state.flags.guardian1)); i++) {

@@ -65,6 +65,17 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
 
 After Elder Wren's advice, your fellow trainee **Tam** stops you outside the Hearth Shrine for a first battle (losing is fine). Wren gives you the **Warden's Lamp**, which also lights dark passages. **Chapter 1: First Light** sends you to Stonebridge, where two **Ashen Wardens** are taking creatures for **Warden Vesper**. Beat both, and Vesper speaks to you from across the river. A frightened **Cairnwight** hides by the water: read its mood and respond gently three times to earn its trust, and it joins you. **Mason** gives you Climbing Gear after the Keystone Badge, plus a bonus if your first partner is still standing. Then report back to Wren. The journal tracks every step.
 
+## Optional quests
+
+Five side stories, each with a choice that changes the world afterwards:
+- **The Missing Ferry** (Captain Ilsa, Sunhaven): find her boat on Tidepool Shore. Return it and she sails you there for free, or sell it to a smuggler for $3,000 and lose her trust.
+- **The Sick Fields** (Farmer Bram, Sunmeadow): three wilting crop beds lead to a Venomite nest. Move it to your homestead or drive it off, and Bram shares his harvest every day.
+- **Trader's Debt** (Oswin, Lanternrest): deliver a sealed crate to Miller Ada within three days, or open it, find stolen crystals and report him. Then his honest niece Pell runs his stall. Late, and the quest fails.
+- **Duel at Dawn** (Rook): three battles in three towns. Win them all and Rook moves to your homestead for daily sparring.
+- **The Unusual Footprints** (Researcher Fenna, Lanternrest): follow glowing prints to a Lemurmur in Mirewood. Watch it, befriend it or battle it.
+
+The journal records what you chose for each one.
+
 ## Journal, quests and reputation
 
 START → JOURNAL lists everything you're doing in one place: STORY, QUESTS, FINDS, PEOPLE, CREATURES and HOME, plus REP (how well each region knows you: Stranger, Known, Friend, Trusted, Hero). Quests notice what you've already done, so you can do things in any order. Markers on the map (gold for the story, blue for the rest) can be turned off in the journal. Beating an Arena Leader and winning a shard raise your reputation in that region. Quest rewards are given once only.
@@ -195,6 +206,7 @@ node tests/e2e-access.js                        # badges, reputation or permits;
 node tests/e2e-slots.js                         # three save slots: continue, load, new game, save to another slot
 node tests/e2e-field.js                         # CLIMB, LIGHT and DIG with creatures or tools; hidden chests
 node tests/e2e-story1.js                        # Prologue and Chapter 1: Tam, Ashen Wardens, Vesper, the Cairnwight, Mason, Wren
+node tests/e2e-threads.js                       # the five optional quests, both sides of the choices, deadlines
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles

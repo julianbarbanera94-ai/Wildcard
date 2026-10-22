@@ -29,8 +29,10 @@ if (G.FIELD) G.FIELD.light.tools = [G.LAMP];
   G.mk.npc(m, 44, 38, UP, 'boy', null, { creature: 151, still: true, hide: () => !F().vesper1 || !!F().guardian1, talk: () => guardianScene() });
 }
 // ---- Battles that never send you home ----------------------------------------------------------------------------------------
-async function storyBattle(trainer) {
-  const r = await G.startBattle({ trainer, bg: G.world.map.bg });
+async function storyBattle(trainer) { return G.storyBattle({ trainer }); }
+// opts: { trainer } or { wild } (startBattle options); you are healed instead of sent home if you lose.
+G.storyBattle = async function (opts) {
+  const r = await G.startBattle(Object.assign({ bg: G.world.map.bg }, opts));
   if (r === 'lose') { G.state.party.forEach(G.healFull); }
   G.audio.music(G.world.map.music); await G.fadeTo(0, 14);
   return r;
@@ -75,25 +77,29 @@ G.hooks.tick.push(() => {
 
 // ---- The first guardian: earn its trust ----------------------------------------------------------------------------------
 // Each round the Cairnwight shows a mood; the right response builds trust (3 to win), a wrong one scares it (2 to fail).
+// G.trust(name): the trust encounter, reusable for any creature. Resolves true when it trusts you.
 const MOODS = [
-  { text: 'The Cairnwight trembles and presses itself against the rocks.', good: [1, 3] },
-  { text: 'The Cairnwight sniffs the air, watching your hands.', good: [2] },
-  { text: 'The Cairnwight takes a slow step toward you.', good: [0] },
-  { text: 'The Cairnwight growls softly, its stones grinding.', good: [1] },
+  { text: 'The NAME trembles and presses itself against the ground.', good: [1, 3] },
+  { text: 'The NAME sniffs the air, watching your hands.', good: [2] },
+  { text: 'The NAME takes a slow step toward you.', good: [0] },
+  { text: 'The NAME growls softly, its eyes on you.', good: [1] },
 ];
 const ACTS = ['STEP CLOSER', 'STAY STILL', 'OFFER FOOD', 'SPEAK SOFTLY'];
-async function guardianScene() {
-  const S = G.state, f = F(); if (f.guardian1) return;
-  if (!f.guardianMet) { f.guardianMet = true; await says(['A huge Cairnwight is huddled between the rocks, shaking. Grey cloth is caught on its stones.', 'It is far too frightened to fight. Maybe it can learn to trust you.']); }
+G.trust = async function (name) {
   let trust = 0, fear = 0, i = G.rand(MOODS.length);
   while (trust < 3 && fear < 2) {
     const mood = MOODS[i % MOODS.length];
-    await G.say(mood.text, { auto: 1 });
+    await G.say(mood.text.replace('NAME', name), { auto: 1 });
     const c = await G.choose(ACTS, { right: 236, bottom: 108, cancel: false }); G.closeText();
-    if (mood.good.includes(c)) { trust++; G.audio.sfx('select'); await says(['The Cairnwight relaxes a little.', 'It stops trembling and looks at you.', 'It rests its heavy head against your hand.'][trust - 1]); i += 1 + G.rand(2); }
-    else { fear++; G.audio.sfx('bump'); await says(fear < 2 ? 'The Cairnwight flinches and backs away.' : 'The Cairnwight scrambles behind the rocks. Give it time and try again.'); i++; }
+    if (mood.good.includes(c)) { trust++; G.audio.sfx('select'); await says([`The ${name} relaxes a little.`, `It stops trembling and looks at you.`, `It rests its head against your hand.`][trust - 1]); i += 1 + G.rand(2); }
+    else { fear++; G.audio.sfx('bump'); await says(fear < 2 ? `The ${name} flinches and backs away.` : `The ${name} scrambles out of reach. Give it time and try again.`); i++; }
   }
-  if (trust < 3) return;
+  return trust >= 3;
+};
+async function guardianScene() {
+  const S = G.state, f = F(); if (f.guardian1) return;
+  if (!f.guardianMet) { f.guardianMet = true; await says(['A huge Cairnwight is huddled between the rocks, shaking. Grey cloth is caught on its stones.', 'It is far too frightened to fight. Maybe it can learn to trust you.']); }
+  if (!(await G.trust('Cairnwight'))) return;
   f.guardian1 = true; f.guardianCalm = true;
   const c = G.makeCreature(151, 12); c.befriended = true; S.dex[151] = 2;
   (S.party.length < 6 ? S.party : S.box).push(c); G.audio.sfx('caught');

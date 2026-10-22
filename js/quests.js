@@ -76,12 +76,17 @@ const quest = G.quest = {
   complete(id, quiet) {
     const S = st(), q = DEFS[id]; if (!S || !q) return;
     const s = S.quests[id] = S.quests[id] || { st: 'active', step: 0, t: S.frames || 0 };
-    if (s.st === 'done') return;
+    if (s.st === 'done' || s.st === 'failed') return;
     s.st = 'done'; s.step = q.steps.length; give(q);
     if (!quiet) { G.questToast('COMPLETE: ' + q.title, 'done'); G.audio && G.audio.sfx && G.audio.sfx('levelup'); }
   },
+  // Records what you chose (shown in the journal), e.g. quest.outcome('ferry', 'You returned the Gull to Captain Ilsa.').
+  outcome(id, text) { const S = st(); if (S && S.quests[id]) S.quests[id].outcome = text; },
+  // A quest that can no longer be finished (a missed deadline). No reward.
+  fail(id, text) { const S = st(); if (!S || !DEFS[id]) return; const s = S.quests[id] = S.quests[id] || { step: 0 }; if (s.st === 'done' || s.st === 'failed') return; s.st = 'failed'; if (text) s.outcome = text; G.questToast('FAILED: ' + DEFS[id].title, 'rep'); },
+  failed: id => { const s = quest.state(id); return !!s && s.st === 'failed'; },
   // Test Mode: every quest finished and every reward given.
-  completeAll() { for (const id of ORDER) quest.complete(id, true); },
+  completeAll() { for (const id of ORDER) if (!quest.failed(id)) quest.complete(id, true); },
   // Quests that start themselves, and steps that finish themselves.
   tick() {
     const S = st(); if (!S) return;
@@ -124,7 +129,7 @@ G.journalScreen = async function () {
   const S = st(); quest.tick();
   const tabs = [...CATS, ['rep', 'REP']];
   let tab = 0, row = 0, close = false, tap = null;
-  const listOf = c => quest.all().filter(q => q.cat === c && S.quests[q.id]).sort((a, b) => (S.quests[a.id].st === 'done') - (S.quests[b.id].st === 'done'));
+  const listOf = c => quest.all().filter(q => q.cat === c && S.quests[q.id]).sort((a, b) => (S.quests[a.id].st !== 'active') - (S.quests[b.id].st !== 'active'));
   const layer = { draw(ctx) {
     G.frame(ctx, 2, 2, 236, 156, 'light'); G.tapZone(-999, -999, 2400, 2400, () => {});
     G.text(ctx, 'JOURNAL', 10, 6, { font: G.FONT_B || G.FONT });
@@ -148,14 +153,15 @@ G.journalScreen = async function () {
     const top = tab === 0 ? 40 : 32, lw = 92;
     list.slice(0, 10).forEach((q, i) => { const s = S.quests[q.id], y = top + i * 11.5, on = i === row;
       if (on) { G.kit.rr(ctx, 6, y - 1.5, lw, 10.5, 4); ctx.fillStyle = 'rgba(247,132,63,.18)'; ctx.fill(); }
-      G.text(ctx, (s.st === 'done' ? '✓ ' : '• ') + q.title, 9, y, { font: G.FONT_S, color: s.st === 'done' ? '#8aa86a' : '#4a3a56', shadow: false });
+      G.text(ctx, (s.st === 'done' ? '✓ ' : s.st === 'failed' ? '✗ ' : '• ') + q.title, 9, y, { font: G.FONT_S, color: s.st === 'done' ? '#8aa86a' : s.st === 'failed' ? '#b06060' : '#4a3a56', shadow: false });
       G.tapZone(6, y - 2, lw, 11, () => { tap = ['row', i]; }); });
     // detail
     const q = list[row], s = S.quests[q.id], x = 104, w = 128; let y = top;
     G.text(ctx, q.title, x, y, { font: G.FONT_B || G.FONT }); y += 10;
     if (q.giver) { G.text(ctx, 'FROM: ' + q.giver, x, y, { ...sm, color: '#8a7a90' }); y += 8; }
     G.wrap(q.desc || '', w).slice(0, 3).forEach(l => { G.text(ctx, l, x, y, sm); y += 7.5; }); y += 2;
-    q.steps.forEach((p, i) => { if (i > s.step) return; const done = i < s.step || s.st === 'done';
+    if (s.outcome) { G.wrap(s.outcome, w).slice(0, 2).forEach(l => { G.text(ctx, l, x, y, { font: G.FONT_S, color: s.st === 'failed' ? '#b03a3a' : '#9a5ae0', shadow: false }); y += 7.5; }); y += 1; }
+    q.steps.forEach((p, i) => { if (i > s.step || (s.st === 'failed' && i >= s.step)) return; const done = i < s.step || s.st === 'done';
       const c = p.count && !done ? p.count(S) : null, txt = (done ? '✓ ' : '› ') + p.text + (c ? ` (${Math.min(c[0], c[1])}/${c[1]})` : '');
       G.wrap(txt, w).slice(0, 2).forEach(l => { if (y < 146) G.text(ctx, l, x, y, { font: G.FONT_S, color: done ? '#8aa86a' : '#2a6ab8', shadow: false }); y += 7.5; }); });
     const R = rewardText(q.reward); if (R) { const ls = G.wrap((s.st === 'done' ? 'GOT: ' : 'REWARD: ') + R, w).slice(0, 2); let ry = Math.max(y + 2, 148 - ls.length * 7.5); ls.forEach(l => { G.text(ctx, l, x, ry, { font: G.FONT_S, color: '#2a7a4a', shadow: false }); ry += 7.5; }); }
