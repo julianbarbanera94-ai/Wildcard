@@ -155,6 +155,8 @@ async function roamFight(r, charged) {
   }
 }
 G.loadMap = function (id) {
+  if (!maps[id] && G.refreshInteriors) G.refreshInteriors();   // a structure's interior may not be built yet (a save made inside it)
+  if (!maps[id]) id = 'homestead';
   if (world.map && G.state) world.map.roamLeft = G.state.frames;
   world.mapId = id; world.map = maps[id]; world.map._spawn = true;
   if (G.applyBuilds) G.applyBuilds(world.map); world.map.npcs.forEach(n => { n.ox0 = n.ox0 === undefined ? n.x : n.ox0; n.oy0 = n.oy0 === undefined ? n.y : n.oy0; n.ox = 0; n.oy = 0; n.frame = 0; n.timer = 60 + G.rand(120); delete n.tx; delete n.ty; });

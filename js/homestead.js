@@ -30,6 +30,7 @@ G.migrateState = function (S) {
   }
   const hm = maps[HOME];
   if (hm && hm.homeSpot && !S.builds.some(b => b.type === 'house')) S.builds.push({ id: 'house', type: 'house', map: HOME, x: hm.homeSpot.x, y: hm.homeSpot.y, lvl: 1, rot: 0 });
+  if (G.refreshInteriors) G.refreshInteriors();
   return S;
 };
 const uid = () => Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
