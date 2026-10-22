@@ -1014,37 +1014,43 @@ async function flight(mode, carrier) {
   const hereId = (G.worldPlaceOf && G.worldPlaceOf(G.world.mapId)) || G.world.mapId, here = nodes.find(n => n.id === hereId) || nodes[0];
   const why = n => nodeWhy(n), whyById = {}, whyOf = id => { const n = nodes.find(q => q.id === id); return n ? why(n) : null; };
   let sel = nodes.indexOf(nodes.find(n => !why(n)) || here), phase = 'pick', tapped = -1, cancel = false;
-  const fly = { t: 0, x: here.x, y: here.y, k: 0, from: here, to: null, faceRight: true };
+  const fly = { t: 0, x: here.x, y: here.y, k: 0, from: here, to: null, faceRight: true, a: [0, 0], b: [0, 0] };
+  const nav = G.mapNav(nodes);
+  nav.update(sel); nav.last = sel;
   const scene = {
-    update() { fly.t++; },
+    wide: true, raw: true,
+    update() { fly.t++; nav.update(sel); },
     tap() {},
     draw(ctx) {
       const t = fly.t;
       // slow drifting clouds; they stream past while flying
       const drift = phase === 'fly' ? (fly.faceRight ? -1 : 1) : 0, vel = phase === 'fly' ? 1.6 : .12;
       fly.cl = (fly.cl || 0) + vel * (drift || 1);
-      G.drawWorldMap(ctx, 0, 0, 240, 160, { t, here: here.id, cursor: phase === 'pick' ? nodes[sel].id : undefined, names: 'known', icons: phase === 'pick' ? 'sel' : 'none', ok: id => phase === 'pick' && !whyOf(id), dim: id => !!whyOf(id) && whyOf(id) !== 'You are here.', ferries: false });
+      const W = G.W, H = G.H, hxy = nav.xy(here.id);
+      G.drawWorldMap(ctx, 0, 0, W, H, { t, here: here.id, view: nav.view(), cursor: phase === 'pick' ? nodes[sel].id : undefined, names: phase === 'pick' && nav.zoom ? 'known' : 'sel', icons: phase === 'pick' ? 'sel' : 'none', ok: id => phase === 'pick' && !whyOf(id), dim: id => !!whyOf(id) && whyOf(id) !== 'You are here.', ferries: false });
       if (phase === 'fly') {
-        const gx = fly.from.x + (fly.to.x - fly.from.x) * fly.k, gy = fly.from.y + (fly.to.y - fly.from.y) * fly.k;
+        const gx = fly.a[0] + (fly.b[0] - fly.a[0]) * fly.k, gy = fly.a[1] + (fly.b[1] - fly.a[1]) * fly.k;
         ell(ctx, gx, gy + 2, 7 - Math.sin(fly.k * Math.PI) * 2.5, 2, 'rgba(30,30,60,.28)');
         drawCarrier(ctx, mode, carrier, fly.x, fly.y, t, fly.faceRight, true);
         // near clouds sweep past quickly for depth
-        for (let i = 0; i < 3; i++) { const e = cloudArt(i), w = 70 + i * 16, cx = ((i * 113 - fly.t * (3.2 + i) * (fly.faceRight ? 1 : -1)) % 420 + 420) % 420 - 100, cy = 18 + i * 46;
+        for (let i = 0; i < 3; i++) { const e = cloudArt(i), w = 70 + i * 16, cx = ((i * 113 - fly.t * (3.2 + i) * (fly.faceRight ? 1 : -1)) % 420 + 420) % 420 - 100, cy = (18 + i * 46) * H / 160;
           ctx.globalAlpha = .82; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * 18 / 40 + e.pad * 2); ctx.globalAlpha = 1; }
-      } else drawCarrier(ctx, mode, carrier, here.x, here.y - 8, t, true, false);
+      } else drawCarrier(ctx, mode, carrier, hxy[0], hxy[1] - 8, t, true, false);
       // header chip and info panel (the panel flips to the top when the cursor is low on the map)
       const title = mode === 'heli' ? 'HELICOPTER' : `FLY WITH ${G.name(carrier)}`;
       if (phase !== 'pick') { G.frame(ctx, 4, 4, Math.max(96, G.textW(ctx, title) + 20), 17, 'light'); G.text(ctx, title, 12, 8.5, { font: G.FONT_B || G.FONT }); }
       if (phase === 'pick') {
-        const n = nodes[sel], w = why(n), py = n.y > 92 ? 3 : 132;
-        G.tapZone(-999, -999, 2400, 2400, () => { cancel = true; });
-        nodes.forEach((n2, i) => G.tapZone(n2.x - 8, n2.y - 8, 16, 16, () => { tapped = i; }));
-        G.frame(ctx, 4, py, 232, 25, 'light'); G.tapZone(4, py, 232, 25, () => {});
-        G.text(ctx, n.name, 12, py + 4, { font: G.FONT_B || G.FONT });
-        G.text(ctx, title, 228, py + 4.5, { align: 'right', font: G.FONT_S, color: '#8a7a90', shadow: false });
-        G.text(ctx, w || 'Ready for take-off. A landing spot is waiting.', 12, py + 14.5, { font: G.FONT_S, color: w ? '#b03a3a' : '#2a7a4a', shadow: false });
-        if (!w) { G.kit.pill(ctx, 184, py + 13, 46, 10, '#3fae5a', G.touch ? 'TAP: FLY' : 'A: FLY'); G.tapZone(184, py + 11, 50, 14, () => { tapped = sel; }); }
-        else G.text(ctx, G.touch ? 'TAP OUTSIDE: BACK' : 'B: BACK', 228, py + 14.5, { align: 'right', font: G.FONT_S, color: '#8a7a90', shadow: false });
+        const n = nodes[sel], w = why(n), ph = 34, pw = Math.min(W - 8, 232), x0 = (W - pw) / 2, top = nav.xy(n.id)[1] > H * .55, py = top ? 3 : H - ph - 3;
+        nav.touch(i => { tapped = i; });
+        G.frame(ctx, x0, py, pw, ph, 'light'); G.tapZone(x0, py, pw, ph, () => {});
+        G.text(ctx, n.name, x0 + 8, py + 4, { font: G.FONT_B || G.FONT });
+        G.text(ctx, title, x0 + pw - 6, py + 4.5, { align: 'right', font: G.FONT_S, color: '#8a7a90', shadow: false });
+        G.text(ctx, w || 'Ready for take-off. A landing spot is waiting.', x0 + 8, py + 14.5, { font: G.FONT_S, color: w ? '#b03a3a' : '#2a7a4a', shadow: false });
+        const bw = 44, by = py + ph - 11;
+        G.kit.pill(ctx, x0 + 8, by, bw, 8.5, '#3a9ae8', G.touch ? (nav.zoom ? 'ZOOM OUT' : 'ZOOM') : nav.zoom ? 'ENTER: OUT' : 'ENTER: ZOOM'); G.tapZone(x0 + 8, by - 1, bw, 11, () => nav.setZoom(!nav.zoom, sel));
+        G.kit.pill(ctx, x0 + 8 + bw + 4, by, bw, 8.5, '#9a8ea8', G.touch ? 'BACK' : 'B: BACK'); G.tapZone(x0 + 8 + bw + 4, by - 1, bw, 11, () => { cancel = true; });
+        if (!w) { G.kit.pill(ctx, x0 + pw - 52, by, 46, 8.5, '#3fae5a', G.touch ? 'TAP: FLY' : 'A: FLY'); G.tapZone(x0 + pw - 54, by - 1, 50, 11, () => { tapped = sel; }); }
+        if (nav.zoom && G.touch) G.text(ctx, 'DRAG TO LOOK AROUND', W / 2, top ? py + ph + 3 : py - 11, { font: G.FONT_S, color: '#fff', shadow: '#000', align: 'center' });
       }
     },
   };
@@ -1057,18 +1063,20 @@ async function flight(mode, carrier) {
     const k = G.input.pressed;
     if (tapped >= 0) { if (tapped === sel && !why(nodes[sel])) { target = nodes[sel]; break; } sel = tapped; tapped = -1; G.audio.sfx('select'); continue; }
     if (cancel || k.b) break;
+    if (k.start) nav.setZoom(!nav.zoom, sel);
     const nx = G.worldNav(nodes, sel, k); if (nx !== sel) { sel = nx; G.audio.sfx('select'); }
     if (k.a) { if (!why(nodes[sel])) { target = nodes[sel]; break; } G.audio.sfx('bump'); }
   }
   if (!target) { await G.fadeTo(1, 10, '#000'); G.scene = back || G.world.scene; await G.fadeTo(0, 10); api._fly = null; return false; }
   // Before taking off: a vehicle you're riding stays parked where you are.
   if (riding()) api.park();
-  phase = 'fly'; fly.from = here; fly.to = target; fly.faceRight = target.x >= here.x;
+  nav.snap(); fly.a = nav.xy(here.id); fly.b = nav.xy(target.id); fly.x = fly.a[0]; fly.y = fly.a[1];
+  phase = 'fly'; fly.from = here; fly.to = target; fly.faceRight = fly.b[0] >= fly.a[0];
   G.audio.sfx('throw');
-  const dist = Math.hypot(target.x - here.x, target.y - here.y), T = Math.max(80, Math.min(150, Math.round(dist * 1.2))), lift = 18 + dist * .12;
+  const dist = Math.hypot(fly.b[0] - fly.a[0], fly.b[1] - fly.a[1]), T = Math.max(80, Math.min(150, Math.round(dist * 1.2))), lift = 18 + dist * .12;
   for (let i = 0; i <= T; i++) {
     const k = i / T, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-    fly.k = e; fly.x = here.x + (target.x - here.x) * e; fly.y = here.y + (target.y - here.y) * e - 8 - Math.sin(e * Math.PI) * lift;
+    fly.k = e; fly.x = fly.a[0] + (fly.b[0] - fly.a[0]) * e; fly.y = fly.a[1] + (fly.b[1] - fly.a[1]) * e - 8 - Math.sin(e * Math.PI) * lift;
     if (i === T - 18) G.fadeTo(1, 18, '#ffffff');
     await G.nextFrame();
   }

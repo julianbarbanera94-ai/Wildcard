@@ -169,6 +169,7 @@ node tests/e2e-farm.js                         # crops, watering, withering, spr
 node tests/e2e-craft.js                        # refinery jobs, forge, kitchen, storage, treats, furniture
 node tests/e2e-towns.js                        # shops (D-pad and touch), selling, healing centres, homestead road
 node tests/e2e-vehicles.js                     # garage, riding rules, parking, buying, boats, flight, helicopter, quests
+node tests/e2e-mapview.js                       # map and flight picker on a phone: full screen, zoom, touch pan
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles

@@ -12,7 +12,7 @@ const KEYS = {
 G.tapKey = k => { G.press(k); G.release(k); };
 // Tap zones: screens register rectangles (in the 240x160 UI space) each frame they draw; a tap on the canvas runs the topmost one.
 G.zones = [];
-G.tapZone = (x, y, w, h, fn) => { G.zones.push({ x, y, w, h, fn }); };
+G.tapZone = (x, y, w, h, fn, drag) => { G.zones.push({ x, y, w, h, fn, drag }); };   // drag(dx, dy) in logical units: a press that moves pans instead of tapping
 G.press = k => { if (!input.held[k]) input.next[k] = true; input.held[k] = true; G.audio.init(); };
 G.release = k => { input.held[k] = false; };
 addEventListener('keydown', e => { if (G.keyHook && G.keyHook(e)) { e.preventDefault(); return; } const k = KEYS[e.key]; if (k) { e.preventDefault(); if (!e.repeat) G.press(k); } });
@@ -123,14 +123,29 @@ function draw(ctx) {
   if (audio.muted) G.text(ctx, 'MUTE', G.W - 4, 2, { align: 'right', color: '#fff', shadow: '#000' });
 }
 G.start = function (canvas) {
+  // Pointer position in the logical units of the current scene (scenes with `raw` draw across the whole screen).
+  const pos = e => {
+    const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1, r = canvas.getBoundingClientRect(), raw = G.scene && G.scene.raw;
+    return [(e.clientX - r.left - canvas.clientLeft) / w * G.W - (raw ? 0 : G.uiX || 0), (e.clientY - r.top - canvas.clientTop) / h * G.H - (raw ? 0 : G.uiY || 0)];
+  };
+  let drag = null;
   canvas.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1, r = canvas.getBoundingClientRect();
-    const x = (e.clientX - r.left - canvas.clientLeft) / w * G.W - (G.uiX || 0), y = (e.clientY - r.top - canvas.clientTop) / h * G.H - (G.uiY || 0);
+    const [x, y] = pos(e);
     G.audio.init();
-    for (let i = G.zones.length - 1; i >= 0; i--) { const z = G.zones[i]; if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h) { z.fn(x, y); return; } }
+    for (let i = G.zones.length - 1; i >= 0; i--) { const z = G.zones[i]; if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h) {
+      if (z.drag) { drag = { z, id: e.pointerId, x0: x, y0: y, x, y, moved: false }; try { canvas.setPointerCapture(e.pointerId); } catch (_) {} } else z.fn(x, y);
+      return; } }
     if (G.ui.text) G.tapKey('a'); else if (G.scene && G.scene.tap) G.scene.tap(x, y);
   });
+  canvas.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const [x, y] = pos(e);
+    if (!drag.moved && Math.hypot(x - drag.x0, y - drag.y0) < 3) return;
+    drag.moved = true; drag.z.drag(x - drag.x, y - drag.y); drag.x = x; drag.y = y;
+  });
+  const lift = e => { if (!drag || e.pointerId !== drag.id) return; const d = drag; drag = null; if (!d.moved && e.type === 'pointerup') d.z.fn(d.x, d.y); };
+  canvas.addEventListener('pointerup', lift); canvas.addEventListener('pointercancel', lift);
   const ctx = canvas.getContext('2d', { alpha: false });
   // The game is laid out in 240x160 logical units; the backing store is sized to the real screen so art stays sharp.
   const fit = () => {

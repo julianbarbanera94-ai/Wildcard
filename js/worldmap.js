@@ -633,27 +633,37 @@ function placeState(p, o) {
   const fog = o.fog !== false && !visited && p.id !== o.here;
   return { fog, locked: !!why && o.locks !== false, here: p.id === o.here, sel: p.id === o.cursor, dim: o.dim ? !!o.dim(p.id) : false, ok: o.ok ? !!o.ok(p.id) : false, visited };
 }
+let SEA = null;
+function seaColor() { if (!SEA) { const c = baseMap().getContext('2d').getImageData(4, RH >> 1, 1, 1).data; SEA = `rgb(${c[0]},${c[1]},${c[2]})`; } return SEA; }
 // The part of the base map that is visible: view { cx, cy, z } in normalised coordinates, z >= 1.
-function viewRect(o) {
-  const z = o && o.view ? Math.max(1, o.view.z) : 1, sw = RW / z, sh = RH / z;
-  let sx = (o && o.view ? o.view.cx : .5) * RW - sw / 2, sy = (o && o.view ? o.view.cy : .5) * RH - sh / 2;
-  sx = Math.max(0, Math.min(RW - sw, sx)); sy = Math.max(0, Math.min(RH - sh, sy));
-  return { sx, sy, sw, sh, z };
+function viewRect(o, w, h) {
+  w = w || RW; h = h || RH;
+  const z = o && o.view ? Math.max(1, o.view.z) : 1, sc = Math.min(w / RW, h / RH) * z, sw = w / sc, sh = h / sc;
+  const fit = (c, len, vis) => vis >= len ? (len - vis) / 2 : Math.max(0, Math.min(len - vis, c * len - vis / 2));
+  return { sx: fit(o && o.view ? o.view.cx : .5, RW, sw), sy: fit(o && o.view ? o.view.cy : .5, RH, sh), sw, sh, z, s: sc };
 }
 // Screen position of a place (or a point { x, y } in reference pixels) inside the rectangle the map is drawn into.
 G.worldMapXY = function (idOrPt, x, y, w, h, o) {
-  const v = viewRect(o), p = typeof idOrPt === 'string' ? BYID[idOrPt] : idOrPt; if (!p) return null;
-  return [x + (p.x - v.sx) * w / v.sw, y + (p.y - v.sy) * h / v.sh];
+  const v = viewRect(o, w, h), p = typeof idOrPt === 'string' ? BYID[idOrPt] : idOrPt; if (!p) return null;
+  return [x + (p.x - v.sx) * v.s, y + (p.y - v.sy) * v.s];
 };
 // Draws the illustrated map into (x, y, w, h). opts: t, view, here, cursor, fog, locks, names ('known' | 'all' | 'none'),
 // icons ('all' | 'sel' | 'none'), ferries, clouds, dim(id), ok(id), draw(ctx, P, k) for extra art (boats, planes) above the map.
 G.drawWorldMap = function (ctx, x, y, w, h, o) {
-  o = o || {}; const t = o.t || 0, v = viewRect(o), kx = w / v.sw, ky = h / v.sh, zs = .85 + .15 * v.z;
-  const P = (px, py) => [x + (px - v.sx) * kx, y + (py - v.sy) * ky];
+  o = o || {}; const t = o.t || 0, v = viewRect(o, w, h), kx = v.s, ky = v.s, zs = .85 + .15 * v.z;
+  const P = (px, py) => [x + (px - v.sx) * kx, y + (py - v.sy) * ky], hs = h / 160;
   ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(baseMap(), v.sx, v.sy, v.sw, v.sh, x, y, w, h);
-  if (o.clouds !== false) for (let i = 0; i < 5; i++) { const e = drawCloudSprite(i % 3), cw = (50 + (i % 3) * 14) * zs, px = ((i * 71 + t * .06 * (1 + i % 2)) % 330) - 45, py = [6, 50, 118, 142, 28][i]; ctx.globalAlpha = .5; ctx.drawImage(e.c, x + px - e.pad, y + py - e.pad, cw + e.pad * 2, cw * 36 / 80 + e.pad * 2); ctx.globalAlpha = 1; }
+  if (v.sw > RW || v.sh > RH) { ctx.fillStyle = seaColor(); ctx.fillRect(x, y, w, h); }   // the screen is bigger than the map: open sea around it
+  const i0 = Math.max(0, v.sx), j0 = Math.max(0, v.sy), i1 = Math.min(RW, v.sx + v.sw), j1 = Math.min(RH, v.sy + v.sh);
+  ctx.drawImage(baseMap(), i0, j0, i1 - i0, j1 - j0, x + (i0 - v.sx) * kx, y + (j0 - v.sy) * ky, (i1 - i0) * kx, (j1 - j0) * ky);
+  { // where the screen is bigger than the map, fade its edges into the open sea
+    const fade = (x0, y0, x1, y1, gx, gy) => { const g = ctx.createLinearGradient(gx[0], gx[1], gy[0], gy[1]), c = seaColor(); g.addColorStop(0, c); g.addColorStop(1, c.replace('rgb', 'rgba').replace(')', ',0)')); ctx.fillStyle = g; ctx.fillRect(x0, y0, x1, y1); };
+    const f = 12 * kx / (w / RW) * .2 + 6, top = y + (0 - v.sy) * ky, bot = y + (RH - v.sy) * ky, lef = x + (0 - v.sx) * kx, rig = x + (RW - v.sx) * kx;
+    if (v.sy < 0) fade(x, top, w, f, [0, top], [0, top + f]); if (v.sy + v.sh > RH) fade(x, bot - f, w, f, [0, bot], [0, bot - f]);
+    if (v.sx < 0) fade(lef, y, f, h, [lef, 0], [lef + f, 0]); if (v.sx + v.sw > RW) fade(rig - f, y, f, h, [rig, 0], [rig - f, 0]);
+  }
+  if (o.clouds !== false) for (let i = 0; i < 5; i++) { const e = drawCloudSprite(i % 3), cw = (50 + (i % 3) * 14) * zs, px = ((i * 71 + t * .06 * (1 + i % 2)) % (w + 90)) - 45, py = [6, 50, 118, 142, 28][i] * hs; ctx.globalAlpha = .5; ctx.drawImage(e.c, x + px - e.pad, y + py - e.pad, cw + e.pad * 2, cw * 36 / 80 + e.pad * 2); ctx.globalAlpha = 1; }
   const sts = {};
   const vis = p => p.x > v.sx - 90 && p.x < v.sx + v.sw + 90 && p.y > v.sy - 90 && p.y < v.sy + v.sh + 90;
   // fog banks
@@ -704,44 +714,78 @@ function navPick(list, sel, k) {
 }
 G.worldNav = navPick;
 
+// ---- Shared map viewer: zoom, touch panning and picking, used by START > MAP and the flight picker ------------------------------
+// The caller keeps `sel` (index into nodes); nav animates the view, draws nothing itself.
+G.mapNav = function (nodes) {
+  const nav = { zoom: false, z: 1, cx: .5, cy: .5, tcx: .5, tcy: .5, last: -1, W: 240, H: 160 };
+  const focus = n => { const p = BYID[n.id]; nav.tcx = p.nx; nav.tcy = p.ny; };
+  nav.setZoom = (on, sel) => { nav.zoom = on; if (on) focus(nodes[sel]); else { nav.tcx = .5; nav.tcy = .5; } };
+  nav.update = sel => {
+    if (sel !== nav.last) { nav.last = sel; if (nav.zoom) focus(nodes[sel]); }
+    nav.z += ((nav.zoom ? 2.4 : 1) - nav.z) * .16; nav.cx += (nav.tcx - nav.cx) * .16; nav.cy += (nav.tcy - nav.cy) * .16;
+  };
+  nav.snap = () => { nav.zoom = false; nav.z = 1; nav.cx = nav.cy = nav.tcx = nav.tcy = .5; };
+  nav.view = () => ({ cx: nav.cx, cy: nav.cy, z: nav.z });
+  nav.xy = id => G.worldMapXY(id, 0, 0, nav.W, nav.H, { view: nav.view() });
+  // Registers the full-screen touch layer: drag pans (when zoomed in), a tap picks the nearest place. Call before any panels.
+  nav.touch = pick => {
+    const W = nav.W = G.W, H = nav.H = G.H;
+    G.tapZone(0, 0, W, H, (x, y) => {
+      let best = -1, bd = 11; nodes.forEach((n, i) => { const q = nav.xy(n.id); if (!q) return; const d = Math.hypot(q[0] - x, q[1] - y); if (d < bd) { bd = d; best = i; } });
+      if (best >= 0) pick(best);
+    }, (dx, dy) => {
+      if (!nav.zoom) return;
+      const v = viewRect({ view: nav.view() }, W, H), hx = v.sw / 2 / RW, hy = v.sh / 2 / RH;
+      nav.cx = Math.max(Math.min(hx, .5), Math.min(Math.max(1 - hx, .5), nav.cx - dx / v.s / RW)); nav.cy = Math.max(Math.min(hy, .5), Math.min(Math.max(1 - hy, .5), nav.cy - dy / v.s / RH));
+      nav.tcx = nav.cx; nav.tcy = nav.cy;
+    });
+  };
+  return nav;
+};
+
 // ---- START > MAP ------------------------------------------------------------------------------------------------------------------
 G.worldMapScreen = async function () {
   buildGraph();
   const S = G.state, back = G.scene, here = G.worldPlaceOf(G.world.mapId) || 'lanternrest';
   const nodes = PLACES.map(p => ({ id: p.id, name: p.name, x: p.nx * 240, y: p.ny * 160 }));
-  let sel = Math.max(0, nodes.findIndex(n => n.id === here)), zoom = false, vz = 1, vcx = .5, vcy = .5, close = false, tapped = -1, t = 0;
-  const api = { here, nodes, desc: '', get sel() { return sel; }, set sel(v) { sel = v; }, get zoomed() { return zoom; }, get zoom() { return vz; }, info: null, lines: [] };
+  let sel = Math.max(0, nodes.findIndex(n => n.id === here)), close = false, tapped = -1, t = 0;
+  const nav = G.mapNav(nodes);
+  const api = { here, nodes, desc: '', get sel() { return sel; }, set sel(v) { sel = v; }, get zoomed() { return nav.zoom; }, get zoom() { return nav.z; }, nav, info: null, lines: [] };
+  const toggle = () => nav.setZoom(!nav.zoom, sel);
   const scene = {
-    update() { t++; const tz = zoom ? 2.4 : 1, p = BYID[nodes[sel].id], tx = zoom ? p.nx : .5, ty = zoom ? p.ny : .5; vz += (tz - vz) * .16; vcx += (tx - vcx) * .16; vcy += (ty - vcy) * .16; },
+    wide: true, raw: true,
+    update() { t++; nav.update(sel); },
     draw(ctx) {
-      const id = nodes[sel].id, p = BYID[id], I = api.info = G.worldInfo(id);
-      G.drawWorldMap(ctx, 0, 0, 240, 160, { t, here, cursor: id, view: { cx: vcx, cy: vcy, z: vz }, names: zoom ? 'known' : 'sel', icons: zoom ? 'all' : 'sel', ferries: zoom });
-      nodes.forEach((n, i) => { const [px, py] = G.worldMapXY(n.id, 0, 0, 240, 160, { view: { cx: vcx, cy: vcy, z: vz } }); if (px > -10 && px < 250) G.tapZone(px - 8, py - 8, 16, 16, () => { tapped = i; }); });
+      const W = G.W, H = G.H, zoom = nav.zoom, id = nodes[sel].id, I = api.info = G.worldInfo(id);
+      G.drawWorldMap(ctx, 0, 0, W, H, { t, here, cursor: id, view: nav.view(), names: zoom ? 'known' : 'sel', icons: zoom ? 'all' : 'sel', ferries: zoom });
+      nav.touch(i => { tapped = i; });
       // info panel (flips to the top when the cursor is in the lower half)
-      const [, cyp] = G.worldMapXY(id, 0, 0, 240, 160, { view: { cx: vcx, cy: vcy, z: vz } }), top = cyp > 82, py0 = top ? 3 : 113, ph = 44;
-      G.frame(ctx, 4, py0, 232, ph, 'light'); G.tapZone(4, py0, 232, ph, () => {});
-      const F = G.FONT_B || G.FONT; ctx.font = F; const nw = ctx.measureText(I.name).width;
-      G.text(ctx, I.name, 12, py0 + 5, { font: F });
+      const cyp = nav.xy(id)[1], top = cyp > H * .55, pw = Math.min(W - 8, 232), x0 = (W - pw) / 2, ph = 44, py0 = top ? 3 : H - ph - 3;
+      G.frame(ctx, x0, py0, pw, ph, 'light'); G.tapZone(x0, py0, pw, ph, () => {});
+      const F = G.FONT_B || G.FONT; ctx.font = F; const nw = ctx.measureText(I.name).width, L = x0 + 8;
+      G.text(ctx, I.name, L, py0 + 5, { font: F });
       const pill = (txt, col, x) => { ctx.font = '900 5.5px ' + G.FONT_FAM; const w = ctx.measureText(txt).width + 9; G.kit.pill(ctx, x, py0 + 5.5, w, 8.5, col, txt); return w; };
-      let px2 = 12 + nw + 5; px2 += pill(I.kindWord.toUpperCase(), KIND_COL[I.kind] === '#f6f0dc' ? '#8aa86a' : KIND_COL[I.kind], px2) + 3; if (id === here) pill('YOU ARE HERE', '#ff8a3c', px2);
+      let px2 = L + nw + 5; px2 += pill(I.kindWord.toUpperCase(), KIND_COL[I.kind] === '#f6f0dc' ? '#8aa86a' : KIND_COL[I.kind], px2) + 3; if (id === here) pill('YOU ARE HERE', '#ff8a3c', px2);
       const sm = { font: G.FONT_S, color: '#5a4a66', shadow: false };
       const l1 = !I.visited ? "You haven't been here yet." : I.blurb; api.desc = I.desc;
-      G.wrap(l1, 165).slice(0, 1).forEach(l => G.text(ctx, l, 12, py0 + 14.5, sm));
+      G.wrap(l1, pw - 70).slice(0, 1).forEach(l => G.text(ctx, l, L, py0 + 14.5, sm));
       // services row
-      let sx = 12; const sy = py0 + 24;
+      let sx = L; const sy = py0 + 24;
       const svc = (f, label) => { f(ctx, sx + 3, sy + 3); G.text(ctx, label, sx + 8, sy, sm); ctx.font = G.FONT_S; sx += 12 + ctx.measureText(label).width; };
       if (I.services.heal) svc((c, x, y) => iconCross(c, x, y, 2.8), 'HEAL'); if (I.services.shop) svc((c, x, y) => iconCoin(c, x, y, 2.8), 'SHOP');
       if (I.services.arena) svc((c, x, y) => iconArena(c, x, y, I.badgeGot, 3), I.badge ? (I.badgeGot ? I.badge.name.toUpperCase() + ' (WON)' : I.badge.name.toUpperCase()) : 'ARENA');
       if (I.services.ferry) svc((c, x, y) => iconAnchor(c, x, y, 2.8), 'FERRY'); if (I.services.cave) svc((c, x, y) => iconCave(c, x, y, 2.8), 'CAVE');
       const wl = I.levels ? `WILD LV ${I.levels[0]}-${I.levels[1]}` : I.kind === 'city' || I.kind === 'town' ? 'NO WILD CREATURES' : '';
-      if (wl) G.text(ctx, wl, 230, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false, align: 'right' });
-      if (I.locked) { iconLock(ctx, 15, py0 + 36, 2.4); G.text(ctx, G.worldLockShort(id), 21, py0 + 33, { font: G.FONT_S, color: '#b03a3a', shadow: false }); }
-      else G.text(ctx, I.visited ? 'Open to you.' : 'Open to you, not visited yet.', 12, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false });
+      if (wl) G.text(ctx, wl, x0 + pw - 2, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false, align: 'right' });
+      if (I.locked) { iconLock(ctx, L + 3, py0 + 36, 2.4); G.text(ctx, G.worldLockShort(id), L + 9, py0 + 33, { font: G.FONT_S, color: '#b03a3a', shadow: false }); }
+      else G.text(ctx, I.visited ? 'Open to you.' : 'Open to you, not visited yet.', L, py0 + 33, { font: G.FONT_S, color: '#2a7a4a', shadow: false });
       // buttons
-      G.kit.pill(ctx, 178, py0 + 5.5, 52, 9, '#3a9ae8', G.touch ? 'TAP: ZOOM' : zoom ? 'A: ZOOM OUT' : 'A: ZOOM');
-      G.tapZone(178, py0 + 4, 52, 11, () => { zoom = !zoom; });
-      G.kit.pill(ctx, 178, py0 + 17, 52, 9, '#9a8ea8', G.touch ? 'TAP: CLOSE' : 'B: CLOSE');
-      G.tapZone(178, py0 + 16, 52, 11, () => { close = true; });
+      const bx = x0 + pw - 54;
+      G.kit.pill(ctx, bx, py0 + 5.5, 52, 9, '#3a9ae8', G.touch ? (zoom ? 'TAP: ZOOM OUT' : 'TAP: ZOOM') : zoom ? 'A: ZOOM OUT' : 'A: ZOOM');
+      G.tapZone(bx, py0 + 4, 52, 11, toggle);
+      G.kit.pill(ctx, bx, py0 + 17, 52, 9, '#9a8ea8', G.touch ? 'TAP: CLOSE' : 'B: CLOSE');
+      G.tapZone(bx, py0 + 16, 52, 11, () => { close = true; });
+      if (zoom && G.touch) G.text(ctx, 'DRAG TO LOOK AROUND', W / 2, top ? py0 + ph + 3 : py0 - 11, { font: G.FONT_S, color: '#fff', shadow: '#000', align: 'center' });
     },
   };
   api.scene = scene; G.worldMap = api; if (G.vehicles) G.vehicles._map = api;
@@ -749,9 +793,9 @@ G.worldMapScreen = async function () {
   for (;;) {
     await G.nextFrame();
     const k = G.input.pressed;
-    if (tapped >= 0) { if (tapped === sel) zoom = !zoom; else G.audio.sfx('select'); sel = tapped; tapped = -1; continue; }
+    if (tapped >= 0) { if (tapped === sel) toggle(); else G.audio.sfx('select'); sel = tapped; tapped = -1; continue; }
     if (close || k.b) break;
-    if (k.a) { zoom = !zoom; G.audio.sfx('select'); }
+    if (k.a) { toggle(); G.audio.sfx('select'); }
     const nx = navPick(nodes, sel, k); if (nx !== sel) { sel = nx; G.audio.sfx('select'); }
   }
   G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = back || G.world.scene; G.worldMap = null; if (G.vehicles) G.vehicles._map = null; await G.fadeTo(0, 8);
