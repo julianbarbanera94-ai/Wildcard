@@ -230,11 +230,15 @@ Prop and vehicle art (`js/propart.js`):
 | Motorbike | 3.5 | 8 | land and cave floors, not tall grass or marsh | none | $15,000 at Tidewheel Motors; needs 1 Ember Shard |
 | Car | 4 | 10 | roads only, no caves | none | $30,000 at Tidewheel Motors; needs Garage Lv2 and 2 shards |
 | Hoverboard | 3 | 3 | all walkable land plus water `w`; not caves | 0 | Forge tier 3, after the Lantern is lit |
+| Rowboat | 2 | 4 | water `w` only | none | Forge tier 1 (12 Plank, 4 Rope, 6 Nails), or $1,500 at Tidewheel Motors |
+| Motorboat | 3.5 | 6 | water `w` only | none | Forge tier 2 (20 Plank, 1 Engine Part, 4 Iron Ingot, 4 Rope), or $9,000 at Tidewheel Motors |
+| Sailboat | 3 | 5 | water `w` only | none | Forge tier 3 (24 Plank, 4 Cloth, 6 Rope, 8 Nails) |
 | Helicopter | flight | n/a | flies between landing spots | n/a | $80,000 at Tidewheel Motors after the Lantern is lit; needs Garage Lv3 and a Helipad |
 
 - **Riding:**
   - While riding, B gives no extra speed. Vehicles can't enter interiors: `beforeWarp` parks it outside the door, and it is waiting when you come back out.
   - Indoors, or on maps without `outdoor`, you can't take a vehicle out.
+- **Boats:** face a water tile with a boat owned and press A (`Launch the rowboat?`): the boat goes on that tile with you aboard. Boats need no Garage and never leave their map. Face a walkable shore tile and press A to step ashore; the boat stays moored (`S.vehicles.moored = { id, map, x, y, dir }`, one at a time) and you board it again by facing it and pressing A. Entering an interior moors it where it floats. The Garage lists boats under BOATS; MOOR NEARBY drops one at the closest shore water within 8 tiles. `G.vehicles.ownsBoat()` tells the ferry flow that SAIL YOUR BOAT is free.
 - **Garage:** owned vehicles, take one out (capacity = `perks.slots`; owned beyond capacity are "at the dealer lot" and can't be taken out), store the one you're riding, tune (+0.5 speed, Lv2, costs 1 Engine Part), and paint (choose a colour, Lv2).
 - **Travel menu** (the START menu has TRAVEL; the lead calls `G.travelMenu()`):
   - Ride or get off, call a parked vehicle back home, FLY with a creature, and HELICOPTER.

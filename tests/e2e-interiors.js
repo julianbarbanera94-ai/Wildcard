@@ -54,7 +54,15 @@ const OUT = process.env.OUT || '/tmp';
         while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) { const nx = x + dx, ny = y + dy, k = nx + ',' + ny; if (!seen.has(k) && pass(nx, ny)) { seen.add(k); q.push([nx, ny]); } } }
         const next = (x, y) => [[0, 1], [0, -1], [1, 0], [-1, 0]].some(([dx, dy]) => seen.has((x + dx) + ',' + (y + dy)));
         const bad = [];
-        for (const o of m.objs) { if (typeof o.prompt !== 'string' && typeof o.prompt !== 'function') bad.push('noprompt ' + o.x + ',' + o.y); if (!next(o.x, o.y)) bad.push('obj ' + o.prompt + ' ' + o.x + ',' + o.y); }
+        // an object belongs to the prop covering its cell: one reachable cell of a prop is enough to use it
+        const groups = new Map();
+        for (const o of m.objs) {
+          if (typeof o.prompt !== 'string' && typeof o.prompt !== 'function') bad.push('noprompt ' + o.x + ',' + o.y);
+          const pi = m.props.findIndex(p => o.x >= p.x && o.y >= p.y && o.x < p.x + p.w && o.y < p.y + p.h), g = pi >= 0 ? 'p' + pi : o.x + ',' + o.y;
+          groups.set(g, (groups.get(g) || false) || next(o.x, o.y));
+          if (!groups.has('n' + g)) groups.set('n' + g, o.prompt + ' ' + o.x + ',' + o.y);
+        }
+        for (const [g, ok] of groups) if (!g.startsWith('n') && !ok) bad.push('obj ' + groups.get('n' + g));
         for (const n of m.npcs) if (!next(n.x, n.y)) bad.push('npc ' + n.x + ',' + n.y);
         if (!seen.has(sx + ',' + (sy + 1))) bad.push('mat');
         // props: nothing on a wall, nothing stacked
