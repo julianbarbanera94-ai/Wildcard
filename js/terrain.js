@@ -1480,7 +1480,7 @@ function biomeFx(ctx, m, s, B, cx, cy, t, x0, y0, x1, y1) {
     const e = ov[q];
     if (e === 'snow') {
       const P = glowSprite('#ffffff', 1);
-      for (let i = 0; i < 52; i++) {
+      for (let i = 0; i < 38; i++) {
         const a = hash(i, 1, 31), b = hash(i, 2, 31), sp = .25 + hash(i, 3, 31) * .35, z = i % 3, sz = 1.4 + z * .7;
         const px = mod(a * 997 + Math.sin(t / 55 + i) * 6 + t * .1 * (1 + z * .3) - cx * (.5 + z * .2), W + 20) - 10, py = mod(b * 613 + t * sp * (.8 + z * .3) - cy * .5, H + 20) - 10;
         ctx.globalAlpha = .55 + .3 * z / 2; ctx.drawImage(P, px - sz, py - sz, sz * 2, sz * 2);
@@ -1533,9 +1533,7 @@ function biomeFx(ctx, m, s, B, cx, cy, t, x0, y0, x1, y1) {
       ctx.globalAlpha = 1;
     } else if (e === 'aurora') {
       const A = auroraSprite(), P = starSprite();
-      ctx.globalCompositeOperation = 'lighter';
-      for (let k = 0; k < 2; k++) { ctx.globalAlpha = .55 + .25 * Math.sin(t / 90 + k * 2); ctx.drawImage(A, -20 + Math.sin(t / 240 + k * 1.7) * 14 - k * 30, -4 + k * 6 + Math.sin(t / 130 + k) * 3, W + 60, 54 + 8 * k); }
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = .7 + .25 * Math.sin(t / 90); ctx.drawImage(A, -20 + Math.sin(t / 240) * 14, -4 + Math.sin(t / 130) * 3, W + 40, 58);
       for (let i = 0; i < 14; i++) { const sz = 2.2 + 2.4 * Math.max(0, Math.sin(t / 30 + i * 2.7)); ctx.globalAlpha = .8; ctx.drawImage(P, hash(i, 1, 71) * W - sz / 2, hash(i, 2, 71) * H * .55 - sz / 2, sz, sz); }
       ctx.globalAlpha = 1;
     }

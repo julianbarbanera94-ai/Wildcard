@@ -91,6 +91,7 @@ fs.mkdirSync(OUT, { recursive: true });
 
   // 4) ferries: refused with too few badges (nothing charged), too little money, and a real crossing
   const openFerry = async (from) => { await ev(f => G.runWorld(() => G.ferry(f)), from); await pressUntil(() => G.ferryDesk && G.scene === G.ferryDesk.scene && G.ui.fade.a === 0 && !G.ui.text, 20000, 'ferry desk'); };
+  const leaveDesk = async () => { await pressUntil(() => G.ferryDesk && !G.ui.text && G.scene === G.ferryDesk.scene, 8000, 'desk again'); await key('x'); await pressUntil(() => !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0 && !G.ui.text, 20000, 'back at the pier'); };
   const dockOf = id => ev(i => G.MAPS[i].dock, id);
   let d = await dockOf('driftwood');
   await ev(d => setup('driftwood', d.x, d.y, 0, null, { money: 5000, badges: 2, visited: ['driftwood'] }), d);
@@ -99,12 +100,12 @@ fs.mkdirSync(OUT, { recursive: true });
   await openFerry('driftwood'); await page.waitForTimeout(300); await shot('ferry-desk');
   await key('z'); let t = await pressUntil(() => G.ui.text && G.ui.text.lines.join(' ').includes('Arena Badges'), 5000, 'badge refusal');
   assert.match(t, /3 Arena Badges\. You have 2/); assert.equal(await ev(() => G.state.money), 5000, 'nothing charged'); assert.equal(await ev(() => G.world.mapId), 'driftwood');
-  await key('z'); await page.waitForTimeout(200); await key('x'); await pressUntil(() => !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0, 20000, 'back at the pier');
+  await leaveDesk();
   step('ferry: too few badges is refused with the reason and nothing is charged');
 
   await ev(d => setup('driftwood', d.x, d.y, 0, null, { money: 100, badges: 3, visited: ['driftwood'] }), d);
   await openFerry('driftwood'); await key('z'); t = await pressUntil(() => G.ui.text && /only have \$100/.test(G.ui.text.lines.join(' ')), 5000, 'money refusal');
-  assert.equal(await ev(() => G.state.money), 100); await key('z'); await page.waitForTimeout(200); await key('x'); await pressUntil(() => !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0, 20000, 'back at the pier');
+  assert.equal(await ev(() => G.state.money), 100); await leaveDesk();
   step('ferry: too little money is refused and nothing is charged');
 
   await ev(d => setup('driftwood', d.x, d.y, 0, null, { money: 5000, badges: 3, visited: ['driftwood'] }), d);

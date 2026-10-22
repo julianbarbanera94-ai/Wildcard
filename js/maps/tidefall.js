@@ -69,7 +69,6 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   scatter(m, 'f', [[27, 20], [28, 20], [33, 20], [32, 20]]);
   // the pier and the dock
   rect(m, 30, 28, 2, 8, 'z'); rect(m, 29, 33, 1, 2, 'z'); rect(m, 32, 33, 1, 2, 'z');
-  scatter(m, 'l', [[29, 28], [32, 28], [29, 35], [32, 35]]); scatter(m, 'd', [[29, 31], [32, 31]]);
   m.dock = { x: 30, y: 35 };
   m.npcs.push({ x: 31, y: 35, dir: DOWN, style: { hair: '#d8d8d8', skin: '#e8c098', shirt: '#2a6ab0', pants: '#304060', hat: '#f0f0f0' }, still: true, talk: () => G.ferry ? G.ferry('tidefall') : G.story.says('The ferry is not running yet.') });
   // the far islet at the end of the pier

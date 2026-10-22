@@ -792,7 +792,10 @@ function pathAt(pts, k) {   // point along a polyline at fraction k, with its he
 }
 // Smooth the sea path so the boat turns gently.
 function seaPath(pts) { const out = []; const n = 60; for (let i = 0; i <= n; i++) { const k = i / n, p = pathAt(pts, k); out.push([p.x, p.y]); } return out; }
-async function sail(from, to) {
+let sailBoat = false;
+const byBoatNow = () => sailBoat;
+async function sail(from, to, boat) {
+  sailBoat = !!boat;
   const pts = ferryPath(from, to), A = BYID[from], B = BYID[to], len = pathAt(pts, 0).len, T = Math.max(230, Math.min(420, Math.round(len / 2.3)));
   const trail = []; let t = 0, k = 0, vcx = A.port ? A.port[0] / RW : A.nx, vcy = A.port ? A.port[1] / RH : A.ny;
   const scene = {
@@ -809,7 +812,7 @@ async function sail(from, to) {
         } });
       // caption + progress
       G.frame(ctx, 4, 4, 232, 20, 'dark');
-      G.text(ctx, `FERRY: ${G.worldShort(from)} to ${G.worldShort(to)}`, 12, 8, { font: G.FONT_B || G.FONT, color: '#ffffff', shadow: '#0c2a40' });
+      G.text(ctx, `${byBoatNow() ? 'BOAT' : 'FERRY'}: ${G.worldShort(from)} to ${G.worldShort(to)}`, 12, 8, { font: G.FONT_B || G.FONT, color: '#ffffff', shadow: '#0c2a40' });
       ctx.fillStyle = 'rgba(0,20,40,.5)'; G.kit.rr(ctx, 12, 18, 216, 3, 1.5); ctx.fill(); ctx.fillStyle = '#7ae8ff'; G.kit.rr(ctx, 12, 18, Math.max(2, 216 * k), 3, 1.5); ctx.fill();
     },
   };
@@ -859,13 +862,13 @@ G.ferry = async function (fromId) {
         G.text(ctx, txt, 22, yy + 7.5, { font: G.FONT_S, color: r.why ? '#b03a3a' : '#2a7a4a', shadow: false });
         if (r.why) iconLock(ctx, 22 + ctx.measureText(txt).width + 6, yy + 10.5, 2);
       });
-      G.text(ctx, G.touch ? 'TAP: BUY   TAP MAP: BACK' : 'A: BUY TICKET   B: BACK', 12, y0 + h - 8.5, { font: G.FONT_S, color: '#8a7a90', shadow: false });
+      G.text(ctx, G.touch ? 'TAP: BUY   TAP MAP: BACK' : (G.vehicles && G.vehicles.ownsBoat && G.vehicles.ownsBoat() ? 'A: TICKET OR YOUR BOAT   B: BACK' : 'A: BUY TICKET   B: BACK'), 12, y0 + h - 8.5, { font: G.FONT_S, color: '#8a7a90', shadow: false });
       G.tapZone(-999, -999, 2400, 2400, () => { cancel = true; });
     },
   };
   G.ferryDesk = { scene, routes, get sel() { return sel; }, set sel(v) { sel = v; }, here };
   G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = scene; await G.fadeTo(0, 8);
-  let dest = null;
+  let dest = null, byBoat = false;
   for (;;) {
     await G.nextFrame(); const k = G.input.pressed;
     if (tapped >= 0) { if (tapped === sel) k.a = true; else { sel = tapped; G.audio.sfx('select'); } tapped = -1; }
@@ -874,17 +877,21 @@ G.ferry = async function (fromId) {
     if (!k.a) continue;
     const r = routes[sel];
     if (r.why) { G.audio.sfx('bump'); await says('FERRY CAPTAIN: ' + r.why); continue; }
+    const boat = !!(G.vehicles && G.vehicles.ownsBoat && G.vehicles.ownsBoat());
+    if (boat) {   // owners of a boat may sail it across for free (same destinations and requirements)
+      const c = await G.choose([`BUY TICKET ${dollars(r.price)}`, 'SAIL YOUR BOAT', 'CANCEL'], { right: 236, y: 4, minW: 70, rowH: 13 }); G.closeText();
+      if (c === 1) { G.audio.sfx('select'); dest = r; byBoat = true; break; }
+      if (c !== 0) continue;
+    }
     if (S.money < r.price) { G.audio.sfx('bump'); await says(`FERRY CAPTAIN: A ticket to ${G.worldShort(r.to)} is ${dollars(r.price)}, and you only have ${dollars(S.money)}.`); continue; }
-    await G.say(`Buy a ticket to ${G.worldShort(r.to)} for ${dollars(r.price)}?`, { auto: 1 });
-    const yes = await G.yesNo(); G.closeText();
-    if (!yes) continue;
+    if (!boat) { await G.say(`Buy a ticket to ${G.worldShort(r.to)} for ${dollars(r.price)}?`, { auto: 1 }); const yes = await G.yesNo(); G.closeText(); if (!yes) continue; }
     S.money -= r.price; G.audio.sfx('buy'); dest = r; break;
   }
   G.ferryDesk = null;
   if (!dest) { await G.fadeTo(1, 8, '#000'); G.scene = back; await G.fadeTo(0, 8); await says('FERRY CAPTAIN: Come back whenever you need to cross!'); return false; }
-  await says(`FERRY CAPTAIN: All aboard! Next stop, ${BYID[dest.to].name}.`);
+  await says(byBoat ? `You cast off in your own boat, bound for ${BYID[dest.to].name}.` : `FERRY CAPTAIN: All aboard! Next stop, ${BYID[dest.to].name}.`);
   G.audio.sfx('warp'); await G.fadeTo(1, 10, '#000');
-  await sail(here, dest.to);
+  await sail(here, dest.to, byBoat);
   G.ui.fade.a = 1;
   S.visited = S.visited || {}; S.visited[dest.to] = true;
   G.loadMap(dest.to);

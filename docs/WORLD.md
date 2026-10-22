@@ -111,10 +111,10 @@ Each exit is two tiles wide: the listed tile and the next one along the edge. "A
 | `cloudpeak` | W | (0,30) | `evergreen` | (58,24) | 1 |
 | `glacier` | S | (30,43) | `emberfall` | (1,20) | 6 |
 | `emberfall` | W | (0,20) | `glacier` | (30,42) | 5 |
-| `ridge` | N | (36,0) | `cloudpeak` | (24,58) | 3 |
-| `cloudpeak` | S | (24,59) | `ridge` | (36,1) | - |
-| `ridge` | E | (51,40) | `lakeside` | (1,24) | - |
-| `lakeside` | W | (0,24) | `ridge` | (50,40) | - |
+| `ridge` | N | (46,0) | `cloudpeak` | (24,58) | 3 |
+| `cloudpeak` | S | (24,59) | `ridge` | (46,1) | - |
+| `ridge` | E | (51,45) | `lakeside` | (1,24) | - |
+| `lakeside` | W | (0,24) | `ridge` | (50,45) | - |
 | `lakeside` | E | (55,22) | `glacier` | (1,34) | 5 |
 | `glacier` | W | (0,34) | `lakeside` | (54,22) | - |
 | `cloudpeak` | E | (63,20) | `glacier` | (1,20) | 5 |

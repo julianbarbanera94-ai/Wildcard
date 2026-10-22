@@ -60,7 +60,6 @@ const item = (m, x, y, id, name, qty) => m.objs.push(Object.assign({ x, y, id, i
   // the ferry dock at the end of the pier: boats to Moonlit Island leave from here
   m.dock = { x: 20, y: 34 }; m.landing = { x: 30, y: 4 };
   npc(m, 21, 34, LEFT, 'old', null, { still: true, style: { hair: '#d8d8d8', skin: '#e8c098', shirt: '#2a6ab0', pants: '#304060', hat: '#f0f0f0' }, talk: () => G.ferry ? G.ferry('shore') : G.story.says('The ferry is not running yet.') });
-  scatter(m, 'l', [[19, 33], [22, 34]]);
 
   // The lighthouse on a rocky point in the south-east, with a cliff ridge behind it.
   blob(m, 53, 29, 6, 4, 'y', null, .1);

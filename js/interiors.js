@@ -216,7 +216,7 @@ function buildBarn(b) {
     R.windows([[3, 1], [6, 1], [9, 1], [12, 1]]);
     pen(1, 1); pen(4, 1); pen(7, 1); pen(10, 1); pen(1, 5); pen(12, 5);
     hay(3, 1); milk(6, 1); hay(9, 1); milk(13, 1); R.prop('plant', 13, 2);
-    stall(3, 5); stall(10, 5); milk(5, 6); trough(6, 6, 3); milk(9, 6);
+    stall(3, 5); stall(10, 5); milk(4, 7); trough(6, 6, 3); milk(10, 7);
     R.prop('rug', 5, 7, 5, 2, { flat: true });
     farmhand(11, 8, LEFT); R.prop('lamp', 1, 8); R.prop('lamp', 13, 8); R.prop('plant', 3, 8); R.prop('plant', 12, 8); hay(1, 4); hay(13, 4);
   }
@@ -254,7 +254,7 @@ function buildStation(b) {
     R.prop('healer', 6, 1, 1, 1, healerO); R.prop('healer', 7, 1, 1, 1, healerO);
     bed(6, 3); bed(7, 3);
     R.prop('rug', 1, 4, 3, 2, { flat: true });
-    R.prop('sofa', 1, 5, 2, 1); R.prop('table', 3, 4); R.prop('plant', 1, 4); R.prop('monitor', 5, 2, 1, 1, { prompt: 'Monitor', say: () => `HEAL LOG: ${left()} of ${R.perks.perDay} heals left today. Revives fainted creatures: yes.` });
+    R.prop('sofa', 1, 5, 2, 1); R.prop('table', 3, 4); R.prop('plant', 1, 4); R.prop('monitor', 1, 3, 1, 1, { prompt: 'Monitor', say: () => `HEAL LOG: ${left()} of ${R.perks.perDay} heals left today. Revives fainted creatures: yes.` });
     R.prop('lamp', 7, 5);
   } else {
     R.windows([[1, 1], [3, 2], [8, 2]]);
