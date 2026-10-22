@@ -127,11 +127,11 @@ const OUT = process.env.OUT || '/tmp';
     const b = await T('put', type, 1, mapId);
     const door = await ev(() => G.home.door(G.state.builds.find(x => x.id !== 'house')));
     await ev(([d]) => { G.placePlayer(d[0], d[1] + 1, 1); }, [door]); await page.waitForTimeout(150);
-    await key('ArrowUp', 100);
+    await key('ArrowUp', 350);
     await until(([id]) => G.world.mapId === id && G.ui.fade.a === 0 && !G.world.busy, 8000, 'inside ' + type, ['in_' + b.id]);
     const inside = await where(), want = await ev(id => G.home.interiorEntry(id), 'in_' + b.id);
     assert.deepEqual([inside.x, inside.y], want, type + ': arrive just inside the mat');
-    await key('ArrowDown', 100);
+    await key('ArrowDown', 350);
     await until(() => G.world.mapId === 'homestead' && G.ui.fade.a === 0 && !G.world.busy, 8000, 'outside ' + type);
     const out = await where();
     assert.deepEqual([out.x, out.y], [door[0], door[1] + 1], type + ': the exit puts you in front of the door');
@@ -275,7 +275,7 @@ const OUT = process.env.OUT || '/tmp';
     // leave through the new door position
     await ev(id => { G.loadMap(id); const [ex, ey] = G.home.interiorEntry(id); G.placePlayer(ex, ey, 1); }, id); await page.waitForTimeout(200);
     await ev(id => { const s = G.state.builds.find(x => x.type === 'barn'); s.y += 1; G.home.refresh(); }, id);   // moved while you are inside
-    await key('ArrowDown', 100); await until(() => G.world.mapId === 'homestead' && G.ui.fade.a === 0 && !G.world.busy, 8000, 'out');
+    await key('ArrowDown', 350); await until(() => G.world.mapId === 'homestead' && G.ui.fade.a === 0 && !G.world.busy, 8000, 'out');
     const o2 = await ev(() => { const s = G.state.builds.find(x => x.type === 'barn'), d = G.home.door(s); return [G.world.p.x, G.world.p.y, d[0], d[1] + 1]; });
     assert.deepEqual(o2.slice(0, 2), o2.slice(2), 'you step out at the moved door');
     // removing drops the interior (only when you are not inside)
@@ -288,9 +288,9 @@ const OUT = process.env.OUT || '/tmp';
     await T('fresh');
     const b = await T('put', type, 1, 'sunmeadow'), id = 'in_' + b.id;
     const door = await ev(() => G.home.door(G.state.builds.find(x => x.id !== 'house')));
-    await ev(([d]) => { G.placePlayer(d[0], d[1] + 1, 1); }, [door]); await page.waitForTimeout(150); await key('ArrowUp', 100);
+    await ev(([d]) => { G.placePlayer(d[0], d[1] + 1, 1); }, [door]); await page.waitForTimeout(150); await key('ArrowUp', 350);
     await until(([id]) => G.world.mapId === id && G.ui.fade.a === 0 && !G.world.busy, 8000, 'inside ' + type, [id]);
-    await key('ArrowDown', 100); await until(() => G.world.mapId === 'sunmeadow' && G.ui.fade.a === 0 && !G.world.busy, 8000, 'back out');
+    await key('ArrowDown', 350); await until(() => G.world.mapId === 'sunmeadow' && G.ui.fade.a === 0 && !G.world.busy, 8000, 'back out');
     const out = await where(); assert.deepEqual([out.x, out.y], [door[0], door[1] + 1]);
     assert.deepEqual((await T('reach', id)).bad, []);
   }
@@ -306,7 +306,7 @@ const OUT = process.env.OUT || '/tmp';
     assert.equal(st.map, id); assert(st.ok && st.lvl === 2);
     await shot('reloaded-inside');
     // walk out through the mat of the reloaded interior
-    await ev(id => { const [ex, ey] = G.home.interiorEntry(id); G.placePlayer(ex, ey, 1); }, id); await key('ArrowDown', 100);
+    await ev(id => { const [ex, ey] = G.home.interiorEntry(id); G.placePlayer(ex, ey, 1); }, id); await key('ArrowDown', 350);
     await until(() => G.world.mapId === 'homestead' && G.ui.fade.a === 0 && !G.world.busy, 8000, 'out after reload');
     const out = await ev(() => { const s = G.state.builds.find(x => x.type === 'forge'), d = G.home.door(s); return [G.world.p.x, G.world.p.y, d[0], d[1] + 1]; });
     assert.deepEqual(out.slice(0, 2), out.slice(2));
