@@ -93,7 +93,7 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   building(m, 44, 14, 9, 'U', 4);     // door (48,16)
   rect(m, 43, 17, 11, 5, '%'); rect(m, 48, 17, 2, 5, '%');
   scatter(m, 'l', [[43, 17], [53, 17], [46, 19], [51, 19]]);
-  rect(m, 43, 14, 1, 3, 'F'); rect(m, 53, 14, 1, 3, 'F');
+  rect(m, 43, 14, 1, 3, 'F'); rect(m, 42, 11, 12, 1, 'p'); rect(m, 53, 8, 1, 10, 'p'); rect(m, 50, 7, 4, 2, 'f');
   // -- the mill, by the river --
   building(m, 31, 7, 5, 'R', 2);      // door (33,9)
   rect(m, 33, 10, 1, 1, 'p'); rect(m, 36, 9, 1, 3, 'd'); set(m, 36, 9, 'd');
@@ -115,12 +115,12 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   const grove = (x, y, w, h, chs, pct) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const X = x + i, Y = y + j, k = hash(X, Y); if (m.t[Y] && m.t[Y][X] === 'g' && k < pct) set(m, X, Y, chs[Math.floor(hash(Y, X) * chs.length)]); } };
   grove(2, 30, 6, 12, ['#', 'n', 'u'], .25); grove(10, 31, 14, 10, ['#', 'n', 'u'], .2); grove(30, 31, 6, 10, ['#', 'u'], .2);
   grove(44, 31, 10, 11, ['#', 'n', 'u'], .2); grove(42, 7, 12, 6, ['#', 'n'], .4); grove(15, 7, 2, 4, ['u'], .5); grove(2, 14, 10, 9, ['#', 'u'], .15);
-  grove(20, 7, 8, 4, ['u', 'f'], .3);
+  grove(20, 7, 6, 4, ['u', 'f'], .3);
   // clear flat building ground (6x6 each): south-west and south-east
   rect(m, 4, 31, 7, 7, 'g'); rect(m, 44, 32, 7, 7, 'g');
   rect(m, 22, 31, 4, 1, 'f'); rect(m, 29, 33, 4, 2, 'f'); rect(m, 15, 20, 3, 1, 'f');
   scatter(m, 'f', [[11, 23], [12, 22], [24, 8], [25, 9], [45, 24], [50, 24], [16, 17], [33, 24]]);
-  scatter(m, 'l', [[21, 17], [33, 17], [26, 22], [30, 22], [26, 14], [30, 14], [14, 21], [41, 21], [36, 21], [26, 29], [30, 29], [18, 11], [34, 11], [8, 22], [24, 28]]);
+  scatter(m, 'l', [[21, 17], [34, 17], [26, 22], [30, 22], [26, 14], [30, 14], [14, 21], [41, 21], [36, 21], [26, 29], [30, 29], [18, 11], [34, 11], [8, 22], [24, 28]]);
   scatter(m, 'u', [[15, 24], [16, 24], [34, 24], [35, 24], [17, 17], [18, 17], [20, 13], [24, 13]]);
   scatter(m, 'd', [[41, 12], [14, 29], [33, 35]]);
   // flowering banks on the plaza edge
@@ -137,7 +137,7 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   item(m, 5, 41, 'sb_potion', 'Potion');                // south-west grove
   item(m, 3, 16, 'sb_orb', 'Terra Orb', 2);             // behind the west trees
   item(m, 51, 8, 'sb_sp', 'Super Potion');              // secret nook, north-east
-  item(m, 52, 41, 'sb_shard', 'Crystal Shard');         // beside the pool
+  item(m, 50, 35, 'sb_shard', 'Crystal Shard');         // beside the pool
   item(m, 13, 9, 'sb_heal', 'Full Heal');               // by the pond
 
   // -- people --
@@ -146,8 +146,8 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   npc(m, 31, 19, LEFT, 'lass', ['The Healing Centre is the red-roofed one. It is free! Even the grumpy Warden from Mirewood uses it.'], { roam: 1 });
   npc(m, 50, 23, UP, 'hiker', ['East of here the road climbs into the Whispering Woods. You will need a Keystone Badge to pass the ranger.', 'The woods glow at night. They say a hidden shrine sleeps somewhere inside.'], { still: true });
   npc(m, 44, 20, RIGHT, 'camper', ['I came to challenge the Arena. Then I saw the lines. Now I am just here for the view.'], { roam: 1 });
-  npc(m, 33, 12, DOWN, 'mom', ['The mill grinds flour for the whole town. Bring me Wheat and I will tell you a bread recipe!'], { roam: 1 });
-  npc(m, 12, 28, RIGHT, 'bug', ['The pond below the Whistling Falls is full of Dewsnail and Padhop.', 'South of town the river tumbles down to Tidepool Shore. Follow the road past the pool.'], { roam: 1 });
+  npc(m, 33, 11, DOWN, 'mom', ['The mill grinds flour for the whole town. Bring me Wheat and I will tell you a bread recipe!'], { roam: 1 });
+  npc(m, 13, 28, RIGHT, 'bug', ['The pond below the Whistling Falls is full of Dewsnail and Padhop.', 'South of town the river tumbles down to Tidepool Shore. Follow the road past the pool.'], { roam: 1 });
   npc(m, 37, 30, DOWN, 'boy', ['I jumped off the lower falls once. Once.'], { still: true });
   npc(m, 41, 30, UP, 'old', ['The pool at the bottom of the falls is deep. Old Stonebridge folk say the river keeps lost keys and lost tempers.'], { still: true });
   npc(m, 9, 22, UP, 'girl', ['The west road runs back to Mirewood Marsh. Mind the boardwalks!'], { roam: 1 });
@@ -159,12 +159,12 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
     { x: 33, y: 7, text: 'STONEBRIDGE MILL', style: 'craft' },
   ];
   // -- doors --
-  warp(m, 22, 16, 'stoneheal', 3, 6, UP);
-  warp(m, 33, 16, 'stonemart', 3, 6, UP);
+  warp(m, 22, 16, 'stoneheal', 3, 5, UP);
+  warp(m, 33, 16, 'stonemart', 3, 5, UP);
   warp(m, 48, 16, 'arena_stonebridge', 0, 0, UP);
-  warp(m, 33, 9, 'stonemill', 3, 6, UP);
-  warp(m, 8, 19, 'stonehouse1', 3, 6, UP);
-  warp(m, 19, 9, 'stonehouse2', 3, 6, UP);
+  warp(m, 33, 9, 'stonemill', 3, 5, UP);
+  warp(m, 8, 19, 'stonehouse1', 3, 5, UP);
+  warp(m, 19, 9, 'stonehouse2', 3, 5, UP);
   // -- exits --
   G.mk.edgeExit(m, 'N', 27, 'lanternrest', 28, 50);
   G.mk.edgeExit(m, 'W', 22, 'mirewood', 74, 24);

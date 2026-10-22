@@ -115,11 +115,11 @@ trainer(m, 'evergreen_ranger2', 51, 31, UP, 'camper', { name: 'ASH', cls: 'HEAD 
 
 // ---- Villagers ----
 npc(m, 32, 20, LEFT, 'old', ['This is the Elder Oak. It has watched over the forest for a thousand years.', 'Sit a while under it. Your creatures will feel calmer.'], { still: true });
-npc(m, 22, 8, DOWN, 'mom', ['I am the cabin cook for the rangers. Everyone here is always hungry.'], { still: true });
-npc(m, 33, 43, UP, 'kid', ['I got lost looking for the Elder Oak. Then I found it. Then I got lost again!'], { roam: 2 });
+npc(m, 19, 9, DOWN, 'mom', ['I am the cabin cook for the rangers. Everyone here is always hungry.'], { still: true });
+npc(m, 35, 43, UP, 'kid', ['I got lost looking for the Elder Oak. Then I found it. Then I got lost again!'], { roam: 2 });
 npc(m, 48, 34, DOWN, 'old', ['The rangers watch the gate to Cloudpeak. Only experienced Wardens may pass.', 'Three Badges, they say.'], { still: true });
 npc(m, 14, 30, RIGHT, 'girl', ['Some of the glades here are hidden. Look for thin gaps between the trees.'], { still: true });
-npc(m, 41, 12, DOWN, 'bug', ['I heard that a glade full of flowers hides in the north-east. The path is only one tile wide!'], { roam: 1 });
+npc(m, 39, 12, DOWN, 'bug', ['I heard that a glade full of flowers hides in the north-east. The path is only one tile wide!'], { roam: 1 });
 npc(m, 20, 44, UP, 'lass', ['South goes back to Sunhaven. The Arena there is run by a Grass-type Leader.'], { roam: 1 });
 
 // ---- Warps ----

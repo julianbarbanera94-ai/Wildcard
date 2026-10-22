@@ -102,10 +102,10 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   m.landing = { x: 27, y: 27 };
 
   warp(m, 27, 31, 'arena_lakeside', 0, 0, UP);
-  warp(m, 13, 31, 'lake_heal', 3, 6, UP); warp(m, 41, 31, 'lake_shop', 3, 6, UP);
-  warp(m, 28, 11, 'lake_gazebo', 3, 5, UP);
-  warp(m, 10, 38, 'lake_house1', 3, 6, UP); warp(m, 46, 38, 'lake_house2', 3, 6, UP);
-  warp(m, 18, 23, 'lake_boat', 3, 5, UP);
+  warp(m, 13, 31, 'lake_heal', 3, 5, UP); warp(m, 41, 31, 'lake_shop', 3, 5, UP);
+  warp(m, 28, 11, 'lake_gazebo', 3, 4, UP);
+  warp(m, 10, 38, 'lake_house1', 3, 5, UP); warp(m, 46, 38, 'lake_house2', 3, 5, UP);
+  warp(m, 18, 23, 'lake_boat', 3, 4, UP);
   // exits (kept as in docs/WORLD.md; the Ridge end moved down to y 45)
   edgeExit(m, 'W', 24, 'ridge', 50, 45, null);
   edgeExit(m, 'E', 22, 'glacier', 1, 34, gate(5, 'GLACIER PASS'));

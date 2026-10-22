@@ -130,7 +130,7 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   item(m, 5, 5, 'sunhaven_potion', 'Super Potion');         // behind the NW houses
   item(m, 57, 2, 'sunhaven_orb', 'Verdant Orb');            // NE corner by the trees
   item(m, 49, 46, 'sunhaven_heal', 'Full Heal');            // south park
-  item(m, 3, 25, 'sunhaven_pearl', 'Pearl');                // end of the west pier
+  item(m, 4, 24, 'sunhaven_pearl', 'Pearl');                // end of the west pier
 
   // ---- Trainers ----
   trainer(m, 'sunhaven_sailor', 17, 44, RIGHT, 'boy', { name: 'MARLO', cls: 'SAILOR', sight: 4, team: [[32, 15], [41, 15], [4, 16]], pre: 'Fresh off the boat and itching for a scrap!', win: 'Sunk without a splash...', post: 'The Arena Leader loves roses. Mind the thorns.', prize: 900 });
@@ -145,7 +145,7 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   npc(m, 23, 36, RIGHT, 'boy', ['The ferries leave from Driftwood, not here. We only have fishing boats!', 'I am going to be a captain someday.'], { roam: 1 });
   npc(m, 29, 8, RIGHT, 'camper', ['Evergreen Forest starts just north. The trees are enormous!', 'Bring at least one Badge. The rangers up there are strict.'], { still: true });
   npc(m, 14, 13, DOWN, 'lass', ['The towers by the plaza are apartments. The view of the bay from the top is lovely.'], { roam: 2 });
-  npc(m, 6, 26, DOWN, 'old', ['I have fished off this pier for fifty years.', 'Pearls wash up here now and then. Keep your eyes open!'], { still: true });
+  npc(m, 6, 25, DOWN, 'old', ['I have fished off this pier for fifty years.', 'Pearls wash up here now and then. Keep your eyes open!'], { still: true });
   npc(m, 60, 25, UP, 'bug', ['East lies Sunmeadow and then Lanternrest. I came all that way to see the sea!'], { roam: 1 });
   npc(m, 54, 3, LEFT, 'girl', ['This clear lawn is perfect for a building plot. Imagine a cottage right here by the sea breeze!'], { still: true });
 
@@ -172,7 +172,7 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
 // ---- Interiors ----
 (function () {
   const m = interior('sunheal', 'SUNHAVEN HEALING CENTRE', 10, 8, 5);
-  rect(m, 2, 2, 5, 1, 'k'); set(m, 8, 1, 'P'); set(m, 1, 1, 'h'); rect(m, 7, 5, 2, 1, 'a'); scatter(m, 'S', [[6, 1]]);
+  rect(m, 2, 2, 5, 1, 'k'); set(m, 8, 1, 'P'); set(m, 1, 1, 'h'); rect(m, 7, 5, 2, 1, 'a');
   npc(m, 4, 1, DOWN, 'nurse', null, { still: true });
   npc(m, 2, 5, RIGHT, 'boy', ['Resting here is free. Sailors come in with salty, sleepy teams all the time.']);
   for (let x = 2; x <= 6; x++) m.objs.push({ x, y: 2, prompt: 'Heal', fn: () => G.healUI ? G.healUI({ name: 'HEALING CENTRE', free: true }) : G.story.nurse() });

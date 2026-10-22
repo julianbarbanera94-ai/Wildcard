@@ -40,13 +40,22 @@ G.VEHICLES = {
     where: 'all open land and even water, but not caves',
     how: 'Craft one at a Master Forge (tier 3) after the Great Lantern is lit.',
     desc: 'It floats over grass and water alike. Wild creatures never notice you pass.' },
+  rowboat: { name: 'Rowboat', speed: 2, turn: 4, tiles: 'w', boat: true, enc: 0, price: 1500, color: '#b9783c',
+    where: 'water only', how: 'Craft one at a Forge (tier 1), or buy one for $1,500 at Tidewheel Motors.',
+    desc: 'A little wooden rowboat. Slow and steady across any open water.' },
+  motorboat: { name: 'Motorboat', speed: 3.5, turn: 6, tiles: 'w', boat: true, enc: 0, price: 9000, color: '#e04848',
+    where: 'water only', how: 'Craft one at a Forge (tier 2), or buy one for $9,000 at Tidewheel Motors.',
+    desc: 'An outboard motorboat. It skips across open water almost twice as fast as rowing.' },
+  sailboat: { name: 'Sailboat', speed: 3, turn: 5, tiles: 'w', boat: true, enc: 0, price: 0, color: '#3a78e0',
+    where: 'water only', how: 'Craft one at a Master Forge (tier 3).',
+    desc: 'A graceful sailboat with a bright white sail. Quick, quiet and lovely to look at.' },
   helicopter: { name: 'Helicopter', speed: 0, turn: 0, tiles: '', enc: 0, price: 80000, color: '#e05030', flies: true, req: { lit: true, struct: { garage: 3, helipad: 1 } },
     where: 'flies between landing spots',
     how: '$80,000 at Tidewheel Motors after the Lantern is lit. Needs a Motor Hall (Garage Lv3) and a Helipad.',
     desc: 'Your own helicopter. Fly to any landing spot in the vale you have visited.' },
 };
 const ORDER = Object.keys(G.VEHICLES);
-const SOLD = ['bicycle', 'motorbike', 'car', 'helicopter'];
+const SOLD = ['bicycle', 'rowboat', 'motorboat', 'motorbike', 'car', 'helicopter'];
 const PAINTS = [['RED', '#e04848'], ['BLUE', '#3a78e0'], ['GREEN', '#3fae5a'], ['YELLOW', '#f0c030'], ['PURPLE', '#9a5ae0'], ['BLACK', '#3a3a48']];
 const TILE_WORD = { G: 'tall grass', q: 'marsh reeds', c: 'cave floors', e: 'cave floors', M: 'cave mouths', w: 'water', g: 'grass', f: 'flowers' };
 
@@ -65,7 +74,7 @@ const LANDING = {
 function st() {
   const S = G.state;
   const V = S.vehicles = S.vehicles || {};   // fill defaults in place: callers keep references to this object
-  for (const [k, d] of [['owned', null], ['riding', null], ['parked', null], ['paint', null], ['tune', null], ['heli', null]]) if (V[k] === undefined) V[k] = d;
+  for (const [k, d] of [['owned', null], ['riding', null], ['parked', null], ['paint', null], ['tune', null], ['heli', null], ['moored', null]]) if (V[k] === undefined) V[k] = d;
   if (!Array.isArray(V.owned)) V.owned = [];
   V.paint = V.paint || {}; V.tune = V.tune || {};
   if (V.riding && !G.VEHICLES[V.riding]) V.riding = null;
@@ -86,13 +95,15 @@ const helipadB = () => (G.state.builds || []).find(b => b.type === 'helipad') ||
 const garageLvl = () => { const b = garageB(); return b && G.home ? G.home.lvl(b) : 0; };
 const perks = () => { const b = garageB(); return b && G.home ? G.home.L(b).perks : { slots: 0 }; };
 const slots = () => perks().slots || 0;
-const landOwned = () => st().owned.filter(id => !V$(id).flies);
+const landOwned = () => st().owned.filter(id => !V$(id).flies && !V$(id).boat);
+const isBoat = id => !!(V$(id) && V$(id).boat);
 // Vehicles beyond the garage's capacity (in the order you got them) wait at the dealer lot.
-const atLot = id => !V$(id).flies && landOwned().indexOf(id) >= slots();
+const atLot = id => !V$(id).flies && !V$(id).boat && landOwned().indexOf(id) >= slots();
 function whereIs(id) {
   const V = st();
   if (!owns(id)) return 'none';
   if (V$(id).flies) return V.heli ? 'away' : 'pad';
+  if (V$(id).boat) return V.riding === id ? 'riding' : (V.moored && V.moored.id === id) ? 'moored' : 'stowed';
   if (V.riding === id) return 'riding';
   if (V.parked && V.parked.id === id) return 'parked';
   return atLot(id) ? 'lot' : 'garage';
@@ -112,6 +123,7 @@ function allowed(id, ch) {
 }
 function refusal(id, ch) {
   const V = V$(id);
+  if (V.boat) return `${a_(id) === 'an' ? 'An' : 'A'} ${V.name} can only sail on water.`;
   if (V.road) return `${a_(id) === 'an' ? 'An' : 'A'} ${V.name} can only go on roads and paths.`;
   return `${a_(id) === 'an' ? 'An' : 'A'} ${V.name} can't go on ${TILE_WORD[ch] || 'that ground'}.`;
 }
@@ -119,6 +131,7 @@ function refusal(id, ch) {
 function vehicleAt(x, y) {
   const V = st(), m = G.world.mapId;
   if (V.parked && V.parked.map === m && V.parked.x === x && V.parked.y === y) return { kind: 'parked', id: V.parked.id };
+  if (V.moored && V.moored.map === m && V.moored.x === x && V.moored.y === y && owns(V.moored.id)) return { kind: 'moored', id: V.moored.id };
   if (V.heli && owns('helicopter') && V.heli.map === m && V.heli.x === x && V.heli.y === y) return { kind: 'heli', id: 'helicopter' };
   return null;
 }
@@ -157,6 +170,7 @@ const SEAT = {
 };
 const hasArt = () => !!(G.homeArt && G.homeArt.vehicle);
 function seat(id, dir) {
+  if (ownBoatArt(id)) return boatSeat(id, dir);
   let s = null;
   if (hasArt() && G.homeArt.seat) { try { s = G.homeArt.seat(id, dir); } catch (e) { s = null; } }
   s = Object.assign({ dx: 0, dy: 0 }, s || SEAT[id][dir] || {});
@@ -165,6 +179,7 @@ function seat(id, dir) {
 }
 function art(ctx, id, dir, x, y, t, info) {
   info = Object.assign({ color: colorOf(id) }, info);
+  if (ownBoatArt(id)) { boatArt(ctx, id, dir, x, y, t, info); return; }
   if (hasArt()) { try { G.homeArt.vehicle(ctx, id, dir, x, y, t, info); return; } catch (e) { /* use the fallback */ } }
   fallback(ctx, id, dir, x, y, t, info);
 }
@@ -358,6 +373,142 @@ function fallback(c, id, dir, x, y, t, info) {
   c.restore();
 }
 
+// ---- Boats: drawn art (used unless G.homeArt.vehicleIds lists the boat) -------------------------------
+const BOATS = { rowboat: 1, motorboat: 1, sailboat: 1 };
+const ownBoatArt = id => !!BOATS[id] && !(hasArt() && G.homeArt.vehicleIds && G.homeArt.vehicleIds.includes(id));
+const boatBob = t => Math.sin(t / 17) * .7;
+function boatSeat(id, dir) {
+  const s = dir === RIGHT ? 1 : -1, b = boatBob(G.frameNo);
+  if (dir < 2) return { dx: 0, dy: -6 + b };
+  return { dx: -s * (id === 'motorboat' ? 2.5 : id === 'sailboat' ? 3 : .5), dy: -2 + b };
+}
+function waterFx(c, cx, gy, side, s, dirY, t, mv) {
+  const rx = side ? 12.5 : 7.5, ry = side ? 2.8 : 3.4, cy = side ? gy - 1.2 : gy - 9;
+  ell(c, cx, side ? gy - 1.2 : gy - 8, rx, side ? ry : 8.5, 'rgba(20,60,100,.2)');   // soft shadow on the water
+  for (const off of [0, 27]) {
+    const ph = ((t + off) % 54) / 54;
+    c.strokeStyle = `rgba(255,255,255,${.6 * (1 - ph)})`; c.lineWidth = .6; c.beginPath(); c.ellipse(cx, cy, rx + 1 + ph * 6, side ? ry + ph * 2 : 8.5 + ph * 3, 0, 0, TAU); c.stroke();
+  }
+  if (!mv) return;
+  for (let k = 0; k < 3; k++) {   // wake: V lines streaming off the stern
+    const q = ((t * .9 + k * 9) % 27) / 27, a = (1 - q) * .75, len = 5 + q * 10, sp = 1.2 + q * 3.4;
+    c.strokeStyle = `rgba(255,255,255,${a})`; c.lineWidth = .8; c.lineCap = 'round';
+    for (const sg of [-1, 1]) {
+      c.beginPath();
+      if (side) { const sx = cx - s * 10; c.moveTo(sx, gy - 1.6); c.lineTo(sx - s * len, gy - 1.6 + sg * sp * .6); }
+      else { const sy = dirY > 0 ? gy - 15 : gy - 2; c.moveTo(cx + sg * 3, sy); c.lineTo(cx + sg * (3 + sp), sy - dirY * len * .8); }
+      c.stroke();
+    }
+    c.fillStyle = `rgba(255,255,255,${a * .8})`;
+    if (side) c.fillRect(cx - s * (11 + len * .7), gy - 2.2 + (k - 1) * .6, 1.2, .8); else c.fillRect(cx - .6 + (k - 1) * 1.4, (dirY > 0 ? gy - 15 : gy - 2) - dirY * len * .7, 1.2, .8);
+  }
+  if (side) { c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = .8; c.beginPath(); c.arc(cx + s * 12, gy - 2, 1.8 + (t % 8) * .12, s > 0 ? -1 : Math.PI - .6 + 0, s > 0 ? .9 : Math.PI + 1, false); c.stroke(); }
+}
+function hullSide(c, cx, y0, y1, s) {
+  c.beginPath(); c.moveTo(cx - s * 10, y0);
+  c.quadraticCurveTo(cx + s * 1, y0 + 1.4, cx + s * 12.5, y0 - 2.8);
+  c.quadraticCurveTo(cx + s * 10.5, y1 - .6, cx + s * 5.5, y1);
+  c.lineTo(cx - s * 7, y1); c.quadraticCurveTo(cx - s * 10, y1 - .8, cx - s * 10.6, y0 + .4); c.closePath();
+}
+function hullV(c, cx, gy, bob, g) {
+  const w = 6 + g, t0 = gy - 17.5 + bob - g * .2, tb = gy - .5 + bob + g * .3;
+  c.beginPath(); c.moveTo(cx - w + .5, t0 + 2.5); c.quadraticCurveTo(cx, t0 - 1.2, cx + w - .5, t0 + 2.5);
+  c.lineTo(cx + w, gy - 9 + bob); c.quadraticCurveTo(cx + w - .5, gy - 3.5 + bob, cx, tb); c.quadraticCurveTo(cx - w + .5, gy - 3.5 + bob, cx - w, gy - 9 + bob); c.closePath();
+}
+function boatArt(c, id, dir, x, y, t, info) {
+  const cx = x + 8, gy = y + 15, col = info.color, mv = !!info.moving, back = info.layer !== 'front', front = info.layer !== 'back';
+  const bob = boatBob(t) + (mv ? Math.sin(t / 3.5) * .3 : 0), side = dir > 1, s = dir === RIGHT ? 1 : -1, dirY = dir === UP ? -1 : 1;
+  const lite = G.shade(col, 1.32), dark = G.shade(col, .7), deep = '#5a3a22', motor = id === 'motorboat', sail = id === 'sailboat', row = id === 'rowboat';
+  const trim = motor ? '#ffffff' : sail ? '#fff6e0' : lite;
+  c.save();
+  if (side) {
+    const y0 = gy - 7 + bob, y1 = gy - 1.6 + bob;
+    if (back) {
+      waterFx(c, cx, gy, true, s, 0, t, mv);
+      if (sail) {   // mast and sails sit behind the sailor
+        const mx = cx + s * 2.5, top = gy - 28 + bob, sw = Math.sin(t / 24) * .8;
+        c.beginPath(); c.moveTo(mx - s * .8, top + 1.5); c.quadraticCurveTo(mx - s * (6 + sw), (top + y0) / 2 + 2, mx - s * 9.5, y0 - 3.4); c.lineTo(mx - s * .8, y0 - 3.4); c.closePath(); c.fillStyle = '#fffaf0'; c.fill();
+        c.beginPath(); c.moveTo(mx - s * .8, top + 5); c.quadraticCurveTo(mx - s * (3.6 + sw * .6), (top + y0) / 2 + 3, mx - s * 6.5, y0 - 3.4); c.strokeStyle = 'rgba(160,140,110,.5)'; c.lineWidth = .5; c.stroke();
+        c.beginPath(); c.moveTo(mx + s * .8, top + 3); c.quadraticCurveTo(mx + s * (7 + sw), (top + y0) / 2 + 2, mx + s * 11.5, y0 - 3.6); c.lineTo(mx + s * .8, y0 - 3.6); c.closePath(); c.fillStyle = '#ffd6dc'; c.fill();
+        line(c, [mx, top - .5, mx, y0 - 1], '#7a4a22', 1.2);
+        c.beginPath(); c.moveTo(mx, top - .5); c.lineTo(mx + s * 4.2, top + .8 + sw * .3); c.lineTo(mx, top + 2.4); c.closePath(); c.fillStyle = '#ff5a4a'; c.fill();
+        line(c, [mx, y0 - 3.4, mx - s * 9.5, y0 - 3.4], '#7a4a22', .9);
+      }
+      if (motor) {  // outboard engine at the stern
+        const ex = cx - s * 12.3;
+        box(c, ex - 2, y0 - 4.5, 4, 6, 1.4, '#3a3e4c'); box(c, ex - 2, y0 - 4.5, 4, 2.4, 1.2, col); line(c, [ex, y0 + 1, ex, y1 + 2.2], '#5a5e6c', 1.1);
+        circ(c, ex, y1 + 2.8, 1.1, '#9aa0b0'); line(c, [ex + 2.3 * Math.cos(t / 2), y1 + 2.8, ex - 2.3 * Math.cos(t / 2), y1 + 2.8], '#c9ccd8', .7);
+        if (mv) for (let k = 0; k < 4; k++) { const q = ((t * 1.3 + k * 5) % 20) / 20; circ(c, ex - s * (1 + q * 8), y1 + 2.6 + Math.sin(k * 2 + t / 3) * .8, 1.3 * (1 - q * .6), `rgba(255,255,255,${.85 - q * .7})`); }
+      }
+      // interior: dark floor seen over the near gunwale, and the far rim
+      c.beginPath(); c.moveTo(cx - s * 9.4, y0 - 2.4); c.quadraticCurveTo(cx + s * 1, y0 - .8, cx + s * 11.6, y0 - 4.4); c.lineTo(cx + s * 12.5, y0 - 2.8); c.quadraticCurveTo(cx + s * 1, y0 + 1.4, cx - s * 10, y0); c.closePath(); c.fillStyle = deep; c.fill();
+      c.beginPath(); c.moveTo(cx - s * 9.4, y0 - 2.4); c.quadraticCurveTo(cx + s * 1, y0 - .8, cx + s * 11.6, y0 - 4.4); c.strokeStyle = lite; c.lineWidth = .9; c.stroke();
+      box(c, cx - 3 - s * 1, y0 - 1.4, 6, 1.4, .6, '#d8a860');   // thwart
+    }
+    if (front) {
+      // outer hull face over the sailor's legs
+      c.save(); hullSide(c, cx, y0, y1, s); c.fillStyle = G.kit.lin(c, 0, y0 - 3, 0, y1, [lite, col, dark]); c.fill(); c.clip();
+      c.strokeStyle = 'rgba(0,0,0,.2)'; c.lineWidth = .4; for (let k = 1; k <= 2; k++) { c.beginPath(); c.moveTo(cx - 12, y0 + k * 1.7 - .2); c.quadraticCurveTo(cx, y0 + k * 1.7 + .9, cx + 14, y0 + k * 1.7 - 3); c.stroke(); }
+      if (motor || sail) { c.strokeStyle = trim; c.lineWidth = 1; c.beginPath(); c.moveTo(cx - 11, y0 + 1.6); c.quadraticCurveTo(cx, y0 + 2.6, cx + 14, y0 - .8); c.stroke(); }
+      c.fillStyle = 'rgba(255,255,255,.2)'; c.fillRect(cx - 12, y0 - 1, 26, 1.1);
+      c.restore();
+      c.beginPath(); c.moveTo(cx - s * 10, y0); c.quadraticCurveTo(cx + s * 1, y0 + 1.4, cx + s * 12.5, y0 - 2.8); c.strokeStyle = trim; c.lineWidth = 1.1; c.stroke();
+      circ(c, cx + s * 12.2, y0 - 2.8, .9, lite);
+      c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = .8; c.beginPath(); c.moveTo(cx - s * 8, y1 + .5); c.quadraticCurveTo(cx - s * 1, y1 + 1.5, cx + s * 6, y1 + .3); c.stroke();   // water lapping at the hull
+      if (row) {   // the oar dips in time with the strokes
+        const sw = mv ? Math.sin(t / 5) : .15, ex = cx - s * .5 + s * sw * 5, ey = gy + 1.6;
+        line(c, [cx - s * .5, y0 - 1, ex, ey], '#8a5a2a', 1); ell(c, ex + s * .6, ey + .6, 1.7, .9, '#b07a40');
+        if (mv) { c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = .5; c.beginPath(); c.ellipse(ex, ey + 1, 2.4 + (t % 10) * .3, .8, 0, 0, TAU); c.stroke(); }
+      }
+      if (motor) { c.beginPath(); c.moveTo(cx + s * 4, y0 - .6); c.lineTo(cx + s * 5.4, y0 - 5); c.lineTo(cx + s * 8.6, y0 - 4.2); c.lineTo(cx + s * 8, y0 - 2.2); c.closePath(); c.fillStyle = 'rgba(190,232,255,.75)'; c.fill(); c.strokeStyle = '#ffffff'; c.lineWidth = .6; c.stroke(); }
+    }
+  } else {
+    const flip = dir === UP;
+    const place = fn => { c.save(); if (flip) { c.translate(0, 2 * (gy - 9)); c.scale(1, -1); } fn(); c.restore(); };
+    if (back) {
+      waterFx(c, cx, gy, false, s, dirY, t, mv);
+      if (sail) {
+        const mx = cx, top = gy - 29 + bob;
+        line(c, [mx, top, mx, gy - 8 + bob], '#7a4a22', 1.2);
+        c.beginPath(); c.moveTo(mx + 1, top + 1.5); c.quadraticCurveTo(mx + 5.5 + Math.sin(t / 24) * .6, gy - 19, mx + 1.6, gy - 11 + bob); c.lineTo(mx + 1, gy - 11 + bob); c.closePath(); c.fillStyle = '#fffaf0'; c.fill();
+        c.beginPath(); c.moveTo(mx, top - .5); c.lineTo(mx - 3.6, top + .8); c.lineTo(mx, top + 2.4); c.closePath(); c.fillStyle = '#ff5a4a'; c.fill();
+      }
+      place(() => {
+        hullV(c, cx, gy, bob, 0); c.fillStyle = G.kit.lin(c, cx - 6, 0, cx + 6, 0, [dark, lite, col, dark]); c.fill();
+        c.strokeStyle = trim; c.lineWidth = 1; c.stroke();
+        hullV(c, cx, gy, bob, -1.9); c.fillStyle = deep; c.fill();
+        c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = .4; c.beginPath(); c.moveTo(cx - 3.2, gy - 14 + bob); c.lineTo(cx + 3.2, gy - 14 + bob); c.moveTo(cx - 3.4, gy - 5 + bob); c.lineTo(cx + 3.4, gy - 5 + bob); c.stroke();
+        box(c, cx - 3.4, gy - 11.6 + bob, 6.8, 1.5, .6, '#d8a860');
+      });
+      if (motor && flip) {   // windscreen ahead of the driver (bow points away)
+        c.beginPath(); c.moveTo(cx - 3.8, gy - 12 + bob); c.lineTo(cx - 2.6, gy - 14.6 + bob); c.lineTo(cx + 2.6, gy - 14.6 + bob); c.lineTo(cx + 3.8, gy - 12 + bob); c.closePath(); c.fillStyle = 'rgba(190,232,255,.75)'; c.fill(); c.strokeStyle = '#fff'; c.lineWidth = .5; c.stroke();
+      }
+    }
+    if (front) {
+      c.save(); c.beginPath(); c.rect(cx - 12, gy - 9.5 + bob, 24, 14); c.clip();
+      place(() => {
+        hullV(c, cx, gy, bob, 0); c.fillStyle = G.kit.lin(c, cx - 6, 0, cx + 6, 0, [dark, lite, col, dark]); c.fill();
+        c.strokeStyle = trim; c.lineWidth = 1.1; c.stroke();
+        c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = .6; c.beginPath(); c.moveTo(cx, gy - 9 + bob); c.lineTo(cx, gy - 1 + bob); c.stroke();
+      });
+      c.restore();
+      c.strokeStyle = trim; c.lineWidth = 1; c.beginPath(); c.moveTo(cx - 5.6, gy - 9.2 + bob); c.quadraticCurveTo(cx, gy - 8 + bob, cx + 5.6, gy - 9.2 + bob); c.stroke();
+      c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = .8; c.beginPath(); c.moveTo(cx - 3.5, gy + .8 + bob); c.quadraticCurveTo(cx, gy + 1.6 + bob, cx + 3.5, gy + .8 + bob); c.stroke();
+      if (row) {
+        const sw = mv ? Math.sin(t / 5) * 3.2 : 0;
+        for (const sg of [-1, 1]) { const ex = cx + sg * 12.5, ey = gy - 8 + sg * sw * .0 + sw * sg * sg * (dir === DOWN ? -1 : 1) * .6;
+          line(c, [cx + sg * 5.8, gy - 10.4, ex, ey], '#8a5a2a', 1); ell(c, ex + sg * .8, ey, 1.9, 1, '#b07a40'); }
+      }
+      if (motor && !flip) { c.beginPath(); c.moveTo(cx - 4.4, gy - 7.8 + bob); c.lineTo(cx - 3, gy - 11.6 + bob); c.lineTo(cx + 3, gy - 11.6 + bob); c.lineTo(cx + 4.4, gy - 7.8 + bob); c.closePath(); c.fillStyle = 'rgba(190,232,255,.75)'; c.fill(); c.strokeStyle = '#ffffff'; c.lineWidth = .6; c.stroke(); }
+      if (motor && flip) {   // the outboard hangs off the stern, which faces the camera
+        box(c, cx - 2.2, gy - 4.6 + bob, 4.4, 4.2, 1.2, '#3a3e4c'); box(c, cx - 2.2, gy - 4.6 + bob, 4.4, 1.8, 1, col);
+        if (mv) for (let k = 0; k < 4; k++) { const q = ((t * 1.3 + k * 5) % 20) / 20; circ(c, cx + Math.sin(k * 2 + t / 3) * 1.6, gy + 1 + q * 6, 1.3 * (1 - q * .6), `rgba(255,255,255,${.85 - q * .7})`); }
+      }
+    }
+  }
+  c.restore();
+}
+
 // ---- Drawing the rider ---------------------------------------------------------------------------
 G.hooks.drawPlayer = function (ctx, x, y, dir, frame, t, grassOver) {
   const id = riding(); if (!id || !G.world.map || !G.world.map.outdoor) return false;
@@ -376,6 +527,10 @@ G.hooks.draw.push((items, cx, cy, t) => {
   if (V.parked && V.parked.map === m.id && owns(V.parked.id)) {
     const P = V.parked, x = P.x * 16 - cx, y = P.y * 16 - cy;
     items.push({ y: P.y * 16 + 16.05, draw: c => { art(c, P.id, P.dir || 0, x, y, t, { parked: true, layer: 'back' }); art(c, P.id, P.dir || 0, x, y, t, { parked: true, layer: 'front' }); } });
+  }
+  if (V.moored && V.moored.map === m.id && owns(V.moored.id)) {
+    const P = V.moored, x = P.x * 16 - cx, y = P.y * 16 - cy;
+    items.push({ y: P.y * 16 + 16.05, draw: c => { art(c, P.id, P.dir || 0, x, y, G.frameNo, { parked: true, layer: 'back' }); art(c, P.id, P.dir || 0, x, y, G.frameNo, { parked: true, layer: 'front' }); } });
   }
   if (owns('helicopter')) {
     let hx = null, hy = null, base = 0;
@@ -400,20 +555,69 @@ function drawWreck(c, x, y, t) {
   if ((t >> 5) % 4 === 0) G.kit.star(c, x + 13, y + 3, 1.6, '#fff6c0');
   c.restore();
 }
-G.hooks.prompt.push((tx, ty) => {
+// Boats: these two hooks go first, because gather.js claims every water tile for refilling the can.
+const shoreOk = (tx, ty) => { const W = G.worldApi, m = G.world.map; return W.tileAt(tx, ty) && W.tileAt(tx, ty) !== 'w' && W.canWalk(tx, ty) && !W.tileWarp(tx, ty) && !vehicleAt(tx, ty) && !(m.block && m.block.has(tx + ',' + ty)); };
+function launchWhy(tx, ty, id) {
+  const W = G.worldApi, m = G.world.map;
+  if (!m || !m.outdoor) return `You can't sail ${a_(id)} ${nameOf(id)} indoors. Go outside first.`;
+  if (W.tileAt(tx, ty) !== 'w' || vehicleAt(tx, ty) || (m.block && m.block.has(tx + ',' + ty)) || W.npcAt(tx, ty) || W.objAt(tx, ty) || W.tileWarp(tx, ty)) return `Face open water to launch your ${nameOf(id).toLowerCase()}: stand on the shore and look at the water.`;
+  return null;
+}
+const ownedBoats = () => ORDER.filter(id => owns(id) && isBoat(id));
+G.hooks.prompt.unshift((tx, ty) => {
   if (!G.state) return null;
-  const v = vehicleAt(tx, ty); if (!v) return null;
-  return v.kind === 'heli' ? 'Fly helicopter' : `Ride ${nameOf(v.id).toLowerCase()}`;
+  const v = vehicleAt(tx, ty), rid = riding();
+  if (v) return v.kind === 'heli' ? 'Fly helicopter' : v.kind === 'moored' ? `Board ${nameOf(v.id).toLowerCase()}` : `Ride ${nameOf(v.id).toLowerCase()}`;
+  if (rid && isBoat(rid)) return shoreOk(tx, ty) ? 'Step ashore' : null;
+  if (!rid && ownedBoats().length && !launchWhy(tx, ty, ownedBoats()[0])) return 'Launch boat';
+  return null;
 });
-G.hooks.interact.push(async (tx, ty) => {
-  if (!G.state) return false;
-  const v = vehicleAt(tx, ty); if (!v) return false;
-  if (v.kind === 'heli') { await helicopter(); return true; }
-  if (riding()) { await says(`Get off the ${nameOf(riding())} first.`); return true; }
-  const p = G.world.p; st().parked = null; st().riding = v.id;
-  G.placePlayer(tx, ty, p.dir); G.audio.sfx('select');
+async function launchFlow(tx, ty) {
+  const boats = ownedBoats(), S = G.state, cap = G.farm && G.farm.canCap ? G.farm.canCap() : 0, can = cap > 0 && (S.can || 0) < cap;
+  let pick;
+  if (boats.length === 1 && !can) {
+    await G.say(`Launch the ${nameOf(boats[0]).toLowerCase()}?`, { auto: 1 });
+    if (!(await G.yesNo())) { G.closeText(); return true; }
+    pick = boats[0];
+  } else {
+    await G.say(boats.length === 1 ? `Launch the ${nameOf(boats[0]).toLowerCase()}?` : 'Launch a boat here?', { auto: 1 });
+    const opts = boats.map(id => `LAUNCH ${NAME(id)}`).concat(can ? ['REFILL CAN'] : [], ['CANCEL']);
+    const i = await G.choose(opts, { right: 236, bottom: 108, minW: 70 }); G.closeText();
+    if (i < 0 || opts[i] === 'CANCEL') return true;
+    if (opts[i] === 'REFILL CAN') { await G.farm.refill('water'); return true; }
+    pick = boats[i];
+  }
+  const p = G.world.p; st().moored = null; st().riding = pick;
+  G.placePlayer(tx, ty, p.dir); G.audio.sfx('levelup'); showToast('Smooth sailing! Face the shore and press A to step ashore.');
   return true;
+}
+G.hooks.interact.unshift(async (tx, ty) => {
+  if (!G.state) return false;
+  const v = vehicleAt(tx, ty), rid = riding();
+  if (v) {
+    if (v.kind === 'heli') { await helicopter(); return true; }
+    if (rid) { await says(`Get off the ${nameOf(rid)} first.`); return true; }
+    const p = G.world.p; st().parked = null; st().moored = null; st().riding = v.id;
+    G.placePlayer(tx, ty, p.dir); G.audio.sfx('select');
+    return true;
+  }
+  if (rid && isBoat(rid)) { if (!shoreOk(tx, ty)) return false; return stepAshore(tx, ty); }
+  if (!rid && ownedBoats().length && !launchWhy(tx, ty, ownedBoats()[0])) return launchFlow(tx, ty);
+  return false;
 });
+// Step from the boat onto the shore tile (tx, ty); the boat stays moored where it floats.
+function stepAshore(tx, ty) {
+  const V = st(), p = G.world.p, id = V.riding;
+  V.riding = null; V.moored = { id, map: G.world.mapId, x: p.x, y: p.y, dir: p.dir };
+  G.placePlayer(tx, ty, p.dir); G.audio.sfx('select'); showToast(`You stepped ashore. The ${nameOf(id)} is moored.`);
+  return true;
+}
+// Park a vehicle: boats are only ever moored on water (else they go back to storage).
+function putDown(id, map, x, y, dir) {
+  const V = st();
+  if (isBoat(id)) { const m = G.MAPS[map], ch = m && m.t[y] && m.t[y][x]; V.moored = ch === 'w' ? { id, map, x, y, dir } : null; }
+  else V.parked = { id, map, x, y, dir };
+}
 G.hooks.overlay.push((ctx) => {
   if (!toast || G.frameNo > toast.until || G.scene !== G.world.scene) return;
   const f = G.FONT_S || G.FONT; ctx.save(); ctx.font = f; const w = Math.ceil(ctx.measureText(toast.text).width) + 16; ctx.restore();
@@ -433,7 +637,7 @@ G.hooks.load.push(m => {
   if (m.outdoor) G.state.visited[m.id] = true;
   if (V.riding && !m.outdoor) {
     const p = G.world.p, id = V.riding; V.riding = null;
-    if (prev && G.MAPS[prev] && G.MAPS[prev].outdoor) { V.parked = { id, map: prev, x: p.x, y: p.y, dir: p.dir }; showToast(`You left the ${nameOf(id)} parked outside.`); }
+    if (prev && G.MAPS[prev] && G.MAPS[prev].outdoor) { putDown(id, prev, p.x, p.y, p.dir); showToast(`You left the ${nameOf(id)} parked outside.`); }
   }
 });
 G.hooks.beforeWarp.push(async w => {
@@ -441,7 +645,7 @@ G.hooks.beforeWarp.push(async w => {
   const dest = G.MAPS[w.to], ch = dest && dest.t[w.ty] && dest.t[w.ty][w.tx];
   if (dest && dest.outdoor && allowed(id, ch)) return;   // ride on to the next outdoor area
   const p = G.world.p, bx = p.x - VEC[p.dir][0], by = p.y - VEC[p.dir][1];
-  st().riding = null; st().parked = { id, map: G.world.mapId, x: bx, y: by, dir: p.dir };
+  st().riding = null; putDown(id, G.world.mapId, bx, by, p.dir);
   G.audio.sfx('select');
   await says(dest && dest.outdoor ? `The ${nameOf(id)} can't go in there. You parked it by the entrance.` : `You parked the ${nameOf(id)} outside. It will be waiting when you come back out.`);
 });
@@ -465,6 +669,7 @@ function rideWhy(id, o) {
   if (V.riding === id) return `You're already riding the ${nameOf(id)}.`;
   if (V.riding) return `Get off the ${nameOf(V.riding)} first.`;
   if (!m || !m.outdoor) return `You can't ride ${a_(id)} ${nameOf(id)} indoors. Go outside first.`;
+  if (isBoat(id)) { const [fx, fy] = G.worldApi.facing(); return launchWhy(fx, fy, id); }
   if (!garageB()) return `You need a Garage to keep your ${nameOf(id)} in. Build one on your homestead (BUILD > VEHICLES).`;
   const w = whereIs(id);
   if (w === 'lot') return `Your ${nameOf(id)} is waiting at the dealer lot: your Garage only has room for ${slots()}. Upgrade the Garage to make space.`;
@@ -489,12 +694,17 @@ const api = G.vehicles = {
   // Get on a vehicle where you stand (it comes out of the garage). true on success; else false and lastWhy.
   mount(id) {
     const why = rideWhy(id); api.lastWhy = why; if (why) return false;
+    if (isBoat(id)) { const [fx, fy] = G.worldApi.facing(); st().moored = null; st().riding = id; G.placePlayer(fx, fy, G.world.p.dir); return true; }
     st().riding = id; return true;
   },
   // Get off: the vehicle stays parked on this tile and you step beside it.
   dismount() {
     const V = st(), id = V.riding, p = G.world.p, W = G.worldApi;
     if (!id) { api.lastWhy = "You're not riding anything."; return false; }
+    if (isBoat(id)) {   // onto the shore tile you face first, else any shore tile beside the boat
+      for (const d of [p.dir, ...[0, 1, 2, 3].filter(d => d !== p.dir)]) { const x = p.x + VEC[d][0], y = p.y + VEC[d][1]; if (shoreOk(x, y)) { api.lastWhy = null; return stepAshore(x, y); } }
+      api.lastWhy = 'There is no shore next to you. Sail up against the land to step ashore.'; return false;
+    }
     const ch = W.tileAt(p.x, p.y);
     if (G.TILES[ch] && G.TILES[ch].solid) { api.lastWhy = `You can't get off over ${TILE_WORD[ch] || 'here'}! Get back onto dry land first.`; return false; }
     const L = [[LEFT, RIGHT, UP, DOWN], [RIGHT, LEFT, DOWN, UP], [DOWN, UP, LEFT, RIGHT], [UP, DOWN, RIGHT, LEFT]][p.dir];
@@ -511,13 +721,18 @@ const api = G.vehicles = {
   // Park the vehicle you're riding right where you stand (the player stays put; used before flights).
   park() {
     const V = st(), id = V.riding, p = G.world.p; if (!id) return false;
-    V.riding = null; V.parked = { id, map: G.world.mapId, x: p.x, y: p.y, dir: p.dir }; return true;
+    V.riding = null; putDown(id, G.world.mapId, p.x, p.y, p.dir); return true;
   },
   // Send a vehicle back to the garage (default: whichever is out). The helicopter flies back to the Helipad.
   returnHome(id) {
     const V = st();
-    if (!id) id = V.riding || (V.parked && V.parked.id) || (V.heli && 'helicopter');
+    if (!id) id = V.riding || (V.parked && V.parked.id) || (V.moored && V.moored.id) || (V.heli && 'helicopter');
     if (!id) return false;
+    if (isBoat(id)) {
+      if (V.riding === id) { api.lastWhy = `Step ashore first: you can't leave the ${nameOf(id)} stranded under you.`; return false; }
+      if (V.moored && V.moored.id === id) { V.moored = null; return true; }
+      return false;
+    }
     if (id === 'helicopter') { if (!V.heli) return false; V.heli = null; return true; }
     if (V.riding === id) { V.riding = null; return true; }
     if (V.parked && V.parked.id === id) { V.parked = null; return true; }
@@ -529,6 +744,8 @@ const api = G.vehicles = {
     return SOLD.map(id => { const V = V$(id), bad = reqList(V.req).filter(r => !r.ok).map(r => r.text);
       return { id, name: V.name, price: V.price, desc: V.desc, why: owns(id) ? `You already own ${a_(id)} ${V.name}.` : bad.length ? `Needs ${bad.join(', ')}.` : null }; });
   },
+  ownsBoat: () => ownedBoats().length > 0,
+  boats: () => ownedBoats(),
   buy: (id, o) => buy(id, o),
   canFly: c => G.canFly(c),
   flyer: () => flyer(),
@@ -564,6 +781,7 @@ async function buy(id, o) {
   api.grant(id); G.audio.sfx('buy'); done();
   const lines = [`You bought the ${V.name}!`];
   if (V.flies) lines.push('It is waiting on your Helipad. Pick HELICOPTER in the TRAVEL menu (START) to fly.');
+  else if (V.boat) lines.push('Stand on a shore, face the water and press A to launch it.');
   else if (!garageB()) lines.push(`It will wait at the dealer lot until you build a Garage on your homestead.`);
   else if (atLot(id)) lines.push('Your Garage is full, so it waits at the dealer lot until you upgrade the Garage.');
   else lines.push(`It is in your Garage. Pick RIDE ${NAME(id)} in the TRAVEL menu (START) to ride it.`);
@@ -572,7 +790,7 @@ async function buy(id, o) {
 }
 
 // ---- Garage ---------------------------------------------------------------------------------------------
-const STATUS = { garage: ['IN GARAGE', '#3fae5a'], riding: ['RIDING', '#3a8ad8'], parked: ['PARKED', '#f0983f'], lot: ['DEALER LOT', '#9a9aa8'], pad: ['ON HELIPAD', '#3fae5a'], away: ['AWAY', '#f0983f'] };
+const STATUS = { moored: ['MOORED', '#3a8ad8'], stowed: ['STOWED', '#9a9aa8'], garage: ['IN GARAGE', '#3fae5a'], riding: ['RIDING', '#3a8ad8'], parked: ['PARKED', '#f0983f'], lot: ['DEALER LOT', '#9a9aa8'], pad: ['ON HELIPAD', '#3fae5a'], away: ['AWAY', '#f0983f'] };
 function vehicleIcon(ctx, id, x, y, t, color) {
   // fit the vehicle into a 26x18 box with its ground line at y+16
   const big = id === 'helicopter' || id === 'car', k = big ? .62 : .9;
@@ -584,33 +802,47 @@ function vehicleIcon(ctx, id, x, y, t, color) {
 function garagePanel(b, list, sel, preview) {
   return { draw(ctx) {
     const t = G.frameNo, lvl = G.home.lvl(b), max = G.home.def(b).levels.length, per = G.home.L(b).perks;
-    const rowH = 17, h = 26 + Math.max(1, list.length) * rowH + 4;
+    const bi = list.findIndex(isBoat), HD = bi >= 0 ? 9 : 0, rowH = list.length + (bi >= 0 ? 1 : 0) > 6 ? 13 : 17, h = 26 + Math.max(1, list.length) * rowH + HD + 4;
+    const rowY = i => 24 + i * rowH + (bi >= 0 && i >= bi ? HD : 0);
     G.frame(ctx, 4, 4, 232, h, 'light');
     G.text(ctx, `${G.home.L(b).name.toUpperCase()}  ${'★'.repeat(lvl)}${'☆'.repeat(max - lvl)}`, 12, 9, { font: G.FONT_B || G.FONT });
     const used = Math.min(per.slots, landOwned().length);
     G.text(ctx, `SLOTS ${used}/${per.slots}`, 228, 10, { align: 'right', font: G.FONT_S, color: '#6a5a78' });
     for (let k = 0; k < per.slots && k < 8; k++) box(ctx, 160 - per.slots * 6 + k * 6, 11, 4.4, 4.4, 1.2, k < used ? '#5fae3f' : 'rgba(90,70,110,.18)');
     if (!list.length) G.text(ctx, 'No vehicles yet. Craft a Bicycle at a Forge, or visit Tidewheel Motors.', 12, 30, { font: G.FONT_S });
+    if (bi >= 0) { const hy = 24 + bi * rowH + 1; G.text(ctx, 'BOATS', 12, hy, { font: G.FONT_S, color: '#3a8ad8', shadow: false }); ctx.fillStyle = 'rgba(58,138,216,.35)'; ctx.fillRect(34, hy + 3, 194, .7); }
     list.forEach((id, i) => {
-      const y = 24 + i * rowH, on = i === sel();
+      const y = rowY(i), on = i === sel();
       if (on) { ctx.fillStyle = 'rgba(255,190,90,.28)'; G.kit.rr(ctx, 8, y - 1, 224, rowH - 1, 6); ctx.fill(); }
       vehicleIcon(ctx, id, 12, y - 2, t, preview && preview.id === id ? preview.color : null);
       G.text(ctx, nameOf(id).toUpperCase(), 44, y + 4, { color: on ? '#3a2a48' : '#5a4a66' });
       const [label, col] = STATUS[whereIs(id)] || ['', '#999'];
       const lw = G.textW(ctx, label) * .78 + 10; G.kit.pill(ctx, 118, y + 3, lw, 9, col, label);
       const P = st().parked, H = st().heli;
-      const where = whereIs(id) === 'parked' && P ? mapName(P.map) : whereIs(id) === 'away' && H ? mapName(H.map) : '';
+      const MO = st().moored, where = whereIs(id) === 'moored' && MO ? mapName(MO.map) : whereIs(id) === 'parked' && P ? mapName(P.map) : whereIs(id) === 'away' && H ? mapName(H.map) : '';
       if (where) G.text(ctx, where, 120 + lw, y + 4.5, { font: G.FONT_S, color: '#8a6a40', shadow: false });
       if (st().tune[id]) G.text(ctx, '+TUNED', 226, y + 1.5, { align: 'right', font: G.FONT_S, color: '#2a7a4a', shadow: false });
       box(ctx, 217, y + 8.5, 8, 5, 2, (preview && preview.id === id) ? preview.color : colorOf(id)); ctx.strokeStyle = 'rgba(60,40,80,.35)'; ctx.lineWidth = .5; G.kit.rr(ctx, 217, y + 8.5, 8, 5, 2); ctx.stroke();
     });
   } };
 }
+// Moor a boat at the closest shore water within 8 tiles of the player.
+function moorNearby(id) {
+  const W = G.worldApi, m = G.world.map, p = G.world.p; let best = null, bd = 99;
+  for (let dy = -8; dy <= 8; dy++) for (let dx = -8; dx <= 8; dx++) {
+    const x = p.x + dx, y = p.y + dy; if (W.tileAt(x, y) !== 'w' || vehicleAt(x, y) || (m.block && m.block.has(x + ',' + y))) continue;
+    if (!VEC.some(([a, c]) => shoreOk(x + a, y + c))) continue;
+    const d = Math.abs(dx) + Math.abs(dy); if (d < bd) { bd = d; best = { x, y }; }
+  }
+  if (best) st().moored = { id, map: m.id, x: best.x, y: best.y, dir: RIGHT };
+  return best;
+}
 G.homeUse.garage = async function (b) {
   st();
   let sel = 0;
   for (;;) {
-    const list = ORDER.filter(owns), per = G.home.L(b).perks;
+    const list = ORDER.filter(owns).sort((a, c) => (isBoat(a) ? 1 : 0) - (isBoat(c) ? 1 : 0)), per = G.home.L(b).perks;
+    api._garage = list;
     const panel = garagePanel(b, list, () => sel, null);
     G.ui.layers.push(panel);
     const pop = () => { if (G.ui.layers.includes(panel)) G.ui.layers.splice(G.ui.layers.indexOf(panel), 1); };
@@ -620,6 +852,13 @@ G.homeUse.garage = async function (b) {
     sel = i; const id = list[i], w = whereIs(id), acts = [];
     if (V$(id).flies) {
       acts.push([w === 'away' ? 'CALL IT HOME' : 'TAKE OFF', async () => { if (w === 'away') { api.returnHome('helicopter'); G.audio.sfx('select'); await says('Your helicopter flew itself back to the Helipad.'); } else { pop(); await helicopter(); return 'exit'; } }]);
+    } else if (isBoat(id)) {
+      if (w !== 'riding') acts.push(['MOOR NEARBY', async () => {
+        const spot = moorNearby(id);
+        if (!spot) { await says(`Moor it at the water instead: there is no shoreline within 8 tiles of here. Carry on to a shore, face the water and press A to launch your ${nameOf(id).toLowerCase()}.`); return; }
+        G.audio.sfx('select'); await says(`The ${nameOf(id)} was moored at the nearest water. Walk up to it and press A to board.`);
+      }]);
+      if (w === 'moored') acts.push(['PUT BACK', async () => { api.returnHome(id); G.audio.sfx('select'); await says(`The ${nameOf(id)} was hauled back into storage.`); }]);
     } else if (w === 'riding' || w === 'parked') {
       acts.push(['PUT BACK', async () => { api.returnHome(id); G.audio.sfx('select'); await says(w === 'riding' ? `You put the ${nameOf(id)} back in the Garage.` : `The ${nameOf(id)} was brought back from ${mapName(st().parked ? st().parked.map : G.world.mapId)} and put away.`); }]);
     } else {
@@ -629,6 +868,7 @@ G.homeUse.garage = async function (b) {
       }]);
     }
     if (!V$(id).flies) acts.push(['TUNE-UP', async () => {
+      if (id === 'rowboat') { await says('A rowboat has no engine to tune. Its oars are as good as they get.'); return; }
       if (!per.tune) { await says('Tune-ups need a Double Garage. Upgrade your Garage to Lv2.'); return; }
       if (st().tune[id]) { await says(`The ${nameOf(id)} is already tuned up to its best.`); return; }
       if (inv().count('Engine Part') < 1) { await says(`A tune-up costs 1 Engine Part (+0.5 speed). You don't have one. Craft one at a Forge or buy one at Tidewheel Motors.`); return; }
@@ -1064,6 +1304,7 @@ function statusLayer() {
     const V = st(), lines = [];
     lines.push(V.riding ? `Riding the ${nameOf(V.riding)}` : 'On foot');
     if (V.parked) lines.push(`${nameOf(V.parked.id)} parked in ${mapName(V.parked.map)}`);
+    if (V.moored) lines.push(`${nameOf(V.moored.id)} moored in ${mapName(V.moored.map)}`);
     if (V.heli && owns('helicopter')) lines.push(`Helicopter in ${mapName(V.heli.map)}`);
     const f = flyer(); lines.push(f ? `Flyer: ${G.name(f)}` : 'No creature can fly you');
     const h = 18 + lines.length * 9;
@@ -1078,26 +1319,31 @@ async function pickVehicle(ids, label) {
 }
 async function rideFromMenu(id) {
   const why = rideWhy(id); if (why) { await says(why); return; }
+  if (isBoat(id)) { api.mount(id); G.audio.sfx('levelup'); showToast('Smooth sailing! Face the shore and press A to step ashore.'); await says(`You launched the ${nameOf(id)}. Face the shore and press A to step ashore.`); return; }
   st().riding = id;
   await G.fadeTo(.6, 6, '#ffffff'); G.audio.sfx('levelup'); await G.fadeTo(0, 8);
   await says(`Your ${nameOf(id)} was brought out of the Garage. Hop on!`);
 }
 G.travelMenu = async function () {
   st();
-  const V = st(), land = landOwned();
-  const out = land.filter(id => whereIs(id) === 'riding' || whereIs(id) === 'parked');
+  const V = st(), land = ORDER.filter(id => owns(id) && !V$(id).flies);
+  const out = land.filter(id => ['riding', 'parked', 'moored'].includes(whereIs(id)));
   if (V.heli && owns('helicopter')) out.push('helicopter');
   const opts = [];
-  if (!land.length) opts.push(['RIDE', () => says("You don't own a vehicle yet. Craft a Bicycle at a Forge, or visit Tidewheel Motors on the shore.")]);
+  if (!land.length) opts.push(['RIDE', () => says("You don't own a vehicle yet. Craft a Bicycle or Rowboat at a Forge, or visit Tidewheel Motors on the shore.")]);
   else if (land.length === 1) opts.push([`RIDE ${NAME(land[0])}`, () => rideFromMenu(land[0])]);
-  else opts.push(['RIDE...', async () => { const id = await pickVehicle(land, id => { const w = whereIs(id); return w === 'lot' ? ' (LOT)' : w === 'riding' ? ' (ON)' : w === 'parked' ? ' (PARKED)' : ''; }); if (id) await rideFromMenu(id); }]);
+  else opts.push(['RIDE...', async () => { const id = await pickVehicle(land, id => { const w = whereIs(id); return w === 'lot' ? ' (LOT)' : w === 'riding' ? ' (ON)' : w === 'parked' ? ' (PARKED)' : w === 'moored' ? ' (MOORED)' : ''; }); if (id) await rideFromMenu(id); }]);
   opts.push(['GET OFF', async () => {
     if (!V.riding) { await says("You're not riding anything."); return; }
     const id = V.riding;
     if (!api.dismount()) { await says(api.lastWhy); return; }
-    G.audio.sfx('select'); await says(`You got off the ${nameOf(id)} and parked it. Press A beside it to ride again.`);
+    G.audio.sfx('select'); await says(isBoat(id) ? `You stepped ashore. The ${nameOf(id)} is moored: face it and press A to board.` : `You got off the ${nameOf(id)} and parked it. Press A beside it to ride again.`);
   }]);
   const send = async id => {
+    if (isBoat(id)) {
+      if (V.riding === id && !api.dismount()) { await says(api.lastWhy); return; }
+      api.returnHome(id); G.audio.sfx('select'); await says(`The ${nameOf(id)} was hauled back into storage.`); return;
+    }
     if (!garageB() && id !== 'helicopter') { api.returnHome(id); await says(`The ${nameOf(id)} was taken back to the dealer lot for safekeeping. Build a Garage to keep it at home.`); return; }
     const wasRiding = V.riding === id; api.returnHome(id); G.audio.sfx('select');
     await says(id === 'helicopter' ? 'Your helicopter flew itself back to the Helipad.' : wasRiding ? `You hopped off, and the ${nameOf(id)} was sent back to your Garage.` : `The ${nameOf(id)} was sent back to your Garage.`);

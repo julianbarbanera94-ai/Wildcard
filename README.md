@@ -79,7 +79,8 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
 - **Gathering**: press A facing trees, stumps, bushes, boulders, crystals or water.
   - An **Axe** gives more wood. A **Pickaxe** unlocks ore and crystals on the Ridge and in the Mine.
   - Tiles regrow after 150 steps.
-- **Land Office**: buy deeds 2 and 3 to clear the thicket and grow your land.
+- **Your land grows with your progress**: the homestead starts as a small yard, and every Arena badge you earn (every town you open) clears more land at 1, 3, 5 and 7 badges. The Land Office board shows where you stand.
+- **Enterable buildings**: the shed, nursery, barn, healing station, refinery, forge, garage and greenhouse all have a door and a furnished interior to walk into, which grow as you upgrade them.
 - **Vehicles**: the **Garage** stores them, and START → TRAVEL lets you ride or get off.
   - **Bicycle**: land, not tall grass. Craft it or buy it.
   - **Scooter**: roads only. A courier quest in Lanternrest.

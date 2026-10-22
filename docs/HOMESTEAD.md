@@ -45,7 +45,7 @@ Helpers in `G.worldApi` are `canWalk`, `canStep`, `tileAt`, `objAt`, `npcAt`, `r
 - `map.block`: a `Set` of `"x,y"` strings for solid cells. It is set up by the lead for structures and props, and `canWalk` respects it.
 - `map.labels`: `[{ x, y, text, style }]`. A name plate is drawn centred over tile `x`, sitting just above tile row `y`. `style` is `'shop'`, `'heal'`, `'home'` or `'craft'`. Use these for town buildings.
 - `map.props`: `[{ x, y, w, h, kind, info }]`. Furniture and fixtures drawn by the prop art. The lead blocks their cells and draws them depth-sorted.
-- `map.zones` (homestead only): `[{ deed: 1, x, y, w, h }, { deed: 2, ... }, { deed: 3, ... }]`. These are the land you own at each deed level. Grass outside your current deed is drawn as thicket (`X`) until you expand.
+- `map.zones` (homestead only): `[{ deed: 1, x, y, w, h }, ... { deed: 5, ... }]`. These are the five parcels of land. The first is a small yard around the cabin; parcels 2 to 5 are released automatically at 1, 3, 5 and 7 Arena badges (`G.home.deedFor()`). Grass outside your current parcels is drawn as thicket (`X`).
 - `map.homeSpot` (homestead only): `{ x, y }`. The top-left corner where the starter house is placed. A 7x5 area there must stay clear, because the house can grow to that size.
 - `map.landing`: `{ x, y }`. A walkable outdoor tile used by flight and the helicopter.
 
@@ -53,7 +53,7 @@ Helpers in `G.worldApi` are `canWalk`, `canStep`, `tileAt`, `objAt`, `npcAt`, `r
 
 ```
 S.builds   [{ id, type, map, x, y, lvl (1-based), rot (0 or 1), ...per-type state }]   existing array, extended
-S.home     { deed: 1 }                          property expansion level (1-3)
+S.home     { deed: 1, seen: 1, v: 2 }           land parcel you own (1-5, grows with Arena badges), the last one announced
 S.day      1                                    current day; advances by sleeping or after DAY_FRAMES of play
 S.clock    0                                    frames into the current day
 S.energy   100                                  player energy, 0..maxEnergy (from the house level's perks.energy)
@@ -284,7 +284,7 @@ The homestead map (`js/maps/homestead.js`):
 - Entrance from Lanternrest: a road north from the NE building plot to a 2-wide exit at the hub's top edge (around x 50–51), arriving at the bottom of the homestead.
 - No wild encounters (`enc: null`).
 - Some trees, bushes, boulders and a pond to gather from. Keep these out of the 7x5 `homeSpot`.
-- `zones` for deeds 1–3. Deed 1 is about 26x18 around the house; deed 3 is nearly the whole map.
+- `zones` for deeds 1–5. Deed 1 is a small 18x17 yard around the house; deed 5 is nearly the whole map.
 - A Land Office board object: `fn: () => G.home.landOffice()`, `prompt: 'Land Office'`.
 - A mailbox with a welcome note. Tip NPC: a friendly neighbour who explains the basics.
 - Interiors `home1`..`home4`: the level-1 cabin is small, and each level has more rooms divided by `B` walls with gaps for doorways.
