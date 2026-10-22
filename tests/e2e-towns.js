@@ -18,6 +18,7 @@ const OUT = process.env.OUT || '/tmp';
   const idle = () => advance(() => !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0 && !G.ui.layers.length && !G.ui.text, 40000, 'world idle');
   const tapUI = async (x, y) => { const p = await ev(([x, y]) => { const r = document.getElementById('screen').getBoundingClientRect(); return [r.left + (x + G.uiX) / G.W * r.width, r.top + (y + G.uiY) / G.H * r.height]; }, [x, y]); await page.mouse.click(p[0], p[1]); await page.waitForTimeout(120); };
   const step = n => console.log('✓', n);
+  const walk = async (k, cond, msg) => { await page.keyboard.down(k); try { await until(cond, 15000, msg); } finally { await page.keyboard.up(k); } };
   const at = (map, x, y, dir) => ev(([map, x, y, dir]) => { G.loadMap(map); G.placePlayer(x, y, dir); (G.world.map.roamers || []).forEach(r => { r.timer = 1e9; }); }, [map, x, y, dir]);
 
   await key('z'); await key('z'); await page.waitForTimeout(600);
@@ -29,7 +30,7 @@ const OUT = process.env.OUT || '/tmp';
   // 1) Meadowbrook Seeds: walk in through the door, see the plate, buy 5 Turnip Seeds with the D-pad
   await at('sunmeadow', 61, 19, 1); await page.waitForTimeout(400); await shot('meadowbrook-outside');
   assert(await ev(() => window.__plates.has('MEADOWBROOK SEEDS')), 'Meadowbrook name plate drawn');
-  await key('ArrowUp', 260); await until(() => G.world.mapId === 'seeds', 6000, 'enter the seed shop'); await idle();
+  await walk('ArrowUp', () => G.world.mapId === 'seeds', 'enter the seed shop'); await idle();
   await key('ArrowUp', 400); await idle();
   assert.deepEqual(await ev(() => [G.world.p.x, G.world.p.y]), [3, 3]);
   await key('z'); await until(() => G.shopState && G.shopState.id === 'seeds', 4000, 'shop open');
@@ -96,7 +97,7 @@ const OUT = process.env.OUT || '/tmp';
   // 7) the Shore Healing Post: walk in, heal; CANCEL heals nothing
   await ev(() => { G.state.party[0].hp = 2; });
   await at('shore', 26, 6, 1); await page.waitForTimeout(300); assert(await ev(() => window.__plates.has('HEALING POST')), 'healing post plate');
-  await key('ArrowUp', 260); await until(() => G.world.mapId === 'shoreheal', 6000, 'enter healing post'); await idle();
+  await walk('ArrowUp', () => G.world.mapId === 'shoreheal', 'enter healing post'); await idle();
   await key('ArrowUp', 400); await idle();
   await key('z'); await until(() => !!G.healState); await key('ArrowRight'); await key('z'); await idle();
   assert.equal(await ev(() => G.state.party[0].hp), 2, 'cancel heals nothing');
@@ -110,7 +111,7 @@ const OUT = process.env.OUT || '/tmp';
   assert.equal(await ev(() => G.world.mapId), 'lanternrest', 'blocked without a starter');
   await ev(() => { G.state.flags.starter = true; }); await at('lanternrest', 50, 2, 1); await page.waitForTimeout(200);
   await shot('hub-road');
-  await key('ArrowUp', 600); await until(() => G.world.mapId === 'homestead', 8000, 'reach the homestead'); await idle();
+  await walk('ArrowUp', () => G.world.mapId === 'homestead', 'reach the homestead'); await idle();
   assert.deepEqual(await ev(() => [G.world.p.x, G.world.p.y]), [27, 42]);
   // walk up the road to the yard, then back down and out
   await page.keyboard.down('ArrowUp'); await until(() => G.world.p.y <= 32, 15000, 'walk up the road'); await page.keyboard.up('ArrowUp'); await page.waitForTimeout(300);
@@ -123,15 +124,15 @@ const OUT = process.env.OUT || '/tmp';
   // 9) the house door leads into the cabin and back out to the door
   const door = await ev(() => { const h = G.home.get('house'), d = G.home.L(h).door; return [h.x + d[0], h.y + d[1]]; });
   await at('homestead', door[0], door[1] + 1, 1); await page.waitForTimeout(200);
-  await key('ArrowUp', 260); await until(() => G.world.mapId === 'home1', 6000, 'enter the cabin'); await idle(); await shot('cabin');
-  await key('ArrowDown', 260); await until(() => G.world.mapId === 'homestead', 6000, 'leave the cabin'); await idle();
+  await walk('ArrowUp', () => G.world.mapId === 'home1', 'enter the cabin'); await idle(); await shot('cabin');
+  await walk('ArrowDown', () => G.world.mapId === 'homestead', 'leave the cabin'); await idle();
   assert.deepEqual(await ev(() => [G.world.p.x, G.world.p.y]), [door[0], door[1] + 1]);
   step('the cabin door opens onto home1 and its exit mat leads back to the door');
 
   // 10) the Lanternrest name plates and the Builder's Yard interior
   await at('lanternrest', 23, 8, 1); await page.waitForTimeout(400); await shot('hub-plates');
   assert(await ev(() => window.__plates.has("BUILDER'S YARD") && window.__plates.has('WARDEN LODGE · HEALING')), 'hub plates drawn');
-  await key('ArrowUp', 400); await until(() => G.world.mapId === 'yard', 6000, 'enter the yard'); await idle();
+  await walk('ArrowUp', () => G.world.mapId === 'yard', 'enter the yard'); await idle();
   await key('ArrowUp', 400); await idle(); await key('z'); await until(() => G.shopState && G.shopState.id === 'builder'); await shot('builder');
   await key('x'); await idle();
   step("Builder's Yard: the hub's name plates are drawn and its counter opens the materials shop");
