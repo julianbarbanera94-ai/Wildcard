@@ -360,12 +360,13 @@ G.startMenu = async function () {
   let idx = 0;
   for (;;) {
     // BUILD sits after BAG; the rest of the menu keeps its old indices via `ch` below
-    const labels = ['DEX', 'PARTY', 'BAG', 'BUILD', 'TRAVEL', S.name, 'SAVE', 'SETTINGS', 'EXIT'];
-    const pick = await G.choose(labels, { right: 238, y: 4, index: idx, minW: 50, rowH: 13 });
-    if (pick < 0 || pick === 8) break; idx = pick;
+    const labels = ['DEX', 'PARTY', 'BAG', 'BUILD', 'TRAVEL', 'MAP', S.name, 'SAVE', 'SETTINGS', 'EXIT'];
+    const pick = await G.choose(labels, { right: 238, y: 4, index: idx, minW: 50, rowH: 12 });
+    if (pick < 0 || pick === 9) break; idx = pick;
     if (pick === 3) { await G.buildMenu(); break; }
     if (pick === 4) { if (G.travelMenu) await G.travelMenu(); else await G.worldApi.says('Travel is not available yet.'); break; }
-    const ch = pick > 4 ? pick - 2 : pick;
+    if (pick === 5) { if (G.worldMapScreen) await G.worldMapScreen(); else await G.worldApi.says('The map is not ready yet.'); continue; }
+    const ch = pick > 5 ? pick - 3 : pick;
     if (ch === 0) await G.dexScreen();
     else if (ch === 1) await G.partyScreen({ mode: 'menu' });
     else if (ch === 2) await G.bagScreen('field');

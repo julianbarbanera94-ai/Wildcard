@@ -32,7 +32,7 @@ const OUT = process.env.OUT || '/tmp';
 
   // settings -> test mode -> password typed on the on-screen keyboard by tapping keys
   await key('Enter'); await until(() => G.ui.layers.length > 0 && G.zones.length > 5, 3000, 'start menu');
-  await tapItem(7); await until(() => G.ui.layers.length > 0 && G.zones.length >= 4, 3000, 'settings'); await tapItem(1);
+  await tapItem(8); await until(() => G.ui.layers.length > 0 && G.zones.length >= 4, 3000, 'settings'); await tapItem(1);
   await until(() => !!G.keyHook, 3000, 'text entry'); await ev(() => { G.keyHook = null; });
   await shot('keyboard');
   const rows = ['abcdefghij', 'klmnopqrst', 'uvwxyz0123', '456789-_.@'];

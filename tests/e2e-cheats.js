@@ -21,7 +21,7 @@ const OUT = process.env.OUT || '/tmp';
   for (let i = 0; i < 40 && await ev(() => !G.state || G.world.busy); i++) await key('z', 50);
   await idle();
   assert(!(await ev(() => G.cheat('god') || !!G.state.cheats)), 'test mode starts off');
-  const openSettings = async () => { await key('Enter'); await until(() => G.ui.layers.length > 0, 3000, 'start menu'); for (let i = 0; i < 7; i++) await key('ArrowDown'); await key('z'); await until(() => G.ui.layers.length > 0, 3000, 'settings'); };
+  const openSettings = async () => { await key('Enter'); await until(() => G.ui.layers.length > 0, 3000, 'start menu'); for (let i = 0; i < 8; i++) await key('ArrowDown'); await key('z'); await until(() => G.ui.layers.length > 0, 3000, 'settings'); };
 
   // wrong password via keyboard typing
   await openSettings(); await shot('settings'); await key('ArrowDown'); await key('z');
