@@ -479,7 +479,8 @@ function draw(ctx) {
   }
   for (const h of hooks.overlay) h(ctx, cx, cy, t);
   // Building name plates (map.labels: [{ x, y, text }] with x, y the tile the plate is centred over).
-  for (const L of m.labels || []) { const x = L.x * 16 + 8 - cx, y = L.y * 16 - cy; if (x > -80 && x < G.W + 80 && y > -20 && y < G.H + 20) G.drawSignPlate(ctx, L.text, x, y, t, L.style); }
+  for (const L of (m.outdoor ? m.labels : null) || []) {   // interiors show their name in the banner instead
+   const x = L.x * 16 + 8 - cx, y = L.y * 16 - cy; if (x > -80 && x < G.W + 80 && y > -20 && y < G.H + 20) G.drawSignPlate(ctx, L.text, x, y, t, L.style); }
   // Context hint for whatever the player is facing.
   if (!world.busy && !p.moving && G.scene === world.scene && !G.ui.layers.length && !G.ui.text) {
     const hint = promptFor(p.x + VEC[p.dir][0], p.y + VEC[p.dir][1]); if (hint) G.drawHint(ctx, hint, t);
