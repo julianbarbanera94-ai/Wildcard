@@ -150,7 +150,7 @@ function buildNursery(b) {
     R.prop('plant', 5, 1);
     R.prop('slide', 7, 1, 2, 2, flav('A bright slide. The creatures take turns climbing up and whooshing down.', 'Slide'));
     R.prop('ballpit', 8, 4, 2, 2, flav('A pit of soft coloured balls. Splash! Somebody has been buried in it.', 'Ball pit'));
-    R.prop('plant', 1, 6); R.prop('lamp', 9, 1); R.prop('painting', 6, 0, 1, 1, {}); R.person(8, 6, LEFT, 'mom', talk);
+    R.prop('plant', 1, 6); R.prop('lamp', 9, 1); R.prop('painting', 6, 0, 1, 1, { flat: true }); R.person(8, 6, LEFT, 'mom', talk);
     area = { x: 2, y: 2, w: 5, h: 5 };
   }
   R.sign(Math.floor(dims[0] / 2), SIGN(b), 'home');

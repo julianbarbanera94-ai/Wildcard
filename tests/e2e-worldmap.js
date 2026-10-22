@@ -72,7 +72,7 @@ fs.mkdirSync(OUT, { recursive: true });
   await ev(() => { const m = G.worldMap; m.sel = m.nodes.findIndex(n => n.id === 'aurora'); }); await page.waitForTimeout(200);
   info = await ev(() => G.worldMap.info); assert.match(info.locked, /8 Arena Badges.*Great Lantern relit/); assert.deepEqual(info.levels, await ev(() => G.worldLevels('aurora')));
   await ev(() => { const m = G.worldMap; m.sel = m.nodes.findIndex(n => n.id === 'sunhaven'); }); await page.waitForTimeout(200);
-  info = await ev(() => G.worldMap.info); assert.equal(info.locked, null, 'Sunhaven is open'); assert(info.services.heal && info.services.arena === 'bloom' && info.badgeGot === false);
+  info = await ev(() => G.worldMap.info); assert.equal(info.locked, null, 'Sunhaven is open'); assert(info.services.heal && info.services.arena === 'bloom' && info.badgeGot === true);
   await key('z'); await page.waitForTimeout(1400); assert(await ev(() => G.worldMap.zoomed && G.worldMap.zoom > 2), 'A zooms in'); await shot('map-zoom');
   await ev(() => { const m = G.worldMap; m.sel = m.nodes.findIndex(n => n.id === 'lakeside'); }); await page.waitForTimeout(1200); await shot('map-zoom-lake');
   await key('z'); await page.waitForTimeout(900); assert(await ev(() => !G.worldMap.zoomed && G.worldMap.zoom < 1.2), 'A zooms back out');

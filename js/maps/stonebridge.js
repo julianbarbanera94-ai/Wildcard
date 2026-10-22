@@ -113,8 +113,8 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   rect(m, 46, 29, 1, 1, 'p'); rect(m, 42, 29, 12, 1, 'p'); rect(m, 42, 24, 1, 6, 'p');
   // -- scenery --
   const grove = (x, y, w, h, chs, pct) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const X = x + i, Y = y + j, k = hash(X, Y); if (m.t[Y] && m.t[Y][X] === 'g' && k < pct) set(m, X, Y, chs[Math.floor(hash(Y, X) * chs.length)]); } };
-  grove(2, 30, 6, 12, ['#', 'n', 'u'], .25); grove(10, 31, 14, 10, ['#', 'n', 'u'], .2); grove(30, 31, 6, 10, ['#', 'u'], .2);
-  grove(44, 31, 10, 11, ['#', 'n', 'u'], .2); grove(42, 7, 12, 6, ['#', 'n'], .4); grove(15, 7, 2, 4, ['u'], .5); grove(2, 14, 10, 9, ['#', 'u'], .15);
+  grove(2, 30, 6, 12, ['#', 'n', 'u'], .25); grove(10, 31, 16, 12, ['#', 'n', 'u'], .32); grove(30, 31, 6, 10, ['#', 'u'], .2);
+  grove(44, 31, 10, 11, ['#', 'n', 'u'], .3); grove(42, 7, 12, 6, ['#', 'n'], .4); grove(15, 7, 2, 4, ['u'], .5); grove(2, 14, 10, 9, ['#', 'u'], .15);
   grove(20, 7, 6, 4, ['u', 'f'], .3);
   // clear flat building ground (6x6 each): south-west and south-east
   rect(m, 4, 31, 7, 7, 'g'); rect(m, 44, 32, 7, 7, 'g');
@@ -123,6 +123,10 @@ G.SHOPS_EXTRA = Object.assign(G.SHOPS_EXTRA || {}, {
   scatter(m, 'l', [[21, 17], [34, 17], [26, 22], [30, 22], [26, 14], [30, 14], [14, 21], [41, 21], [36, 21], [26, 29], [30, 29], [18, 11], [34, 11], [8, 22], [24, 28]]);
   scatter(m, 'u', [[15, 24], [16, 24], [34, 24], [35, 24], [17, 17], [18, 17], [20, 13], [24, 13]]);
   scatter(m, 'd', [[41, 12], [14, 29], [33, 35]]);
+  // a flowerbed and statue in the middle of the plaza, a market row of crates and benches
+  rect(m, 23, 19, 4, 3, 'f'); scatter(m, 'O', [[24, 20], [25, 20]]); scatter(m, 'l', [[22, 19], [27, 19], [22, 22], [27, 22]]);
+  scatter(m, 'x', [[17, 24], [18, 24], [32, 24]]); scatter(m, 'd', [[19, 18], [31, 18]]);
+  rect(m, 38, 12, 1, 1, 'F'); rect(m, 43, 24, 11, 1, 'F'); rect(m, 43, 28, 1, 1, 'f');
   // flowering banks on the plaza edge
   rect(m, 15, 24, 2, 1, 'f'); rect(m, 33, 24, 2, 1, 'f');
 
