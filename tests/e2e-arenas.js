@@ -84,7 +84,9 @@ const OUT = process.env.OUT || '/tmp';
   const before = await ev(() => ({ money: G.state.money, orbs: G.state.bag['Stone Orb'] || 0 }));
   assert.equal(await ev(() => G.badgeCount()), 0);
   await key('z'); await until(() => G.scene !== G.world.scene || G.ui.text, 4000, 'leader talk');
-  await settle(); await shot('after-leader');
+  await until(() => G.state.flags.arena_stonebridge_leader, 90000, 'leader beaten').catch(async e => { throw e; });
+  for (let i = 0; i < 400 && !(await ev(() => !!G.state.flags.badge_keystone)); i++) { await settle(5000).catch(() => {}); await page.waitForTimeout(100); }
+  await page.waitForTimeout(300); await settle(); await shot('after-leader');
   const after = await ev(() => ({ money: G.state.money, orbs: G.state.bag['Stone Orb'] || 0, badge: !!G.state.flags.badge_keystone, n: G.badgeCount() }));
   assert(after.badge && after.n === 1, 'badge flag set'); assert.equal(after.orbs - before.orbs, 5, 'five Stone Orbs'); assert(after.money > before.money, 'prize money');
   assert.equal(await ev(() => G.badgeGate(1)), null); assert(typeof (await ev(() => G.badgeGate(2, 'DRIFTWOOD PORT'))) === 'string' && (await ev(() => G.badgeGate(2))).includes('You have 1'));

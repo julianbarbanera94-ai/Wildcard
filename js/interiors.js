@@ -110,8 +110,8 @@ function buildShed(b) {
     R.prop('goodsshelf', 1, 1, 2, 1, store); R.prop('ladder', 3, 1, 1, 1, { say: 'A ladder up to the loft. It is stuffed with hay and cobwebs. Nothing up there yet!', prompt: 'Ladder' });
     R.prop('goodsshelf', 4, 1, 2, 1, store); R.prop('plant', 6, 1); R.prop('goodsshelf', 7, 1, 2, 1, store);
     R.prop('crates', 1, 2, 1, 1, store); R.prop('sacks', 1, 3, 1, 1, store); R.prop('crates', 1, 4, 1, 1, store); R.prop('lamp', 1, 5);
-    R.prop('workbench', 7, 2, 2, 1, { say: note, prompt: 'Read note' });
-    R.prop('sacks', 8, 3, 1, 1, store); R.prop('crates', 8, 4, 1, 1, store); R.prop('plant', 8, 5);
+    R.prop('workbench', 6, 2, 2, 1, { say: note, prompt: 'Read note' });
+    R.prop('sacks', 7, 5, 1, 1, store); R.prop('crates', 8, 4, 1, 1, store); R.prop('plant', 8, 5);
   }
   R.sign(big ? 5 : 3, SIGN(b), 'craft');
   return R.m;

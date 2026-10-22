@@ -958,7 +958,7 @@ const BASE = {
     saA: '#e4cd93', saB: '#fff8e0', sx: null, paA: '#cfb07c', paB: '#f6e6c2', paC: '#d8bc88', cvA: '#957e69', cvB: '#c6b098' },
   wa: ['#e8f3c6', 'rgba(255,255,255,.95)', '#a3e8e6', '#74d5e3', '#5cc6e2'], waX: null,
   fl: ['#ff7eab', '#ffd84a', '#ffffff', '#ff9e5e', '#c8a2ff'], stem: ['#4c9a36', '#5cae40'], flGlow: false,
-  tree: TREE_PAL, tk: ['round', 'round', 'round'], trunk: ['#8e5c38', '#b88252', '#7a4b2c'], palm: ['#1f6e3a', '#3fae48', '#8be06a'],
+  tree: TREE_PAL, tk: ['round', 'round', 'round'], tscale: 1, trunk: ['#8e5c38', '#b88252', '#7a4b2c'], palm: ['#1f6e3a', '#3fae48', '#8be06a'],
   pine: [['#245e48', '#2f8358', '#4fae78'], ['#1f6a4a', '#358f62', '#5ab983']], pk: 'pine',
   bush: [TREE_PAL[0], TREE_PAL[0], TREE_PAL[2]], bk: 'bush',
   rock: ['#6f6b84', '#9d99b2', '#bcb8cc', '#dddbe8', '#f4f3fa'], rmoss: ['#6fbf5a', '#9ad874'],
@@ -970,7 +970,7 @@ function biome(name, o) {
 }
 const TF = (base, mid, tip, o, om, ot, hs) => ({ G: { base, mid, tip, obase: o, omid: om, otip: ot, hs: hs || 1, bw: 2.5 }, q: TUFT.q });
 const CL = (rim, top, f, strata, lip, hi) => ({ rim, top, f, strata, lip, hi });
-const fern = (c, R, v, pt) => { if (v === 0 || v === 3) return; const x = pt(), y = 5 + R() * 9; c.strokeStyle = 'rgba(30,110,50,.75)'; c.lineWidth = .5; for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(x, y + 1); c.quadraticCurveTo(x + k * .9, y - .5, x + k * 1.5, y - 1.2 + Math.abs(k) * .5); c.stroke(); } };
+const fern = (c, R, v, pt) => { el(c, pt(), pt(), 2.4, 1.4, 'rgba(150,200,70,.28)'); if (v === 0 || v === 3) return; const x = pt(), y = 5 + R() * 9; c.strokeStyle = 'rgba(30,110,50,.75)'; c.lineWidth = .5; for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(x, y + 1); c.quadraticCurveTo(x + k * .9, y - .5, x + k * 1.5, y - 1.2 + Math.abs(k) * .5); c.stroke(); } };
 const floes = (c, ms, v, fi, ph) => {
   const R = rng(v * 7 + 21);
   for (let i = 0; i < 2; i++) { const x = 3 + R() * 10 + Math.sin(ph + i * 3) * .7, y = 3 + R() * 10, w = 2.2 + R() * 1.8;
@@ -978,12 +978,12 @@ const floes = (c, ms, v, fi, ph) => {
     c.fillStyle = 'rgba(190,220,240,.9)'; c.fill(); c.save(); c.translate(-.2, -.3); c.fillStyle = '#ffffff'; c.fill(); c.restore(); }
 };
 biome('forest', {
-  lc: { 0: ['#58a03a'], 1: ['#2f7a34', '#3d8c3e'], 3: ['#d6be86', '#ecd8a6'], 4: ['#a8895e', '#d6bc8c'] },
+  lc: { 0: ['#4a9236'], 1: ['#276a30', '#357c38'], 3: ['#d6be86', '#ecd8a6'], 4: ['#a8895e', '#d6bc8c'] },
   tx: { gA: 'rgba(110,190,80,.35)', gS1: '#468f34', gS2: '#7fc458', tgb: 'rgba(15,70,35,.42)', gx: fern, paA: '#a8865a', paB: '#e0c898', paC: '#bc9c6c' },
   wa: ['#d6e8b6', 'rgba(255,255,255,.9)', '#8edcc8', '#5cc0c4', '#44aab8'],
   fl: ['#ffe066', '#ffffff', '#c8a2ff', '#ff9ec0', '#9ae0ff'],
   tree: [['#1f5f30', '#378a3a', '#2c7434', '#6cc060'], ['#2b5a26', '#4c8a38', '#3e7430', '#88c060'], ['#1a5a44', '#2f8c5a', '#257448', '#62c088']],
-  trunk: ['#6e4a2e', '#9a6c42', '#5a3a22'], fruit: false, moss: 'rgba(150,205,90,.75)',
+  trunk: ['#6e4a2e', '#9a6c42', '#5a3a22'], fruit: false, moss: 'rgba(150,205,90,.75)', tscale: 1.2,
   pine: [['#173f33', '#25664a', '#3f956a'], ['#1a4a38', '#2a7050', '#48a078']],
   bush: [['#1f5a2c', '#36803a', '#2a6c34', '#6cb85c'], ['#235a2a', '#3c8a3a', '#2e7234', '#78c060'], ['#1a5440', '#2c8458', '#236c48', '#62bc88']],
   tuft: TF('#1f6a2a', '#3f9a38', '#8ad060', '#195a24', '#348a30', '#6cb84e', 1.1),
@@ -1319,7 +1319,8 @@ function propSpec(s, m, x, y) {
   const ch = m.t[y][x], v = (hash(x, y, 1) * 4) | 0, ph = hash(x, y, 2), yb = (y + 1) * 16;
   const sm = (f, oob) => mask(m, x, y, f, oob);
   switch (ch) {
-    case '#': return spec('tree' + (v % 3), -5, -17.5, 26, 33.5, c => paintTree(c, v % 3), { yb, br: .014, ph, fx: CB.glow && CB.tk[v % 3] === 'round' ? fxFlora : null, gcol: CB.glow });
+    case '#': if (CB.tscale > 1) return spec('tree' + (v % 3), -9, -25, 34, 42, c => { c.translate(8, 15.6); c.scale(CB.tscale, CB.tscale); c.translate(-8, -15.6); paintTree(c, v % 3); }, { yb, br: .014, ph });
+      return spec('tree' + (v % 3), -5, -17.5, 26, 33.5, c => paintTree(c, v % 3), { yb, br: .014, ph, fx: CB.glow && CB.tk[v % 3] === 'round' ? fxFlora : null, gcol: CB.glow });
     case 'n': return spec('pine' + (v % 2), -2, -13, 20, 29, c => paintPine(c, v % 2), { yb, br: .01, ph });
     case 'u': return spec('bush' + (v % 3), -2, -2.5, 20, 19, c => paintBush(c, v % 3), { yb, br: .02, ph });
     case 'd': { const l = at(m, x - 1, y) === 'd', r = at(m, x + 1, y) === 'd', lg_ = l || r;
