@@ -124,9 +124,22 @@ fs.mkdirSync(OUT, { recursive: true });
   // the return crossing is free of badge checks; Aurora needs the Lantern
   const back = await ev(() => G.ferryRoutes(G.world.mapId).map(r => [r.to, r.badges, r.lantern]));
   assert(back.some(r => r[0] === 'driftwood' && r[1] === 0), 'you can always sail home: ' + JSON.stringify(back));
-  const au = await ev(() => G.ferryRoutes('frostmere')); assert(au.length === 1 && au[0].to === 'aurora' && au[0].lantern && au[0].badges === 8 && /sealed/.test(au[0].why || ''), JSON.stringify(au));
+  const au = await ev(() => G.ferryRoutes('frostmere')); assert(au.length === 1 && au[0].to === 'aurora' && au[0].lantern && au[0].badges === 8 && /8 Arena Badges/.test(au[0].why || ''), JSON.stringify(au));
+  const au8 = await ev(() => { G.BADGES.forEach(b => G.state.flags['badge_' + b.id] = true); return G.ferryRoutes('frostmere')[0].why; }); assert.match(au8, /sealed/, 'with 8 badges the Lantern still blocks Aurora');
+  assert.equal(await ev(() => { G.state.flags.lanternLit = true; return G.ferryRoutes('frostmere')[0].why; }), null, 'and with the Lantern relit the ferry sails');
   const mo = await ev(() => G.ferryRoutes('cobalt').concat(G.ferryRoutes('shore')).map(r => r.to)); assert.deepEqual(mo, ['moonlit', 'moonlit']);
   step('ferry routes: always a way home; Aurora needs 8 badges and the Lantern; Moonlit from Cobalt and the Shore');
+
+  // 4b) a boat owner sails free (same destinations and requirements)
+  d = await dockOf('driftwood');
+  await ev(d => { setup('driftwood', d.x, d.y, 0, null, { money: 0, badges: 3, visited: ['driftwood'] }); G.vehicles.ownsBoat = () => true; }, d);
+  await openFerry('driftwood'); await key('z');
+  await until(() => G.ui.layers.length > 0 && !G.ui.text, 4000, 'boat choice'); await key('ArrowDown'); await key('z');   // SAIL YOUR BOAT
+  await pressUntil(() => G.worldSail && G.ui.fade.a === 0, 20000, 'boat sailing'); await page.waitForTimeout(500); await shot('sailing-boat');
+  await pressUntil(() => G.world.mapId !== 'driftwood' && !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0 && !G.ui.text, 40000, 'boat arrival');
+  assert.equal(await ev(() => G.state.money), 0, 'sailing your own boat costs nothing'); assert.equal(await ev(() => G.world.mapId), 'verdant');
+  await ev(() => { delete G.vehicles.ownsBoat; });
+  step('ferry desk: a boat owner can SAIL YOUR BOAT at no cost (same requirements, same sailing scene, lands on the dock)');
 
   // 5) flight uses the illustrated map: visited places only, never the mine or places behind a badge gate
   await ev(() => { setup('lanternrest', 29, 26, 0, [[1, 30], [17, 20]], { visited: ['lanternrest', 'sunmeadow', 'frostmere'], badges: 1 }); });

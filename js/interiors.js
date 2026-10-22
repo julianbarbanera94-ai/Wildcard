@@ -260,9 +260,9 @@ function buildStation(b) {
     R.windows([[1, 1], [3, 2], [8, 2]]);
     counter(3, 2, 4); nurse(4, 1); cabinet(1, 1); R.prop('monitor', 6, 1, 1, 1, { prompt: 'Monitor', say: 'SPA LOG: unlimited heals, fainted creatures revived, crystal tonic on tap.' });
     R.prop('healer', 7, 1, 1, 1, healerO); R.prop('healer', 8, 1, 1, 1, healerO); R.prop('healer', 9, 1, 1, 1, healerO);
-    bed(6, 3); bed(7, 3); bed(8, 3); bed(9, 3);
+    bed(6, 3); bed(7, 3); bed(8, 3); bed(9, 5);
     R.prop('rug', 1, 4, 4, 3, { flat: true });
-    R.prop('sofa', 1, 6, 2, 1); R.prop('armchair', 3, 6); R.prop('table', 2, 4); R.prop('plant', 1, 4); R.prop('plant', 4, 3); R.prop('lamp', 1, 3); R.prop('plant', 9, 6); R.prop('plant', 6, 6);
+    R.prop('sofa', 1, 6, 2, 1); R.prop('armchair', 3, 6); R.prop('table', 2, 4); R.prop('plant', 1, 4); R.prop('plant', 4, 3); R.prop('lamp', 1, 3); R.prop('plant', 7, 6); R.prop('plant', 6, 6);
   }
   R.sign(Math.floor(dims[0] / 2), SIGN(b), 'heal');
   return R.m;
