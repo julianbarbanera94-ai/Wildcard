@@ -973,114 +973,25 @@ async function helicopter() {
 }
 
 // ---- The fly scene: an overhead map of the vale -------------------------------------------------------------
-const NODES = [
-  { id: 'lanternrest', name: 'LANTERNREST', x: 120, y: 82 },
-  { id: 'homestead', name: 'HOMESTEAD', x: 162, y: 54 },
-  { id: 'ridge', name: 'THE RIDGE', x: 104, y: 40 },
-  { id: 'mine', name: 'GLIMMER MINE', x: 126, y: 18, cave: true },
-  { id: 'sunmeadow', name: 'SUNMEADOW', x: 40, y: 82 },
-  { id: 'mirewood', name: 'MIREWOOD', x: 202, y: 84 },
-  { id: 'shore', name: 'TIDEPOOL SHORE', x: 106, y: 108 },
-  { id: 'hollow', name: 'STARLIT HOLLOW', x: 184, y: 108 },
-];
+// The map itself (places, positions, services) lives in js/worldmap.js; this is the flight picker's view of it.
+const flightNodes = () => G.WORLD.places.map(p => ({ id: p.id, name: p.name, x: p.nx * 240, y: p.ny * 160 }));
 function nodeWhy(n) {
-  const S = G.state, m = G.MAPS[n.id];
-  if (n.cave) return 'Glimmer Mine is deep underground. There is nowhere to land.';
-  if (!m || !landingFor(n.id)) return "There is nowhere to land there yet.";
-  if (n.id === G.world.mapId) return 'You are here.';
-  if (n.id === 'hollow' && !S.flags.lanternLit) return 'The Hollow Gate is sealed until the Great Lantern burns again.';
-  if (!S.visited[n.id]) return `You haven't been to ${m.name} yet. Go there on foot first.`;
+  const m = G.MAPS[n.id];
+  if (!m || !m.outdoor || n.id === 'mine') return 'There is nowhere to land there.';
+  if (!landingFor(n.id)) return "There is nowhere to land there yet.";
+  if (n.id === G.world.mapId || n.id === (G.worldPlaceOf && G.worldPlaceOf(G.world.mapId))) return 'You are here.';
+  const lock = G.worldLockWhy ? G.worldLockWhy(n.id) : null;
+  if (lock) return lock;
+  if (!G.state.visited[n.id]) return `You haven't been to ${m.name} yet. Go there on foot first.`;
   return null;
 }
 const RNG = s => G.mulberry(s);
-function valeArt() {
-  return G.kit.cache('vale-map', 240, 160, x => {
-    const R = RNG(42), K = G.kit;
-    // land
-    x.fillStyle = K.lin(x, 0, 0, 0, 160, ['#a6dc82', '#92d06e', '#86c865']); x.fillRect(0, 0, 240, 160);
-    for (let i = 0; i < 140; i++) { x.fillStyle = `rgba(255,255,255,${.04 + R() * .05})`; x.beginPath(); x.ellipse(R() * 240, 30 + R() * 110, 4 + R() * 10, 2 + R() * 4, 0, 0, TAU); x.fill(); }
-    // west: Sunmeadow patchwork fields and the windmill
-    const fieldCols = ['#d8e88a', '#c4e070', '#e8e0a0', '#b8dc78', '#f0e6a8'];
-    for (let i = 0; i < 9; i++) {
-      const fx = 8 + (i % 3) * 22 + R() * 4, fy = 58 + Math.floor(i / 3) * 16 + R() * 4;
-      x.save(); x.translate(fx + 9, fy + 6); x.rotate(-.12 + R() * .24);
-      K.rr(x, -10, -6.5, 20, 13, 2); x.fillStyle = fieldCols[i % fieldCols.length]; x.fill();
-      x.strokeStyle = 'rgba(140,120,60,.25)'; x.lineWidth = .5; for (let k = -8; k <= 8; k += 2.5) { x.beginPath(); x.moveTo(k, -5.5); x.lineTo(k, 5.5); x.stroke(); }
-      x.restore();
-    }
-    x.fillStyle = '#f4f0e4'; x.beginPath(); x.moveTo(26, 66); x.lineTo(29, 54); x.lineTo(32, 66); x.closePath(); x.fill();
-    x.fillStyle = '#c05a40'; x.beginPath(); x.moveTo(27.5, 56); x.lineTo(29, 52); x.lineTo(30.5, 56); x.closePath(); x.fill();
-    x.strokeStyle = '#8a6a50'; x.lineWidth = 1; for (let k = 0; k < 4; k++) { const a = .5 + k * Math.PI / 2; x.beginPath(); x.moveTo(29, 55.5); x.lineTo(29 + Math.cos(a) * 7, 55.5 + Math.sin(a) * 7); x.stroke(); }
-    // east: Mirewood marsh with ponds and reeds
-    x.fillStyle = '#6fa58a'; x.beginPath(); x.ellipse(204, 86, 38, 30, 0, 0, TAU); x.fill();
-    x.fillStyle = '#7fb596'; x.beginPath(); x.ellipse(200, 82, 30, 22, .3, 0, TAU); x.fill();
-    for (let i = 0; i < 9; i++) { const px = 180 + R() * 50, py = 64 + R() * 42; x.fillStyle = '#5a9ab8'; x.beginPath(); x.ellipse(px, py, 4 + R() * 6, 2 + R() * 3, R(), 0, TAU); x.fill(); x.fillStyle = 'rgba(255,255,255,.25)'; x.beginPath(); x.ellipse(px - 1, py - .6, 2, .7, 0, 0, TAU); x.fill(); }
-    x.strokeStyle = '#3f7a5a'; x.lineWidth = .6; for (let i = 0; i < 40; i++) { const rx = 172 + R() * 62, ry = 60 + R() * 50; x.beginPath(); x.moveTo(rx, ry); x.lineTo(rx - .6, ry - 2.6); x.moveTo(rx + 1, ry); x.lineTo(rx + 1.4, ry - 2.2); x.stroke(); }
-    // south: sand, sea and waves
-    x.fillStyle = '#f3dfa0'; x.beginPath(); x.moveTo(0, 160); for (let i = 0; i <= 240; i += 4) x.lineTo(i, 124 + Math.sin(i / 17) * 3 + Math.sin(i / 7) * 1.2); x.lineTo(240, 160); x.closePath(); x.fill();
-    x.fillStyle = K.lin(x, 0, 128, 0, 160, ['#6cc8f0', '#3a90d0']); x.beginPath(); x.moveTo(0, 160); for (let i = 0; i <= 240; i += 4) x.lineTo(i, 131 + Math.sin(i / 17) * 3 + Math.sin(i / 7) * 1.2); x.lineTo(240, 160); x.closePath(); x.fill();
-    x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = .7; for (let i = 0; i < 14; i++) { const wx = R() * 230, wy = 138 + R() * 18; x.beginPath(); x.moveTo(wx, wy); x.quadraticCurveTo(wx + 3, wy - 1.5, wx + 6, wy); x.stroke(); }
-    // lighthouse
-    x.fillStyle = '#ffffff'; x.fillRect(150, 118, 3, 9); x.fillStyle = '#e05050'; x.fillRect(150, 121, 3, 2); x.fillStyle = '#ffe680'; x.fillRect(150, 116, 3, 2);
-    // north: the Ridge, two ranges of peaks with snow
-    x.fillStyle = '#c8b894'; x.fillRect(0, 0, 240, 22);
-    const range = (base, h, col, snow, n, seed) => { const r = RNG(seed); for (let i = 0; i < n; i++) { const px = -10 + i * (260 / n) + r() * 8, ph = h * (.7 + r() * .5), pw = 16 + r() * 10;
-      x.fillStyle = col; x.beginPath(); x.moveTo(px - pw, base); x.lineTo(px, base - ph); x.lineTo(px + pw, base); x.closePath(); x.fill();
-      x.fillStyle = G.shade(col, .85); x.beginPath(); x.moveTo(px, base - ph); x.lineTo(px + pw, base); x.lineTo(px + pw * .2, base); x.closePath(); x.fill();
-      if (snow) { x.fillStyle = '#ffffff'; x.beginPath(); x.moveTo(px - pw * .28, base - ph * .72); x.lineTo(px, base - ph); x.lineTo(px + pw * .28, base - ph * .72); x.lineTo(px + pw * .1, base - ph * .78); x.lineTo(px - pw * .05, base - ph * .7); x.closePath(); x.fill(); } } };
-    range(26, 24, '#b6a6c8', true, 11, 3); range(38, 22, '#a89070', true, 13, 9);
-    x.fillStyle = '#9a8262'; x.beginPath(); x.moveTo(0, 38); for (let i = 0; i <= 240; i += 6) x.lineTo(i, 36 + Math.sin(i / 9) * 2); x.lineTo(240, 46); x.lineTo(0, 46); x.closePath(); x.globalAlpha = .35; x.fill(); x.globalAlpha = 1;
-    // the mine mouth
-    x.fillStyle = '#3a2e3a'; x.beginPath(); x.ellipse(126, 25, 5, 4.5, 0, Math.PI, TAU); x.fillRect(121, 25, 10, 3); x.fill();
-    x.fillStyle = '#7ad8ff'; x.beginPath(); x.arc(122, 22, 1, 0, TAU); x.arc(131, 23, .9, 0, TAU); x.fill();
-    // forests
-    const tree = (tx, ty, r) => { x.fillStyle = 'rgba(30,60,30,.25)'; x.beginPath(); x.ellipse(tx + .6, ty + r * .8, r, r * .4, 0, 0, TAU); x.fill(); x.fillStyle = '#3f9e44'; x.beginPath(); x.arc(tx, ty, r, 0, TAU); x.fill(); x.fillStyle = '#58bb52'; x.beginPath(); x.arc(tx - r * .3, ty - r * .3, r * .6, 0, TAU); x.fill(); };
-    const grove = (gx, gy, rw, rh, n, seed) => { const r = RNG(seed); const pts = []; for (let i = 0; i < n; i++) pts.push([gx + (r() - .5) * rw, gy + (r() - .5) * rh, 2.4 + r() * 1.8]); pts.sort((a, b) => a[1] - b[1]).forEach(p => tree(...p)); };
-    grove(74, 60, 20, 18, 14, 11); grove(80, 104, 24, 14, 14, 12); grove(150, 92, 16, 20, 12, 13); grove(140, 40, 26, 10, 12, 14); grove(10, 112, 20, 12, 10, 15); grove(228, 50, 18, 16, 10, 16);
-    grove(60, 44, 30, 8, 12, 17); grove(186, 46, 22, 8, 10, 18);
-    // the Hollow: a crystal outcrop
-    x.fillStyle = '#8a7a9a'; x.beginPath(); x.ellipse(184, 106, 12, 7, 0, 0, TAU); x.fill(); x.fillStyle = '#6a5a7a'; x.beginPath(); x.ellipse(184, 108, 10, 4, 0, 0, TAU); x.fill();
-    [[178, 103, 4], [184, 100, 6], [190, 104, 4], [181, 105, 3]].forEach(([cx, cy, h]) => { x.fillStyle = '#c8a8ff'; x.beginPath(); x.moveTo(cx - 1.6, cy + 2); x.lineTo(cx, cy - h); x.lineTo(cx + 1.6, cy + 2); x.closePath(); x.fill(); x.fillStyle = 'rgba(255,255,255,.6)'; x.beginPath(); x.moveTo(cx - .4, cy + 1); x.lineTo(cx, cy - h + 1); x.lineTo(cx + .4, cy + 1); x.closePath(); x.fill(); });
-    // roads out of Lanternrest
-    const road = pts => { x.lineCap = 'round'; x.lineJoin = 'round'; for (const [w, col] of [[3.6, 'rgba(150,110,50,.35)'], [2.4, '#ecd896']]) { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 4) x.quadraticCurveTo(pts[i], pts[i + 1], pts[i + 2], pts[i + 3]); x.stroke(); } };
-    road([120, 82, 84, 72, 40, 82]); road([120, 82, 160, 92, 202, 84]); road([120, 82, 100, 60, 104, 40, 110, 28, 126, 24]); road([120, 82, 118, 98, 106, 108]);
-    road([120, 82, 150, 66, 162, 54]); road([120, 82, 172, 92, 184, 106]);
-    // Lanternrest: a plaza with little houses
-    x.fillStyle = '#f0dca0'; x.beginPath(); x.ellipse(120, 82, 13, 9, 0, 0, TAU); x.fill();
-    x.fillStyle = '#5cb8e0'; x.beginPath(); x.ellipse(103, 92, 5, 3, 0, 0, TAU); x.fill();
-    [[108, 72, '#e06050'], [130, 71, '#5a7ae0'], [110, 89, '#e0a040'], [133, 90, '#e06050'], [127, 77, '#7a5ae0'], [112, 79, '#e0a040']].forEach(([hx, hy, rc]) => {
-      x.fillStyle = '#f8f0e0'; x.fillRect(hx - 2.6, hy - 1, 5.2, 3.4); x.fillStyle = rc; x.beginPath(); x.moveTo(hx - 3.6, hy - .6); x.lineTo(hx, hy - 3.6); x.lineTo(hx + 3.6, hy - .6); x.closePath(); x.fill();
-      x.fillStyle = '#7a5a40'; x.fillRect(hx - .6, hy + .8, 1.2, 1.6); });
-    // the homestead: a fenced field with a cabin
-    x.fillStyle = '#b8e08a'; K.rr(x, 150, 44, 24, 18, 3); x.fill();
-    x.strokeStyle = '#a07a50'; x.lineWidth = .7; K.rr(x, 150, 44, 24, 18, 3); x.stroke();
-    x.strokeStyle = '#a0784a'; x.lineWidth = 1.1; for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(153, 55 + k * 2); x.lineTo(161, 55 + k * 2); x.stroke(); }
-    x.fillStyle = '#c89060'; x.fillRect(164, 49, 6, 4); x.fillStyle = '#a04a3a'; x.beginPath(); x.moveTo(163, 49.4); x.lineTo(167, 46); x.lineTo(171, 49.4); x.closePath(); x.fill();
-    // vignette
-    const g = x.createRadialGradient(120, 80, 60, 120, 80, 150); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(40,30,60,.28)'); x.fillStyle = g; x.fillRect(0, 0, 240, 160);
-  }, { pad: 0, qmax: 5 });
-}
 function cloudArt(k) {
   return G.kit.cache('fly-cloud' + k, 40, 18, x => {
     x.fillStyle = 'rgba(120,150,190,.25)'; x.beginPath(); x.ellipse(20, 15, 17, 3, 0, 0, TAU); x.fill();
     [[9, 11, 6], [17, 7, 8 - k], [27, 8, 7 + k], [34, 12, 4.5]].forEach(([a, b, r]) => { x.fillStyle = '#ffffff'; x.beginPath(); x.arc(a, b, r, 0, TAU); x.fill(); });
     x.fillStyle = 'rgba(210,228,245,.7)'; x.beginPath(); x.ellipse(20, 13.5, 15, 2.4, 0, 0, Math.PI); x.fill();
   }, { pad: 1, qmax: 4 });
-}
-function drawNode(ctx, n, why, sel, t) {
-  const lit = !why, here = why === 'You are here.';
-  if (lit) G.kit.drawGlow(ctx, '#fff6a0', n.x, n.y, 9 + Math.sin(t / 12 + n.x) * 1.2, .8);
-  if (sel) { ctx.strokeStyle = `rgba(255,120,70,${.6 + Math.sin(t / 6) * .3})`; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(n.x, n.y, 7.5 + Math.sin(t / 6), 0, TAU); ctx.stroke(); }
-  circ(ctx, n.x, n.y + .8, 4.8, 'rgba(40,30,60,.35)');
-  circ(ctx, n.x, n.y, 4.8, '#ffffff');
-  circ(ctx, n.x, n.y, 3.4, here ? '#ff8a3c' : lit ? '#3fbf5a' : '#9a96a8');
-  if (!lit && !here) { // padlock
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = .7; ctx.beginPath(); ctx.arc(n.x, n.y - .6, 1.3, Math.PI, TAU); ctx.stroke();
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(n.x - 1.7, n.y - .6, 3.4, 2.4);
-  } else if (here) { circ(ctx, n.x, n.y, 1.4, '#ffffff'); }
-  else { ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(n.x - 1.2, n.y - 1.6); ctx.lineTo(n.x + 1.8, n.y); ctx.lineTo(n.x - 1.2, n.y + 1.6); ctx.closePath(); ctx.fill(); }
-  G.drawSignPlate(ctx, n.name, n.x, n.y + 18, t, here ? 'shop' : lit ? 'home' : 'craft');
-  if (sel) { const by = n.y - 13 + Math.sin(t / 5) * 1.5; ctx.fillStyle = '#ff6b5a'; ctx.beginPath(); ctx.moveTo(n.x - 3, by - 3); ctx.lineTo(n.x + 3, by - 3); ctx.lineTo(n.x, by + 1); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = .7; ctx.stroke(); }
 }
 function drawCarrier(ctx, mode, c, x, y, t, faceRight, moving) {
   if (mode === 'heli') {
@@ -1094,26 +1005,11 @@ function drawCarrier(ctx, mode, c, x, y, t, faceRight, moving) {
   ctx.save(); if (!faceRight) ctx.scale(-1, 1); ctx.drawImage(img, -sz / 2, -sz * .62 + flap, sz, sz * (1 + flap * .04)); ctx.restore();
   ctx.restore();
 }
-// The node nearest in the pressed D-pad direction (or the same index when nothing lies that way).
-function navPick(nodes, sel, k) {
-  const dir = k.up ? [0, -1] : k.down ? [0, 1] : k.left ? [-1, 0] : k.right ? [1, 0] : null;
-  if (!dir) return sel;
-  const cur = nodes[sel]; let best = sel, score = 1e9;
-  nodes.forEach((n, i) => { if (i === sel) return; const dx = n.x - cur.x, dy = n.y - cur.y, along = dx * dir[0] + dy * dir[1], perp = Math.abs(dx * dir[1] - dy * dir[0]); if (along <= 0) return; const sc = along + perp * 3.5; if (sc < score) { score = sc; best = i; } });
-  return best;
-}
-function drawSky(ctx, t, lit, cl) {
-  G.kit.blit(ctx, valeArt(), 0, 0);
-  G.kit.drawGlow(ctx, lit ? '#ffd860' : '#c8b0a0', 120, 79, lit ? 11 + Math.sin(t / 10) * 1.5 : 6, lit ? .9 : .5);
-  ctx.fillStyle = '#d8c8a8'; ctx.fillRect(118.4, 75, 3.2, 6); ctx.fillStyle = lit ? '#fff2a0' : '#8a7a70'; ctx.fillRect(118.8, 74, 2.4, 2);
-  for (let i = 0; i < 5; i++) { const e = cloudArt(i % 3), w = 34 + (i % 3) * 6, cx = ((i * 61 + cl * .5) % 300 + 300) % 300 - 40, cy = 8 + i * 27;
-    ctx.globalAlpha = .18; ctx.fillStyle = '#284060'; ctx.beginPath(); ctx.ellipse(cx + w / 2 + 6, cy + 18, w / 2.4, 3, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = .55; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * 18 / 40 + e.pad * 2); ctx.globalAlpha = 1; }
-}
 async function flight(mode, carrier) {
   const S = G.state, back = G.scene;
-  const nodes = NODES.map(n => Object.assign({}, n));
-  const here = nodes.find(n => n.id === G.world.mapId) || nodes[0];
-  const why = n => nodeWhy(n);
+  const nodes = flightNodes();
+  const hereId = (G.worldPlaceOf && G.worldPlaceOf(G.world.mapId)) || G.world.mapId, here = nodes.find(n => n.id === hereId) || nodes[0];
+  const why = n => nodeWhy(n), whyById = {}, whyOf = id => { const n = nodes.find(q => q.id === id); return n ? why(n) : null; };
   let sel = nodes.indexOf(nodes.find(n => !why(n)) || here), phase = 'pick', tapped = -1, cancel = false;
   const fly = { t: 0, x: here.x, y: here.y, k: 0, from: here, to: null, faceRight: true };
   const scene = {
@@ -1124,8 +1020,7 @@ async function flight(mode, carrier) {
       // slow drifting clouds; they stream past while flying
       const drift = phase === 'fly' ? (fly.faceRight ? -1 : 1) : 0, vel = phase === 'fly' ? 1.6 : .12;
       fly.cl = (fly.cl || 0) + vel * (drift || 1);
-      drawSky(ctx, t, !!S.flags.lanternLit, fly.cl);
-      nodes.forEach((n, i) => drawNode(ctx, n, why(n), phase === 'pick' && i === sel, t));
+      G.drawWorldMap(ctx, 0, 0, 240, 160, { t, here: here.id, cursor: phase === 'pick' ? nodes[sel].id : undefined, names: 'known', icons: phase === 'pick' ? 'sel' : 'none', ok: id => phase === 'pick' && !whyOf(id), dim: id => !!whyOf(id) && whyOf(id) !== 'You are here.', ferries: false });
       if (phase === 'fly') {
         const gx = fly.from.x + (fly.to.x - fly.from.x) * fly.k, gy = fly.from.y + (fly.to.y - fly.from.y) * fly.k;
         ell(ctx, gx, gy + 2, 7 - Math.sin(fly.k * Math.PI) * 2.5, 2, 'rgba(30,30,60,.28)');
@@ -1134,20 +1029,19 @@ async function flight(mode, carrier) {
         for (let i = 0; i < 3; i++) { const e = cloudArt(i), w = 70 + i * 16, cx = ((i * 113 - fly.t * (3.2 + i) * (fly.faceRight ? 1 : -1)) % 420 + 420) % 420 - 100, cy = 18 + i * 46;
           ctx.globalAlpha = .82; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * 18 / 40 + e.pad * 2); ctx.globalAlpha = 1; }
       } else drawCarrier(ctx, mode, carrier, here.x, here.y - 8, t, true, false);
-      // header chip
+      // header chip and info panel (the panel flips to the top when the cursor is low on the map)
       const title = mode === 'heli' ? 'HELICOPTER' : `FLY WITH ${G.name(carrier)}`;
-      G.frame(ctx, 4, 4, Math.max(96, G.textW(ctx, title) + 20), 17, 'light'); G.text(ctx, title, 12, 8.5, { font: G.FONT_B || G.FONT });
-      // info panel
+      if (phase !== 'pick') { G.frame(ctx, 4, 4, Math.max(96, G.textW(ctx, title) + 20), 17, 'light'); G.text(ctx, title, 12, 8.5, { font: G.FONT_B || G.FONT }); }
       if (phase === 'pick') {
-        const n = nodes[sel], w = why(n);
-        G.frame(ctx, 4, 132, 232, 25, 'light');
-        G.text(ctx, n.name, 12, 136, { font: G.FONT_B || G.FONT });
-        G.text(ctx, w || 'Ready for take-off. A landing spot is waiting.', 12, 146.5, { font: G.FONT_S, color: w ? '#b03a3a' : '#2a7a4a', shadow: false });
-        if (!w) G.kit.pill(ctx, 184, 136, 46, 10, '#3fae5a', G.touch ? 'TAP: FLY' : 'A: FLY');
-        else G.text(ctx, G.touch ? 'TAP OUTSIDE: BACK' : 'B: BACK', 228, 137, { align: 'right', font: G.FONT_S, color: '#8a7a90', shadow: false });
+        const n = nodes[sel], w = why(n), py = n.y > 92 ? 3 : 132;
         G.tapZone(-999, -999, 2400, 2400, () => { cancel = true; });
-        nodes.forEach((n2, i) => G.tapZone(n2.x - 12, n2.y - 10, 24, 30, () => { tapped = i; }));
-        G.tapZone(184, 134, 50, 14, () => { tapped = sel; });
+        nodes.forEach((n2, i) => G.tapZone(n2.x - 8, n2.y - 8, 16, 16, () => { tapped = i; }));
+        G.frame(ctx, 4, py, 232, 25, 'light'); G.tapZone(4, py, 232, 25, () => {});
+        G.text(ctx, n.name, 12, py + 4, { font: G.FONT_B || G.FONT });
+        G.text(ctx, title, 228, py + 4.5, { align: 'right', font: G.FONT_S, color: '#8a7a90', shadow: false });
+        G.text(ctx, w || 'Ready for take-off. A landing spot is waiting.', 12, py + 14.5, { font: G.FONT_S, color: w ? '#b03a3a' : '#2a7a4a', shadow: false });
+        if (!w) { G.kit.pill(ctx, 184, py + 13, 46, 10, '#3fae5a', G.touch ? 'TAP: FLY' : 'A: FLY'); G.tapZone(184, py + 11, 50, 14, () => { tapped = sel; }); }
+        else G.text(ctx, G.touch ? 'TAP OUTSIDE: BACK' : 'B: BACK', 228, py + 14.5, { align: 'right', font: G.FONT_S, color: '#8a7a90', shadow: false });
       }
     },
   };
@@ -1160,7 +1054,7 @@ async function flight(mode, carrier) {
     const k = G.input.pressed;
     if (tapped >= 0) { if (tapped === sel && !why(nodes[sel])) { target = nodes[sel]; break; } sel = tapped; tapped = -1; G.audio.sfx('select'); continue; }
     if (cancel || k.b) break;
-    const nx = navPick(nodes, sel, k); if (nx !== sel) { sel = nx; G.audio.sfx('select'); }
+    const nx = G.worldNav(nodes, sel, k); if (nx !== sel) { sel = nx; G.audio.sfx('select'); }
     if (k.a) { if (!why(nodes[sel])) { target = nodes[sel]; break; } G.audio.sfx('bump'); }
   }
   if (!target) { await G.fadeTo(1, 10, '#000'); G.scene = back || G.world.scene; await G.fadeTo(0, 10); api._fly = null; return false; }
@@ -1194,110 +1088,7 @@ async function flight(mode, carrier) {
   return true;
 }
 
-// ---- World map (START > MAP): a view-only map of the vale ---------------------------------------------
-const REGION_DESC = {
-  lanternrest: 'The hub village around the Great Lantern.',
-  homestead: 'Your own land: build, farm and park your vehicles.',
-  ridge: 'A switchback trail up to the mouth of Glimmer Mine.',
-  mine: 'Crystal caves under the Ridge, home of a Warden.',
-  sunmeadow: 'Rolling fields, an orchard and a windmill.',
-  mirewood: 'A misty marsh of boardwalks and reeds.',
-  shore: 'Dunes, tidepools and a lighthouse.',
-  hollow: 'A starlit crystal cavern. Something waits inside.',
-};
-const WARDEN = { sunmeadow: 'meadow', mirewood: 'marsh', mine: 'mine' };
-// The outdoor map (a map-screen node) that a map belongs to: itself, or the first node its warps lead back to.
-function regionOf(id) {
-  const seen = new Set([id]), q = [id];
-  while (q.length) {
-    const cur = q.shift();
-    if (NODES.some(n => n.id === cur)) return cur;
-    for (const w of (G.MAPS[cur] && G.MAPS[cur].warps) || []) if (!seen.has(w.to) && G.MAPS[w.to]) { seen.add(w.to); q.push(w.to); }
-  }
-  return 'lanternrest';
-}
-function servicesOf(id) {
-  const m = G.MAPS[id], out = { heal: 0, shop: 0 };
-  for (const L of (m && m.labels) || []) { if (L.style === 'heal' || /HEAL/.test(L.text)) out.heal++; else if (L.style === 'shop' || L.style === 'craft') out.shop++; }
-  return out;
-}
-function mapNodeInfo(n, here) {
-  const S = G.state, sealed = n.id === 'hollow' && !S.flags.lanternLit, known = n.id === here || !!S.visited[n.id] || (n.id === 'mine' && !!S.visited.mine);
-  const exists = !!G.MAPS[n.id];
-  return { sealed, known: known && exists, exists };
-}
-function iconCross(c, x, y) { circ(c, x, y, 3.2, '#ffffff'); circ(c, x, y, 2.6, '#ff6b8a'); c.fillStyle = '#ffffff'; c.fillRect(x - 1.6, y - .5, 3.2, 1); c.fillRect(x - .5, y - 1.6, 1, 3.2); }
-function iconCoin(c, x, y) { circ(c, x, y, 3.2, '#ffffff'); circ(c, x, y, 2.6, '#f0b030'); circ(c, x, y, 1.7, '#ffd860'); c.fillStyle = '#b07a10'; c.fillRect(x - .35, y - 1.2, .7, 2.4); }
-function iconShard(c, x, y, got) {
-  c.beginPath(); c.moveTo(x, y - 3.4); c.lineTo(x + 2.4, y); c.lineTo(x, y + 3.4); c.lineTo(x - 2.4, y); c.closePath();
-  c.fillStyle = got ? '#ff8a3c' : 'rgba(255,255,255,.75)'; c.fill(); c.strokeStyle = got ? '#ffffff' : '#8a8494'; c.lineWidth = .7; c.stroke();
-  if (got) { c.fillStyle = '#fff2a0'; c.beginPath(); c.moveTo(x, y - 2); c.lineTo(x + .9, y); c.lineTo(x, y + .6); c.closePath(); c.fill(); }
-}
-function iconHouse(c, x, y) { circ(c, x, y, 3.4, '#ffffff'); c.fillStyle = '#5fae3f'; c.beginPath(); c.moveTo(x - 2.4, y); c.lineTo(x, y - 2.3); c.lineTo(x + 2.4, y); c.closePath(); c.fill(); c.fillRect(x - 1.6, y, 3.2, 1.9); }
-G.worldMapScreen = async function () {
-  st();
-  const S = G.state, back = G.scene, here = regionOf(G.world.mapId);
-  const nodes = NODES.map(n => Object.assign({}, n));
-  let sel = Math.max(0, nodes.findIndex(n => n.id === here)), close = false, tapped = -1, t = 0, cl = 0;
-  const scene = {
-    update() { t++; cl += .12; },
-    draw(ctx) {
-      drawSky(ctx, t, !!S.flags.lanternLit, cl);
-      nodes.forEach((n, i) => {
-        const I = mapNodeInfo(n, here), isHere = n.id === here, on = i === sel;
-        if (isHere) { const r = 7 + (t % 50) / 50 * 9; ctx.strokeStyle = `rgba(255,120,60,${1 - (t % 50) / 50})`; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, TAU); ctx.stroke(); }
-        if (on) { ctx.strokeStyle = `rgba(90,140,255,${.6 + Math.sin(t / 6) * .3})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(n.x, n.y, 7, 0, TAU); ctx.stroke(); }
-        circ(ctx, n.x, n.y + .8, 4.6, 'rgba(40,30,60,.35)'); circ(ctx, n.x, n.y, 4.6, '#ffffff');
-        circ(ctx, n.x, n.y, 3.3, isHere ? '#ff8a3c' : I.sealed ? '#7a6a9a' : I.known ? '#3f9fd8' : '#a8a4b4');
-        if (I.sealed) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = .7; ctx.beginPath(); ctx.arc(n.x, n.y - .6, 1.3, Math.PI, TAU); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fillRect(n.x - 1.7, n.y - .6, 3.4, 2.4); }
-        else if (!I.known) G.text(ctx, '?', n.x, n.y - 3, { align: 'center', font: G.FONT_S, color: '#fff', shadow: false });
-        const label = !I.known ? (I.sealed ? '??? · SEALED' : '???') : n.name + (I.sealed ? ' · SEALED' : '');
-        G.drawSignPlate(ctx, label, n.x, n.y + 18, t, isHere ? 'shop' : I.known ? 'home' : 'craft');
-        if (I.known) {   // service icons above the node
-          const sv = servicesOf(n.id), icons = [];
-          if (n.id === 'homestead') icons.push(c => iconHouse(c, 0, 0));
-          if (sv.heal) icons.push(c => iconCross(c, 0, 0));
-          if (sv.shop) icons.push(c => iconCoin(c, 0, 0));
-          if (WARDEN[n.id]) icons.push(c => iconShard(c, 0, 0, !!S.flags['shard_' + WARDEN[n.id]]));
-          icons.forEach((f, k) => { ctx.save(); ctx.translate(n.x - (icons.length - 1) * 4 + k * 8, n.y - 9); f(ctx); ctx.restore(); });
-        }
-        if (isHere) { const by = n.y - 15 - (I.known ? 4 : 0) + Math.sin(t / 7) * 1.4; ctx.fillStyle = '#ff6b5a'; ctx.beginPath(); ctx.arc(n.x, by - 2.5, 2.6, 0, TAU); ctx.moveTo(n.x - 2.2, by - 1.2); ctx.lineTo(n.x, by + 2); ctx.lineTo(n.x + 2.2, by - 1.2); ctx.fill(); circ(ctx, n.x, by - 2.5, 1, '#ffffff'); }
-      });
-      G.frame(ctx, 4, 4, 104, 17, 'light'); G.text(ctx, 'MAP OF THE VALE', 12, 8.5, { font: G.FONT_B || G.FONT });
-      G.frame(ctx, 176, 4, 60, 17, 'light'); G.text(ctx, G.touch ? 'TAP: CLOSE' : 'B: CLOSE', 206, 9.5, { align: 'center', font: G.FONT_S, color: '#8a7a90', shadow: false });
-      const n = nodes[sel], I = mapNodeInfo(n, here);
-      G.frame(ctx, 4, 128, 232, 29, 'light');
-      const nm = I.known ? n.name : '???';
-      G.text(ctx, nm, 12, 132, { font: G.FONT_B || G.FONT });
-      if (n.id === here) { ctx.font = '900 5.5px ' + G.FONT_FAM; const pw = ctx.measureText('YOU ARE HERE').width + 10; ctx.font = G.FONT_B || G.FONT; G.kit.pill(ctx, 12 + ctx.measureText(nm).width + 5, 132.5, pw, 9, '#ff8a3c', 'YOU ARE HERE'); }
-      api._map.desc = !I.exists ? 'Not on the map yet.' : I.sealed ? 'Sealed until the Great Lantern burns again.' : !I.known ? "You haven't been here yet." : mapDesc(n.id);
-      G.wrap(api._map.desc, 300).slice(0, 2).forEach((l, k) => G.text(ctx, l, 12, 142 + k * 7, { font: G.FONT_S, color: '#5a4a66', shadow: false }));
-      // legend
-      [[iconCross, 'HEAL'], [iconCoin, 'SHOP'], [(c, x, y) => iconShard(c, x, y, true), 'SHARD']].forEach(([f, l], k) => { const x = 150 + k * 26; f(ctx, x, 135); G.text(ctx, l, x + 4.5, 132.6, { font: G.FONT_S, color: '#8a7a90', shadow: false }); });
-      G.tapZone(-999, -999, 2400, 2400, () => { close = true; });
-      nodes.forEach((n2, i) => G.tapZone(n2.x - 12, n2.y - 14, 24, 34, () => { tapped = i; }));
-      G.tapZone(4, 128, 232, 29, () => {});
-    },
-  };
-  function mapDesc(id) {
-    const sv = servicesOf(id), bits = [];
-    if (sv.heal) bits.push('healing');
-    if (sv.shop) bits.push(sv.shop > 1 ? `${sv.shop} shops` : 'a shop');
-    if (WARDEN[id]) bits.push(S.flags['shard_' + WARDEN[id]] ? 'Ember Shard won' : 'a Warden holds an Ember Shard');
-    const b = bits.join(', ');
-    return REGION_DESC[id] + (b ? ' Has ' + b + '.' : '');
-  }
-  api._map = { scene, nodes, here, get sel() { return sel; }, desc: '' };
-  G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = scene; await G.fadeTo(0, 8);
-  for (;;) {
-    await G.nextFrame();
-    const k = G.input.pressed;
-    if (tapped >= 0) { if (tapped !== sel) G.audio.sfx('select'); sel = tapped; tapped = -1; continue; }
-    if (close || k.b) break;
-    const nx = navPick(nodes, sel, k); if (nx !== sel) { sel = nx; G.audio.sfx('select'); }
-  }
-  G.audio.sfx('select'); await G.fadeTo(1, 8, '#000'); G.scene = back || G.world.scene; api._map = null; await G.fadeTo(0, 8);
-};
+// ---- World map (START > MAP): see js/worldmap.js (G.worldMapScreen) ---------------------------------
 
 // ---- TRAVEL menu (START > TRAVEL) ---------------------------------------------------------------
 function statusLayer() {
