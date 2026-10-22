@@ -254,7 +254,7 @@ function buildStation(b) {
     R.prop('healer', 6, 1, 1, 1, healerO); R.prop('healer', 7, 1, 1, 1, healerO);
     bed(6, 3); bed(7, 3);
     R.prop('rug', 1, 4, 3, 2, { flat: true });
-    R.prop('sofa', 1, 5, 2, 1); R.prop('table', 3, 4); R.prop('plant', 1, 4); R.prop('monitor', 1, 3, 1, 1, { prompt: 'Monitor', say: () => `HEAL LOG: ${left()} of ${R.perks.perDay} heals left today. Revives fainted creatures: yes.` });
+    R.prop('sofa', 1, 5, 2, 1); R.prop('table', 3, 4); R.prop('plant', 1, 4); R.prop('monitor', 6, 5, 1, 1, { prompt: 'Monitor', say: () => `HEAL LOG: ${left()} of ${R.perks.perDay} heals left today. Revives fainted creatures: yes.` });
     R.prop('lamp', 7, 5);
   } else {
     R.windows([[1, 1], [3, 2], [8, 2]]);
