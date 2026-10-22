@@ -21,7 +21,7 @@ On phones and tablets a thumbstick (drag to walk) and A, B, MENU and ORB buttons
 
 ## Test Mode
 
-START → SETTINGS → TEST MODE, then enter the password (`abc610`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
+START → SETTINGS → TEST MODE, then enter the password (`abc610`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), **Fly Anywhere** (any creature carries you to any place; Unlock Everything turns it on), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
 
 ## Android APK
 
@@ -94,6 +94,7 @@ You are a Warden-in-training in **Lanternrest**, a lantern-lit village whose Gre
   - Vehicles park themselves outside when you go indoors.
 - **Flying**: START → TRAVEL → FLY, with an evolved Flying-type creature at Lv18+. Pick any place you've visited on the vale map.
 - **Map**: START → MAP is an illustrated map of Aurelis showing where you are, what you've visited, what is still locked and why, and the healers, shops and Arenas of each place. Flying and the helicopter pick their destination on the same map.
+- **The sea**: sail off the edge of any harbour town onto the Aurelian Sea, laid out exactly like the map, and into another harbour. Exits to new areas are marked with chevrons, name plates and padlocks showing the badges needed.
 - **Ferries**: the docks at Driftwood Port, Tidepool Shore, Cobalt City and Frostmere sail to Verdant Isle, Tidefall, Moonlit Island and the Aurora Isles for a ticket (or free in your own boat), once you have the badges.
 - **Creatures on the map move like what they are**: winged ones hover and flap, bunnies and frogs hop, ghosts drift, serpents weave, and everything else walks, or runs when hurrying.
 - **Towns**: every service has a name plate.
@@ -168,6 +169,7 @@ node tests/e2e-farm.js                         # crops, watering, withering, spr
 node tests/e2e-craft.js                        # refinery jobs, forge, kitchen, storage, treats, furniture
 node tests/e2e-towns.js                        # shops (D-pad and touch), selling, healing centres, homestead road
 node tests/e2e-vehicles.js                     # garage, riding rules, parking, buying, boats, flight, helicopter, quests
+node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles
 node tests/e2e-interiors.js                    # walking into every building, its handlers, upgrades, moving and saving inside

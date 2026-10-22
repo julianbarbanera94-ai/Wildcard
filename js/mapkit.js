@@ -47,7 +47,7 @@ function trainer(m, id, x, y, dir, style, t) {
 
 // ---- World-expansion helpers (docs/WORLD.md) -----------------------------------
 // A badge gate for a warp's `need`: blocks until the player holds n badges (G.badgeGate comes from js/maps/zz_arenas.js).
-const gate = (n, place) => () => { if (!G.state.flags.starter) return 'It is not safe beyond the lamplight without a Bondling.'; return G.badgeGate ? G.badgeGate(n, place) : null; };
+const gate = (n, place) => { const f = () => { if (!G.state.flags.starter) return 'It is not safe beyond the lamplight without a Bondling.'; return G.badgeGate ? G.badgeGate(n, place) : null; }; f.badges = n; f.place = place; return f; };
 // A 2-wide exit on a map edge. edge 'N'|'S'|'W'|'E'; at = first tile along the edge; (ax, ay) = arrival of the first tile on `to`.
 function edgeExit(m, edge, at, to, ax, ay, need, along) {
   // `along`: which way the second arrival tile steps ('x' or 'y'); by default the same way as this edge runs

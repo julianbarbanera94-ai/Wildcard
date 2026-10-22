@@ -58,7 +58,7 @@ const OUT = process.env.OUT || '/tmp';
 
   // ADD CREATURE
   await ev(() => { G.state.party.length = 0; G.state.party.push(G.makeCreature(4, 20)); });
-  await key('ArrowDown', 60); for (let i = 0; i < 5; i++) await key('ArrowDown', 40);     // ADD CREATURE is item index 6
+  await key('ArrowDown', 60); for (let i = 0; i < 6; i++) await key('ArrowDown', 40);     // ADD CREATURE is item index 7
   await key('z'); await until(() => G.ui.layers.length > 0, 3000);
   for (let i = 0; i < 24; i++) await key('ArrowDown', 25);                                  // Joker (#25)
   await shot('pick-creature'); await key('z'); await until(() => G.ui.layers.length > 0, 3000); await key('ArrowDown', 40); await key('ArrowDown', 40); await key('ArrowDown', 40); await key('ArrowDown', 40); await key('z');

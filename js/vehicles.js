@@ -147,7 +147,7 @@ G.hooks.enter = function (x, y, ch) {
   if (!G.state) return undefined;
   if (vehicleAt(x, y) || wreckAt(x, y)) return false;
   const id = riding(); if (!id) return undefined;
-  if (G.worldApi.tileWarp(x, y)) return undefined;
+  if (G.worldApi.tileWarp(x, y)) return allowed(id, ch) && G.TILES[ch] && G.TILES[ch].solid ? true : undefined;   // harbour gates sit on water
   if (allowed(id, ch)) return G.TILES[ch] && G.TILES[ch].solid ? true : undefined;   // the hoverboard over water
   const T = G.TILES[ch];
   if (T && T.solid) return undefined;
@@ -919,7 +919,8 @@ G.canFly = function (c) {
   const single = !sp.evo && !hasPre(c.id), legend = !!sp.legendary || sp.catchRate <= 30;
   return hasPre(c.id) || single || legend;
 };
-const flyer = () => (G.state.party || []).find(c => G.canFly(c)) || null;
+// Test Mode's FLY ANYWHERE lets any healthy creature carry you.
+const flyer = () => (G.state.party || []).find(c => G.canFly(c)) || (G.cheat && G.cheat('fly') ? (G.state.party || []).find(c => c.hp > 0) : null) || null;
 const NO_FLYER = 'No creature in your party can carry you. A Flying-type that has evolved, at Lv18+, can.';
 function landingFor(id) {
   const m = G.MAPS[id]; if (!m || !m.outdoor) return null;
@@ -953,6 +954,7 @@ async function creatureFlight() {
 }
 function heliWhy() {
   const V = st();
+  if (G.cheat && G.cheat('fly')) return takeoffWhy();   // Test Mode: a helicopter wherever you stand
   if (!owns('helicopter')) return "You don't own a helicopter. Tidewheel Motors on the shore sells them once the Great Lantern is lit.";
   if (garageLvl() < 3) return 'Your helicopter needs a Motor Hall to be serviced. Upgrade your Garage to Lv3.';
   if (!helipadB()) return 'You need a Helipad on your homestead before you can fly the helicopter.';
@@ -980,6 +982,7 @@ function nodeWhy(n) {
   if (!m || !m.outdoor || n.id === 'mine') return 'There is nowhere to land there.';
   if (!landingFor(n.id)) return "There is nowhere to land there yet.";
   if (n.id === G.world.mapId || n.id === (G.worldPlaceOf && G.worldPlaceOf(G.world.mapId))) return 'You are here.';
+  if (G.cheat && G.cheat('fly')) return null;   // Test Mode: every place, visited or not
   const lock = G.worldLockWhy ? G.worldLockWhy(n.id) : null;
   if (lock) return lock;
   if (!G.state.visited[n.id]) return `You haven't been to ${m.name} yet. Go there on foot first.`;

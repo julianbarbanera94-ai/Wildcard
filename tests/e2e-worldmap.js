@@ -48,7 +48,7 @@ fs.mkdirSync(OUT, { recursive: true });
 
   // 1) data: every place has a map, a position and a parent; interiors map to their outdoor parent
   const data = await ev(() => ({ n: G.WORLD.places.length, bad: G.WORLD.places.filter(p => !G.MAPS[p.id] || !(p.nx > 0 && p.nx < 1 && p.ny > 0 && p.ny < 1)).map(p => p.id),
-    missing: Object.values(G.MAPS).filter(m => m.outdoor && !G.WORLD.byId[m.id] && m.id !== 'mine').map(m => m.id),
+    missing: Object.values(G.MAPS).filter(m => m.outdoor && !G.WORLD.byId[m.id] && m.id !== 'mine' && !m.sea).map(m => m.id),
     parents: ['cottage', 'lodge', 'mine', 'arena_cobalt', 'forgeshop', 'home2', 'apothecary'].map(i => G.worldPlaceOf(i)), edges: G.WORLD.edges.length, ferries: G.WORLD.ferries.length }));
   assert.equal(data.n, 24); assert.deepEqual(data.bad, [], 'places exist and are on the map'); assert.deepEqual(data.missing, [], 'every outdoor map has a place');
   assert.deepEqual(data.parents, ['lanternrest', 'lanternrest', 'ridge', 'cobalt', 'ridge', 'homestead', 'mirewood']);

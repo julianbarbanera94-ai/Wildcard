@@ -97,7 +97,15 @@ function buildGraph() {
 buildGraph();
 G.worldRebuild = buildGraph;
 // The place on the map that a map id belongs to (interiors map to their outdoor parent).
-G.worldPlaceOf = id => { const p = WORLD.parent[id] || (G.MAPS[id] && G.MAPS[id].outdoor && id); return p && BYID[p] ? p : null; };
+// The place a map belongs to. On the open sea (a map made from this very picture) it is the nearest place to the boat.
+G.worldPlaceOf = id => {
+  if (id === 'aurelis_sea' && G.world && G.world.p) {
+    const px = G.world.p.x * 8 + 4, py = G.world.p.y * 8 + 4; let best = null, bd = 1e9;
+    for (const p of PLACES) { const d = Math.hypot(p.x - px, p.y - py); if (d < bd) { bd = d; best = p.id; } }
+    return best;
+  }
+  const p = WORLD.parent[id] || (G.MAPS[id] && G.MAPS[id].outdoor && id); return p && BYID[p] ? p : null;
+};
 // Services of a place: detected from the labels on its map and the interiors behind it, plus the contract (every town has them).
 G.worldServices = function (id) {
   const p = BYID[id], out = { heal: false, shop: false, arena: null, cave: !!CAVES[id], ferry: false, craft: false };
@@ -209,6 +217,9 @@ function biomeAt(x, y) {
   if (inPoly(x, y, BIOMES.hollow)) return 'hollow';
   return 'grass';
 }
+
+// The land geometry, shared with the playable sea map (js/maps/zz_sea.js was generated from it: tools/gen-sea.md).
+WORLD.geo = { CONT, ISLANDS, LAKE, BIOMES, RIVERS, FALLS, inPoly, distSeg, biomeAt, RW, RH };
 
 // ---- Art pieces -------------------------------------------------------------------------------------------------------------
 function tree(c, x, y, r, pal) {

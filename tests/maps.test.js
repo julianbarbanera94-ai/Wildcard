@@ -17,6 +17,7 @@ t('every tile char is defined and rows are rectangular', () => {
 });
 t('warps start on walkable tiles and land on walkable tiles of existing maps', () => {
   for (const m of Object.values(maps)) for (const w of m.warps) {
+    if (w.sea) continue;   // boat gates stand on water (checked by the sea test below)
     assert(!solid(m, w.x, w.y), `${m.id}: warp tile ${w.x},${w.y} is solid`);
     const d = maps[w.to]; assert(d, `${m.id}: warp to unknown map ${w.to}`);
     assert(!solid(d, w.tx, w.ty), `${m.id}->${w.to}: landing ${w.tx},${w.ty} is solid`);
@@ -50,12 +51,38 @@ t('everything in the world is reachable on foot from the start (trainers treated
     for (const [dx, dy] of VEC) { const nx = x + dx, ny = y + dy, k = key(id, nx, ny); if (!seen.has(k) && !blocked(m, nx, ny)) { seen.add(k); queue.push([id, nx, ny]); } }
   }
   for (const m of Object.values(maps)) {
+    if (m.sea) continue;   // the open sea is reached by boat (see the sea test)
     assert(reached[m.id], `map ${m.id} is unreachable`);
     const adj = (x, y) => VEC.some(([dx, dy]) => reached[m.id].has((x + dx) + ',' + (y + dy))) || reached[m.id].has(x + ',' + y);
     for (const e of m.npcs) assert(adj(e.x, e.y), `${m.id}: NPC at ${e.x},${e.y} unreachable`);
     for (const o of m.objs) assert(adj(o.x, o.y), `${m.id}: object at ${o.x},${o.y} unreachable`);
-    for (const w of m.warps) assert(reached[m.id].has(w.x + ',' + w.y), `${m.id}: warp at ${w.x},${w.y} unreachable`);
+    for (const w of m.warps) if (!w.sea) assert(reached[m.id].has(w.x + ',' + w.y), `${m.id}: warp at ${w.x},${w.y} unreachable`);
   }
+});
+t('the Aurelian Sea: every harbour town opens onto it, boats can sail from each dock to every other harbour, and the gates line up', () => {
+  const sea = maps.aurelis_sea; assert(sea && sea.sea && sea.seaGates.length >= 8, 'sea map with harbour gates');
+  const wat = (m, x, y) => !!(m.t[y] && m.t[y][x] === 'w');
+  const flood = (m, sx, sy) => { const seen = new Set([sx + ',' + sy]), q = [[sx, sy]]; while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of VEC) { const nx = x + dx, ny = y + dy, k = nx + ',' + ny; if (!seen.has(k) && wat(m, nx, ny) && !(m.t[ny][nx] === 'r')) { seen.add(k); q.push([nx, ny]); } } } return seen; };
+  const gateWarps = sea.warps.filter(w => w.sea);
+  assert.equal(gateWarps.length, sea.seaGates.length * 9, 'a 3x3 gate per harbour');
+  // from the first harbour's gate, every other harbour gate is reachable over water
+  const g0 = sea.seaGates[0], reach = flood(sea, g0.x, g0.y);
+  for (const g of sea.seaGates) assert(reach.has(g.x + ',' + g.y), `the sea route from ${sea.seaGates[0].id} to ${g.id} is blocked`);
+  for (const g of sea.seaGates) {
+    const town = maps[g.id]; assert(town && town.seaExit, `${g.id} has sea exits`);
+    const out = town.warps.filter(w => w.sea && w.to === 'aurelis_sea'); assert(out.length >= 2, `${g.id}: ways out to sea`);
+    const into = sea.warps.filter(w => w.sea && w.to === g.id); assert.equal(into.length, 9);
+    const arr = into[0]; assert(wat(town, arr.tx, arr.ty), `${g.id}: boat arrives on water`); assert(!town.warps.some(w => w.x === arr.tx && w.y === arr.ty), `${g.id}: arrival isn't a gate`);
+    // the boat that arrives can sail to the town's own exits (and the dock's water)
+    const inTown = flood(town, arr.tx, arr.ty);
+    assert(out.some(w => inTown.has(w.x + ',' + w.y)), `${g.id}: arrival water connects to the sea exits`);
+    if (town.dock) assert([...inTown].some(k => { const [x, y] = k.split(',').map(Number); return Math.abs(x - town.dock.x) + Math.abs(y - town.dock.y) <= 3; }), `${g.id}: boat water reaches the dock`);
+    // the boat that leaves lands on open sea, not on a gate
+    const ex = out[0]; assert(wat(sea, ex.tx, ex.ty) && !sea.warps.some(w => w.x === ex.tx && w.y === ex.ty), `${g.id}: launch tile is open water`);
+    assert(reach.has(ex.tx + ',' + ex.ty), `${g.id}: launch tile is connected to the sea`);
+  }
+  // no encounter tiles on the sea
+  assert(!sea.t.some(r => r.some(c => G.TILES[c].enc)));
 });
 t('story chain exists: starter orbs, three shard holders, tower pedestals, Joker', () => {
   assert.equal(maps.shrine.objs.filter(o => o.orb).length, 3);

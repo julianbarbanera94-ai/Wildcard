@@ -3,7 +3,7 @@
 (function () {
 const G = globalThis.G;
 const PASSWORD = 'abc610';
-const OPTIONS = [['money', 'INFINITE MONEY'], ['items', 'INFINITE ITEMS'], ['pp', 'INFINITE PP'], ['god', 'GOD MODE'], ['catch', 'SURE CATCH']];
+const OPTIONS = [['money', 'INFINITE MONEY'], ['items', 'INFINITE ITEMS'], ['pp', 'INFINITE PP'], ['god', 'GOD MODE'], ['catch', 'SURE CATCH'], ['fly', 'FLY ANYWHERE']];
 
 G.cheat = k => !!(G.state && G.state.cheats && G.state.cheats.on && G.state.cheats[k]);
 // Called every overworld frame while Test Mode is on.
@@ -98,6 +98,8 @@ function unlockEverything() {
   if (S.home) { S.home.deed = 5; S.home.seen = 5; }
   for (const b of G.BADGES || []) S.flags['badge_' + b.id] = true;   // every Arena badge (opens the whole world)
   if (G.vehicles && G.vehicles.grant && G.VEHICLES) for (const id of Object.keys(G.VEHICLES)) if (!(S.vehicles.owned || []).includes(id)) G.vehicles.grant(id);
+  // fly anywhere: every outdoor place counts as visited, and the FLY ANYWHERE option is on
+  for (const m of Object.values(G.MAPS)) if (m.outdoor) S.visited[m.id] = true;
   S.energy = G.farm && G.farm.energyMax ? G.farm.energyMax() : 100;
   if (G.home && G.world.map) G.home.refresh();
 }
@@ -132,7 +134,7 @@ G.settingsMenu = async function () {
     else {
       if (S.cheats && S.cheats.unlocked) { S.cheats.on = true; await testMenu(); continue; }
       const pw = await G.textEntry('Enter password', 20, true); if (pw === null) continue;
-      if (pw === PASSWORD) { S.cheats = Object.assign({ money: false, items: false, pp: false, god: false, catch: false }, S.cheats, { on: true, unlocked: true }); G.audio.sfx('levelup'); await G.worldApi.says('Test Mode unlocked.'); await testMenu(); }
+      if (pw === PASSWORD) { S.cheats = Object.assign({ money: false, items: false, pp: false, god: false, catch: false, fly: false }, S.cheats, { on: true, unlocked: true }); G.audio.sfx('levelup'); await G.worldApi.says('Test Mode unlocked.'); await testMenu(); }
       else { G.audio.sfx('bump'); await G.worldApi.says('Wrong password.'); }
     }
   }
