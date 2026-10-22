@@ -255,7 +255,8 @@ const OUT = process.env.OUT || '/tmp';
   { const b = await T('put', 'greenhouse', 1, 'homestead'), id = 'in_' + b.id;
     await ev(() => { const S = G.state; S.builds.push({ id: 'p1', type: 'plot', map: 'homestead', x: 22, y: 33, lvl: 1, rot: 0, crop: { id: 'turnip', grown: 1, wet: false, ripe: false, dry: 0, dead: false } },
       { id: 'p2', type: 'plot', map: 'homestead', x: 23, y: 33, lvl: 1, rot: 0, crop: { id: 'carrot', grown: 4, wet: true, ripe: true, dry: 0, dead: false } }, { id: 'p3', type: 'plot', map: 'homestead', x: 24, y: 33, lvl: 1, rot: 0 }); G.home.refresh(); });
-    await ev(id => { G.loadMap(id); const o = T.obj(id, 'Potting table'); T.go(id, o.x, o.y); }, id); await key('z'); const pt = await waitText(/POTTING TABLE/); assert(/3 garden plots/.test(pt) && /2 planted/.test(pt), pt); await key('z'); const pt2 = await waitText(/1 is ripe, and 1 needs water/); await closeAll();
+    await ev(id => { G.loadMap(id); const o = T.obj(id, 'Potting table'); T.go(id, o.x, o.y); }, id); await key('z'); const pt = await waitText(/POTTING TABLE/); assert(/3 garden plots/.test(pt) && /2 planted/.test(pt), pt); for (let i = 0; i < 6 && !/1 is ripe, and 1 needs water/.test(await lastText()); i++) await key('z', 60);
+    assert(/1 is ripe, and 1 needs water/.test(await lastText()), await lastText()); await closeAll();
     await ev(id => { G.state.bag['Watering Can'] = 1; G.state.can = 0; const o = T.obj(id, 'Refill can'); T.go(id, o.x, o.y); }, id); await key('z'); await until(() => G.state.can > 0, 4000, 'can refilled'); await closeAll();
     assert.equal(await ev(() => G.state.can), await ev(() => G.farm.canCap()));
     step('greenhouse: the potting table counts planted / ripe / dry plots, the hose refills the watering can'); }

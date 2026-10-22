@@ -136,7 +136,13 @@ G.hooks.draw.push((items, cx, cy, t) => {
     const { w, h } = dims(b.type, lvlOf(b), b.rot), x = b.x * 16 - cx, y = b.y * 16 - cy;
     if (x > G.W + 16 || y > G.H + 40 || x + w * 16 < -16 || y + h * 16 < -16) continue;
     const info = { rot: b.rot, door: L(b).door, active: !!(G.homeActive && G.homeActive(b)), build: b };
-    items.push({ y: (b.y + h) * 16 - .5, draw: c => (G.homeArt && G.homeArt.structure) ? G.homeArt.structure(c, b.type, lvlOf(b), x, y, w, h, t, info) : fallbackStructure(c, b, x, y, w, h) });
+    const dinfo = Object.assign({}, info, { door: L(b).door && !b.rot ? L(b).door : null });
+    items.push({ y: (b.y + h) * 16 - .5, draw: c => {
+      if (G.homeArt && G.homeArt.structure) {
+        G.homeArt.structure(c, b.type, lvlOf(b), x, y, w, h, t, dinfo);
+        if (def(b).enterable && dinfo.door && G.homeArt.door) G.homeArt.door(c, b.type, lvlOf(b), x, y, w, h, t, dinfo);   // the entrance of an enterable building
+      } else fallbackStructure(c, b, x, y, w, h);
+    } });
     if (b.type === 'nursery') (b.pets || []).forEach((p, k) => {
       const span = (w - 1) * 16 - 4, ph = (t / 90 + b.x + k * .7) % 2, f = ph < 1 ? ph : 2 - ph;
       const px = x + 4 + f * span - 6, py = y + 2 + (k % 2) * 8, hop = Math.abs(Math.sin(t / 7 + k)) * 2;
