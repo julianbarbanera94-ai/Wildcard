@@ -47,6 +47,9 @@ const RECIPES = G.RECIPES = {
     R('rotor', 3, { 'Iron Ingot': 3, Gear: 2 }, { Rotor: 1 }),
     R('star', 3, { Starmelon: 1, Honey: 2 }, { 'Star Treat': 1 }),
     R('sailboat', 3, { Plank: 24, Cloth: 4, Rope: 6, Nails: 8 }, {}, { vehicle: 'sailboat', name: 'Sailboat', desc: 'A graceful sailboat with a bright white sail.' }),
+    R('climbgear', 1, { Rope: 4, 'Iron Ingot': 1 }, { 'Climbing Gear': 1 }, { tool: true }),
+    R('shovel', 1, { Wood: 3, 'Iron Ingot': 1 }, { Shovel: 1 }, { tool: true }),
+    R('glowlamp', 2, { Glass: 1, 'Copper Ingot': 1, Wire: 1 }, { 'Glow Lamp': 1 }, { tool: true }),
     R('hoverboard', 3, { 'Hover Core': 1, Plank: 4, Glass: 2 }, {}, { vehicle: 'hoverboard', lit: true, name: 'Hoverboard', desc: 'Glides over land and water alike. Needs the Great Lantern lit.' }),
   ],
   kitchen: [

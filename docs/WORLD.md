@@ -270,3 +270,9 @@ All of them blend with their neighbours like the existing tiles. Owners may use 
 - `G.access.danger(id)`: 'some' or 'high' when wild levels are above your team.
 - `G.arenaShift(map)` / `G.scaledTeam(team, map)`: an Arena's trainers and Leader shift so the k-th Leader you face fights at the k-th Arena's strength.
 - Reputation also comes from trainer wins (+2 each, once) and new species caught (+1 in the region you're in). `G.progressPoints()` = badges + total reputation / 80 drives homestead land.
+
+## 11. Field abilities (js/field.js)
+
+- `G.FIELD`: climb, dig and light, each with creature types, a minimum level (8) and a forge tool (Climbing Gear, Shovel, Glow Lamp). `G.fieldHelper(kind)` returns the creature or tool that can do it.
+- `G.FIELD_SPOTS`: nooks `{ id, map, kind, a, b, c, reward, text }` (stand on a, the obstacle is b, a 3x3 hidden nook is centred on c with a chest) and dig spots `{ id, map, kind: 'dig', at, reward }`. Nooks are carved into the map tiles when the file loads. The obstacle and chest stay in `m.block`, and a lit gap is cleared for good.
+- Flags: `fx_<id>` (used), `fx_<id>_chest` (opened). Rewards go through `G.grantOnce('fx:<id>')` and give +3 reputation in the map's region.

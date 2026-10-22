@@ -63,6 +63,18 @@ Q.def({ id: 'dex', cat: 'research', title: 'Field Notes', desc: 'Catch creatures
   ],
   reward: { money: 5000, items: { 'Mythic Orb': 3 } } });
 
+// Hidden places found with CLIMB, LIGHT and DIG (js/field.js).
+const fx = (S, kind) => (G.FIELD_SPOTS || []).filter(s => (!kind || s.kind === kind) && S.once && S.once['fx:' + s.id]).length;
+const fxAll = kind => (G.FIELD_SPOTS || []).filter(s => !kind || s.kind === kind).length;
+Q.def({ id: 'hidden', cat: 'discovery', title: 'Off the Beaten Path', desc: 'Rock faces, dark gaps and soft soil hide things. Climb, light and dig with your creatures, or with tools from the forge.',
+  start: S => !!F(S).starter,
+  steps: [
+    { id: 'first', text: 'Find something hidden off the path', count: S => [fx(S), 1], done: S => fx(S) >= 1 },
+    { id: 'each', text: 'Find a hidden spot with each of CLIMB, LIGHT and DIG', count: S => [['climb', 'light', 'dig'].filter(k => fx(S, k)).length, 3], done: S => ['climb', 'light', 'dig'].every(k => fx(S, k) > 0) },
+    { id: 'all', text: 'Find every hidden spot in Aurelis', count: S => [fx(S), fxAll()], done: S => fx(S) >= fxAll() },
+  ],
+  reward: { money: 4000, items: { 'Mythic Orb': 2 } } });
+
 const deed = S => (S.home && S.home.deed) || 1;
 Q.def({ id: 'home', cat: 'home', title: 'A Place of My Own', desc: 'Your homestead grows as you make your name across Aurelis.',
   start: S => !!F(S).starter,

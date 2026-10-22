@@ -69,6 +69,10 @@ START → JOURNAL lists everything you're doing in one place: STORY, QUESTS, FIN
 
 Locked places open in more than one way: earn the Arena Badges the map shows, become known to the locals (reputation in that region, or the one you're coming from), or buy a travel permit from the ranger at the gate. The far islands have no permit, and the Hollow Gate and Aurora Isles still need the Great Lantern relit. The same rule applies on roads, harbour gates, ferries and flight. Places whose wild creatures are well above your team are marked HARD or TOUGH on the map, and the ranger warns you. Arena Leaders match your progress: the first Leader you face fights like the first Arena, whichever city it is in. Your homestead grows with badges and reputation.
 
+## Field abilities
+
+Your creatures can help outside battle. **CLIMB** (a Rock, Ground or Fighting creature at Lv 8+, or Climbing Gear) gets you up rock faces with handholds. **LIGHT** (Fire or Electric, or a Glow Lamp) opens pitch-black gaps for good. **DIG** (Ground, Bug or Rock, or a Shovel) turns up things buried in soft soil. Make the three tools at the forge. Hidden ledges and hollows have chests, and every find raises your reputation. The journal's FINDS tab tracks them (Off the Beaten Path).
+
 ## Homestead
 
 - **Build** (START → BUILD), grouped by HOME, CREATURES, CRAFTING, FARMING, VEHICLES and DECOR.
@@ -185,6 +189,7 @@ node tests/e2e-mapview.js                       # map and flight picker on a pho
 node tests/e2e-quests.js                        # quests, journal, reputation, rewards once, Test Mode completes all
 node tests/e2e-access.js                        # badges, reputation or permits; Leader scaling; land from reputation
 node tests/e2e-slots.js                         # three save slots: continue, load, new game, save to another slot
+node tests/e2e-field.js                         # CLIMB, LIGHT and DIG with creatures or tools; hidden chests
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles

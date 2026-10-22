@@ -64,6 +64,9 @@ D('tool', [
   ['Pickaxe', 500, 'Break ore and crystals out of rock.'],
   ['Watering Can', 300, 'Waters a garden plot. Holds 6 splashes; refill it at water.'],
   ['Big Watering Can', 1500, 'Holds 15 splashes and waters a plot and its neighbours.'],
+  ['Climbing Gear', 900, 'Rope, harness and hooks. Climb rock faces marked with handholds, even without a climbing creature.'],
+  ['Shovel', 700, 'Dig up soft soil where something is buried, even without a digging creature.'],
+  ['Glow Lamp', 1600, 'A bright crystal lamp. Light up dark passages, even without a Fire or Electric creature.'],
 ]);
 // ---- Seeds and crops ---------------------------------------------------------------------
 D('seed', [
