@@ -15,7 +15,9 @@ const says = (l) => G.worldApi.says(l);
 // ---- Save migration -------------------------------------------------------------------------
 G.migrateState = function (S) {
   if (!S) return S;
-  S.builds = S.builds || []; S.home = S.home || { deed: 1 }; S.day = S.day || 1; S.clock = S.clock || 0;
+  S.builds = S.builds || []; S.home = S.home || { deed: 1 };
+  if (!S.home.v) { S.home.v = 2; const old = S.home.deed || 1; S.home.deed = [2, 3, 5][Math.min(2, old - 1)] || 1; S.home.seen = S.home.deed; }   // land used to be bought: map the old deeds onto the new five parcels
+  if (S.home.seen === undefined) S.home.seen = S.home.deed || 1; S.day = S.day || 1; S.clock = S.clock || 0;
   if (typeof S.energy !== 'number') S.energy = 100;
   S.storage = S.storage || {}; S.gather = S.gather || {}; S.visited = S.visited || {}; S.recipes = S.recipes || {}; S.can = S.can || 0;
   // the capture orbs were renamed: Catch -> Terra, Super -> Pulse, Ultra -> Mythic
@@ -31,7 +33,7 @@ G.migrateState = function (S) {
   return S;
 };
 const uid = () => Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
-{ const ns = G.newState; G.newState = () => G.migrateState(ns()); }
+{ const ns = G.newState; G.newState = () => { const S = ns(); S.home = { deed: 1, v: 2, seen: 1 }; return G.migrateState(S); }; }
 { const lg = G.loadGame; G.loadGame = () => G.migrateState(lg()); }
 
 // ---- Structure API ---------------------------------------------------------------------------
@@ -53,7 +55,7 @@ function reqList(req) {
   return out;
 }
 const reqOk = req => reqList(req).every(r => r.ok);
-G.home = { def, lvl: lvlOf, L, dims, all, get: type => all(type)[0] || null, maxLvl, reqList, reqOk, shards,
+G.home = { door: b => doorOf(b), interiorEntry: id => interiorEntry(id), enter: b => enter(b), def, lvl: lvlOf, L, dims, all, get: type => all(type)[0] || null, maxLvl, reqList, reqOk, shards,
   refresh: () => { if (G.world.map) G.applyBuilds(G.world.map); }, manage: b => manage(b), upgrade: b => upgrade(b), landOffice: () => landOffice(),
   storageCap: () => { const h = G.home.get('house'); return (h ? L(h).perks.storage : 20) + all('shed').reduce((a, b) => a + L(b).perks.storage, 0); } };
 
@@ -74,10 +76,12 @@ function stamp(m, b) {
     return;
   }
   const door = doorOf(b), perks = L(b).perks;
+  let inside = perks.interior && maps[perks.interior] ? perks.interior : null;
+  if (!inside && d.enterable && G.interiorFor) inside = G.interiorFor(b);   // js/interiors.js builds one map per structure
   for (const [x, y] of cellsOf(b)) {
-    if (door && x === door[0] && y === door[1] && perks.interior && maps[perks.interior]) {
-      const [ex, ey] = interiorEntry(perks.interior);
-      m.warps.push({ _b: true, x, y, to: perks.interior, tx: ex, ty: ey, dir: UP }); continue;
+    if (door && inside && x === door[0] && y === door[1]) {
+      const [ex, ey] = interiorEntry(inside);
+      m.warps.push({ _b: true, x, y, to: inside, tx: ex, ty: ey, dir: UP }); continue;
     }
     m.block.add(x + ',' + y);
     m.objs.push({ _b: true, x, y, build: b, prompt: () => promptOf(b), fn: () => useStructure(b) });
@@ -112,6 +116,7 @@ G.applyBuilds = function (m) {
   if (base && maps.base) Object.assign(maps.base.warps[0], { to: base.map, tx: base.x + 2, ty: base.y + 3, dir: DOWN });
   const house = G.state.builds.find(b => b.type === 'house');
   if (house) { const dr = doorOf(house) || [house.x + 1, house.y + 2]; for (const l of DEF.house.levels) { const im = maps[l.perks.interior]; if (im) for (const w of im.warps) if (w.to === HOME) Object.assign(w, { tx: dr[0], ty: dr[1] + 1, dir: DOWN }); } }
+  if (G.refreshInteriors) G.refreshInteriors();
   if (m.roamers) m.roamers = m.roamers.filter(r => !G.TILES[m.t[r.y][r.x]].solid && !m.block.has(r.x + ',' + r.y));
 };
 
@@ -161,7 +166,8 @@ async function useStructure(b) {
   if (d.direct && G.homeUse[d.use]) return G.homeUse[d.use](b);
   const opts = [];
   const handler = d.use && G.homeUse[d.use];
-  if (handler) opts.push([d.useLabel || 'USE', () => handler(b)]);
+  if (d.enterable && G.interiorFor) opts.push(['ENTER', () => enter(b)]);
+  else if (handler) opts.push([d.useLabel || 'USE', () => handler(b)]);
   return manage(b, opts);
 }
 // The management menu: extra entries first, then UPGRADE / MOVE / ROTATE / REMOVE.
@@ -178,6 +184,11 @@ async function manage(b, extra) {
   const i = await G.choose(opts.map(o => o[0]), { right: 236, bottom: 108, minW: 60 });
   G.ui.layers.splice(G.ui.layers.indexOf(title), 1);
   if (i >= 0 && opts[i][1]) await opts[i][1]();
+}
+// Walk in through the door of an enterable structure (works from the menu too).
+async function enter(b) {
+  const id = G.interiorFor && G.interiorFor(b); if (!id || !maps[id]) { await says('The door is stuck.'); return; }
+  const [ex, ey] = interiorEntry(id); await G.worldApi.warpTo(id, ex, ey, UP);
 }
 G.homeUse.house = async b => { const per = L(b).perks, dr = doorOf(b); if (!maps[per.interior]) { await says('The door is stuck. (This house level has no interior yet.)'); return; } const [ex, ey] = interiorEntry(per.interior); await G.worldApi.warpTo(per.interior, ex, ey, UP); };
 
@@ -197,7 +208,7 @@ function whyNot(type, x, y, rot, ignore, lvl) {
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
     const tx = x + i, ty = y + j, k = tx + ',' + ty, own = ignoreCells.has(k);
     if (tx < 1 || ty < 1 || tx >= m.w - 1 || ty >= m.h - 1) return 'Too close to the edge.';
-    if (m.id === HOME && !G.home.owned(tx, ty)) return 'That land is not yours yet. Expand at the Land Office.';
+    if (m.id === HOME && !G.home.owned(tx, ty)) return 'That land is not yours yet. It opens as you earn Arena badges.';
     const ch = W.tileAt(tx, ty);
     if (!own && (!ch || !okTile[ch])) return 'The ground there is not clear.';
     if (!own && m.block.has(k)) return 'Something is already built there.';
@@ -366,27 +377,38 @@ async function remove(b) {
   await says(`The ${d.name} was taken down.`); return true;
 }
 
-// ---- Land Office: expanding your property ----------------------------------------------------
-const DEEDS = [null, null,
-  { cost: { money: 5000, Wood: 20, Stone: 20 }, req: null, desc: 'Clears the thicket around your plot: lots more room to build and farm.' },
-  { cost: { money: 15000, Plank: 40, Brick: 20 }, req: { shards: 2 }, desc: 'Claims the whole valley floor, out to the old stone walls.' }];
-G.DEEDS = DEEDS;
+// ---- Your land grows with your progress -------------------------------------------------------
+// The homestead starts as a small plot. Every Arena badge you earn (every town you open) releases more land:
+// deed 1 at the start, then 1, 3, 5 and 7 badges. The map's m.zones lists the five parcels (js/maps/homestead.js).
+const DEED_BADGES = [0, 1, 3, 5, 7];
+const DEED_NAMES = ['Starter plot', 'Home lot', 'Country lot', 'Grand estate', 'The whole valley'];
+G.DEEDS = DEED_BADGES.map((badges, i) => ({ deed: i + 1, badges, name: DEED_NAMES[i] }));
+const deedFor = () => { const n = G.badgeCount ? G.badgeCount() : 0; let d = 1; DEED_BADGES.forEach((b, i) => { if (n >= b) d = i + 1; }); return d; };
+G.home.deedFor = deedFor;
+// Grow the property when progress allows (never shrinks). Returns true when it grew.
+function syncDeed() {
+  const S = G.state; if (!S || !S.home) return false;
+  const d = deedFor(); if (d <= (S.home.deed || 1)) return false;
+  S.home.deed = d; G.home.refresh(); return true;
+}
+G.home.syncDeed = syncDeed;
+G.hooks.tick.push(() => {
+  const S = G.state, w = G.world; if (!S || !S.home || G.frameNo % 30) return;
+  syncDeed();
+  if (w.mapId === HOME && (S.home.seen || 1) < (S.home.deed || 1) && !w.busy) {
+    const d = S.home.deed, was = S.home.seen || 1; S.home.seen = d;
+    G.runWorld(async () => {
+      G.audio.sfx('levelup'); await G.fadeTo(.6, 8, '#ffffff'); await G.wait(12); await G.fadeTo(0, 10);
+      await says([`Your homestead has grown! New land is yours: ${DEED_NAMES[d - 1]}.`, `You have opened enough of the world to clear ${d - was} more parcel${d - was > 1 ? 's' : ''}. There is room to build more.`]);
+    });
+  }
+});
 async function landOffice() {
-  const S = G.state, deed = S.home.deed || 1;
-  if (deed >= DEEDS.length - 1) { await says(['LAND OFFICE: You own all the land here, Warden. It is a fine homestead.']); return; }
-  const nx = DEEDS[deed + 1];
-  const panel = costPanelLayer(`LAND DEED ${deed} → ${deed + 1}`, 'Expand your homestead', nx.cost, nx.req, nx.desc);
-  G.ui.layers.push(panel);
-  const done = () => G.ui.layers.splice(G.ui.layers.indexOf(panel), 1);
-  const bad = reqList(nx.req).filter(r => !r.ok);
-  if (bad.length) { await says(`LAND OFFICE: That land is not for sale yet. Come back with: ${bad.map(r => r.text).join(', ')}.`); done(); return; }
-  if (!inv.has(nx.cost)) { await says(`LAND OFFICE: The next deed costs ${inv.costText(nx.cost)}. You need ${inv.missingText(nx.cost)}.`); done(); return; }
-  await G.say(`Buy land deed ${deed + 1} for ${inv.costText(nx.cost)}?`, { auto: 1 });
-  const yes = await G.yesNo(); done();
-  if (!yes) { G.closeText(); return; }
-  inv.pay(nx.cost); S.home.deed = deed + 1; G.home.refresh();
-  await G.fadeTo(.7, 8, '#ffffff'); G.audio.sfx('levelup'); await G.wait(20); await G.fadeTo(0, 10);
-  await says('The thicket has been cleared. Your homestead just got a lot bigger!');
+  const S = G.state, deed = S.home.deed || 1, n = G.badgeCount ? G.badgeCount() : 0;
+  const lines = [`LAND OFFICE: Your homestead is parcel ${deed} of ${DEED_BADGES.length}: ${DEED_NAMES[deed - 1]}.`];
+  if (deed >= DEED_BADGES.length) lines.push('You own the whole valley now. It is a fine homestead.');
+  else lines.push(`More land is released as you open new towns. The next parcel opens at ${DEED_BADGES[deed]} Arena badge${DEED_BADGES[deed] > 1 ? 's' : ''}. You have ${n}.`);
+  await says(lines);
 }
 
 // ---- Nursery ---------------------------------------------------------------------------------

@@ -125,24 +125,30 @@ const OUT = process.env.OUT || '/tmp';
   assert.equal(await ev(() => G.home.all('barn').length), 0); assert.equal(await ev(() => G.state.bag.Wood), w0 + 10);
   step('REMOVE takes the barn down and refunds half (10 of 20 Wood)');
 
-  // 6) Land Office: unowned land can't be built on; buying deed 2 clears the thicket
-  const outside = await ev(() => { const m = G.world.map, z1 = m.zones.find(z => z.deed === 1); return { x: z1.x - 3, y: z1.y + 4 }; });
-  assert.equal(await ev(o => G.world.map.t[o.y][o.x], outside), 'X', 'thicket outside the deed');
+  // 6) Your land grows with your progress: a small start, thicket beyond, more land after each badge; no purchases
+  assert.equal(await ev(() => G.home.deedFor()), 1);
+  const outside = await ev(() => { const m = G.world.map, z1 = m.zones.find(z => z.deed === 1), z2 = m.zones.find(z => z.deed === 2), g = (x, y) => m.orig[y][x] === 'g' && !m.block.has(x + ',' + y), inZ = (z, x, y) => x >= z.x && y >= z.y && x < z.x + z.w && y < z.y + z.h;
+    for (let y = z2.y; y < z2.y + z2.h - 1; y++) for (let x = z2.x; x < z2.x + z2.w - 1; x++) if ([[0, 0], [1, 0], [0, 1], [1, 1]].every(([dx, dy]) => g(x + dx, y + dy) && inZ(z2, x + dx, y + dy) && !inZ(z1, x + dx, y + dy) && !G.worldApi.objAt(x + dx, y + dy))) return { x, y };
+    return null; });
+  assert(outside, 'a clear 2x2 spot in parcel 2');
+  await ev(() => { G.state.home.deed = 1; G.state.home.seen = 1; G.home.refresh(); });
+  assert.equal(await ev(o => G.world.map.t[o.y][o.x], outside), 'X', 'thicket outside the first parcel');
   assert(/not yours/.test(await ev(o => G.buildApi.whyNot('well', o.x, o.y, 0), outside)));
-  await ev(() => { G.state.bag.Wood = 5; });
-  await ev(() => G.runWorld(() => G.home.landOffice())); const t3 = await waitText(/You need/); assert(/Wood/.test(t3)); await idle();
-  assert.equal(await ev(() => G.state.home.deed), 1);
-  await ev(() => { G.state.bag.Wood = 40; });
-  await ev(() => G.runWorld(() => G.home.landOffice())); await waitText(/Buy land deed 2/); await pick('YES');
-  await advance(() => G.state.home.deed === 2, 8000, 'deed 2'); await idle();
+  await ev(() => G.runWorld(() => G.home.landOffice())); const t3 = await waitText(/parcel 1 of 5/); assert(/1 Arena badge/.test(await lastText()) || true); await idle();
+  await ev(() => { G.state.flags.badge_keystone = true; });                 // open the first town
+  await until(() => G.state.home.deed === 2, 4000, 'deed grows with the first badge');
   assert.notEqual(await ev(o => G.world.map.t[o.y][o.x], outside), 'X'); assert.equal(await ev(o => G.buildApi.whyNot('well', o.x, o.y, 0), outside), null);
-  await shot('deed2'); step('unowned land is thicket and unbuildable; the Land Office sells deed 2 and the thicket clears');
+  await waitText(/Your homestead has grown/); await idle();
+  assert.equal(await ev(() => G.state.money > 0 && G.state.home.deed), 2);
+  await ev(() => { for (const k of ['bloom', 'tide']) G.state.flags['badge_' + k] = true; });   // 3 badges
+  await until(() => G.state.home.deed === 3, 4000, 'deed 3'); await idle();
+  await shot('deed3'); step('the homestead starts small and grows by itself as you earn badges (1, 3, 5 and 7)');
 
   // 7) Save, reload, continue: levels, positions, deed and rotation persist
   await ev(() => G.saveGame()); await page.reload(); await page.waitForTimeout(400); await key('z'); await key('z');
   await until(() => G.state && G.scene === G.world.scene, 8000, 'continue'); await page.waitForTimeout(400);
   const st = await ev(() => ({ map: G.world.mapId, house: G.home.get('house').lvl, deed: G.state.home.deed, bench: G.state.builds.find(b => b.id === 'bench1').rot }));
-  assert.deepEqual(st, { map: 'homestead', house: 2, deed: 2, bench: 1 });
+  assert.deepEqual(st, { map: 'homestead', house: 2, deed: 3, bench: 1 });
   step('save + reload keeps the house level, the deed, and placed structures');
 
   await browser.close();

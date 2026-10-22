@@ -30,69 +30,76 @@ def('house', {
   ],
 });
 def('shed', {
+  enterable: true,
   name: 'Storage Shed', cat: 'home', homestead: true, use: 'shed', useLabel: 'OPEN STORAGE',
   desc: 'Extra storage space shared with your house cupboard.',
   levels: [
-    { name: 'Shed', w: 3, h: 2, door: null, cost: { money: 600, Wood: 20, Stone: 6 }, desc: '+40 storage slots.', perks: { storage: 40 } },
-    { name: 'Big Shed', w: 4, h: 3, door: null, cost: { money: 2000, Plank: 20, Nails: 4 }, desc: '+100 storage slots.', perks: { storage: 100 } },
+    { name: 'Shed', w: 3, h: 2, door: [1, 1], cost: { money: 600, Wood: 20, Stone: 6 }, desc: '+40 storage slots.', perks: { storage: 40 } },
+    { name: 'Big Shed', w: 4, h: 3, door: [2, 2], cost: { money: 2000, Plank: 20, Nails: 4 }, desc: '+100 storage slots.', perks: { storage: 100 } },
   ],
 });
 
 // ---- Creatures ------------------------------------------------------------------------------
 def('nursery', {
+  enterable: true,
   name: 'Nursery', cat: 'creature', use: 'nursery', useLabel: 'NURSERY', homestead: false,
   desc: 'Leave creatures here. They gain EXP as you walk around.',
   levels: [
-    { name: 'Nursery', w: 3, h: 2, door: null, cost: { money: 1200 }, desc: 'Holds 1 creature. 4 EXP per step.', perks: { slots: 1, exp: 4, cap: 60 } },
-    { name: 'Nursery+', w: 4, h: 2, door: null, cost: { money: 2500, Plank: 15, Fiber: 10 }, desc: 'Holds 2 creatures. 6 EXP per step.', perks: { slots: 2, exp: 6, cap: 70 } },
-    { name: 'Play Garden', w: 5, h: 3, door: null, cost: { money: 6000, Plank: 25, Brick: 10, Honey: 5 }, desc: 'Holds 3 creatures. 8 EXP per step, up to Lv80.', perks: { slots: 3, exp: 8, cap: 80 } },
+    { name: 'Nursery', w: 3, h: 2, door: [1, 1], cost: { money: 1200 }, desc: 'Holds 1 creature. 4 EXP per step.', perks: { slots: 1, exp: 4, cap: 60 } },
+    { name: 'Nursery+', w: 4, h: 2, door: [2, 1], cost: { money: 2500, Plank: 15, Fiber: 10 }, desc: 'Holds 2 creatures. 6 EXP per step.', perks: { slots: 2, exp: 6, cap: 70 } },
+    { name: 'Play Garden', w: 5, h: 3, door: [2, 2], cost: { money: 6000, Plank: 25, Brick: 10, Honey: 5 }, desc: 'Holds 3 creatures. 8 EXP per step, up to Lv80.', perks: { slots: 3, exp: 8, cap: 80 } },
   ],
 });
 def('barn', {
+  enterable: true,
   name: 'Barn', cat: 'creature', homestead: true, use: 'barn', useLabel: 'BARN',
   desc: 'Creatures that live here produce materials every day: Wool, Honey, Fertilizer and more.',
   levels: [
-    { name: 'Barn', w: 4, h: 3, door: null, cost: { money: 1500, Wood: 20, Stone: 10 }, desc: 'Houses 2 creatures. Each makes 1 item a day.', perks: { slots: 2, output: 1 } },
-    { name: 'Big Barn', w: 5, h: 3, door: null, cost: { money: 4000, Plank: 25, Stone: 20, Rope: 5 }, desc: 'Houses 4 creatures. Fertilizer gives a bonus item.', perks: { slots: 4, output: 1, feedBonus: true } },
-    { name: 'Grand Barn', w: 6, h: 4, door: null, cost: { money: 9000, Plank: 40, Brick: 20, 'Iron Ingot': 5 }, desc: 'Houses 6 creatures. Each makes 2 items a day.', perks: { slots: 6, output: 2, feedBonus: true } },
+    { name: 'Barn', w: 4, h: 3, door: [2, 2], cost: { money: 1500, Wood: 20, Stone: 10 }, desc: 'Houses 2 creatures. Each makes 1 item a day.', perks: { slots: 2, output: 1 } },
+    { name: 'Big Barn', w: 5, h: 3, door: [2, 2], cost: { money: 4000, Plank: 25, Stone: 20, Rope: 5 }, desc: 'Houses 4 creatures. Fertilizer gives a bonus item.', perks: { slots: 4, output: 1, feedBonus: true } },
+    { name: 'Grand Barn', w: 6, h: 4, door: [3, 3], cost: { money: 9000, Plank: 40, Brick: 20, 'Iron Ingot': 5 }, desc: 'Houses 6 creatures. Each makes 2 items a day.', perks: { slots: 6, output: 2, feedBonus: true } },
   ],
 });
 def('station', {
+  enterable: true,
   name: 'Healing Station', cat: 'creature', use: 'station', useLabel: 'HEALING', style: 'heal', homestead: false,
   desc: 'Heals your team. Free heals each day; build it at home or out in the wild.',
   levels: [
-    { name: 'Healing Station', w: 2, h: 2, door: null, cost: { money: 800 }, desc: '1 heal a day: restores HP and cures status.', perks: { perDay: 1, revive: false } },
-    { name: 'Healing Clinic', w: 3, h: 2, door: null, cost: { money: 2500, Brick: 10, Glass: 2, Glowcap: 3 }, desc: '3 heals a day, and it revives fainted creatures.', perks: { perDay: 3, revive: true } },
-    { name: 'Healing Spa', w: 3, h: 3, door: null, cost: { money: 6000, Brick: 20, 'Crystal Shard': 5, 'Iron Ingot': 5 }, req: { shards: 2 }, desc: 'Unlimited heals with revives.', perks: { perDay: 99, revive: true } },
+    { name: 'Healing Station', w: 2, h: 2, door: [1, 1], cost: { money: 800 }, desc: '1 heal a day: restores HP and cures status.', perks: { perDay: 1, revive: false } },
+    { name: 'Healing Clinic', w: 3, h: 2, door: [1, 1], cost: { money: 2500, Brick: 10, Glass: 2, Glowcap: 3 }, desc: '3 heals a day, and it revives fainted creatures.', perks: { perDay: 3, revive: true } },
+    { name: 'Healing Spa', w: 3, h: 3, door: [1, 2], cost: { money: 6000, Brick: 20, 'Crystal Shard': 5, 'Iron Ingot': 5 }, req: { shards: 2 }, desc: 'Unlimited heals with revives.', perks: { perDay: 99, revive: true } },
   ],
 });
 
 // ---- Production -----------------------------------------------------------------------------
 def('refinery', {
+  enterable: true,
   name: 'Refinery', cat: 'craft', homestead: true, use: 'refinery', useLabel: 'REFINERY', style: 'craft',
   desc: 'Turns raw materials into planks, bricks, ingots, rope, glass and flour. Takes time.',
   levels: [
-    { name: 'Refinery', w: 3, h: 3, door: null, cost: { money: 1500, Stone: 20, Wood: 10 }, desc: '1 job at a time. Planks, rope, bricks and ingots.', perks: { slots: 1, speed: 1, tier: 1 } },
-    { name: 'Refinery Mk II', w: 4, h: 3, door: null, cost: { money: 4000, Brick: 15, 'Iron Ingot': 5 }, desc: '2 jobs at once, 1.5x faster. Adds glass, cloth and flour.', perks: { slots: 2, speed: 1.5, tier: 2 } },
-    { name: 'Refinery Mk III', w: 4, h: 4, door: null, cost: { money: 9000, Brick: 25, 'Iron Ingot': 15, 'Copper Ingot': 10 }, desc: '3 jobs at once, 2x faster, double planks and bricks.', perks: { slots: 3, speed: 2, tier: 3 } },
+    { name: 'Refinery', w: 3, h: 3, door: [1, 2], cost: { money: 1500, Stone: 20, Wood: 10 }, desc: '1 job at a time. Planks, rope, bricks and ingots.', perks: { slots: 1, speed: 1, tier: 1 } },
+    { name: 'Refinery Mk II', w: 4, h: 3, door: [2, 2], cost: { money: 4000, Brick: 15, 'Iron Ingot': 5 }, desc: '2 jobs at once, 1.5x faster. Adds glass, cloth and flour.', perks: { slots: 2, speed: 1.5, tier: 2 } },
+    { name: 'Refinery Mk III', w: 4, h: 4, door: [2, 3], cost: { money: 9000, Brick: 25, 'Iron Ingot': 15, 'Copper Ingot': 10 }, desc: '3 jobs at once, 2x faster, double planks and bricks.', perks: { slots: 3, speed: 2, tier: 3 } },
   ],
 });
 def('forge', {
+  enterable: true,
   name: 'Forge', cat: 'craft', homestead: true, use: 'forge', useLabel: 'CRAFT', style: 'craft',
   desc: 'A workshop for tools, parts, care items, orbs, sprinklers and vehicles.',
   levels: [
-    { name: 'Workbench', w: 3, h: 2, door: null, cost: { money: 1200, Stone: 15, Wood: 10 }, desc: 'Tools, nails, rope goods and basic care items.', perks: { tier: 1 } },
-    { name: 'Forge', w: 4, h: 3, door: null, cost: { money: 4000, Brick: 10, 'Iron Ingot': 8 }, desc: 'Gears, wire, wheels, engine parts, orbs, sprinklers and the bicycle.', perks: { tier: 2 } },
-    { name: 'Master Forge', w: 5, h: 3, door: null, cost: { money: 10000, Brick: 20, 'Iron Ingot': 20, 'Crystal Shard': 10 }, req: { lit: true }, desc: 'Hover cores, rotors and the hoverboard.', perks: { tier: 3 } },
+    { name: 'Workbench', w: 3, h: 2, door: [1, 1], cost: { money: 1200, Stone: 15, Wood: 10 }, desc: 'Tools, nails, rope goods and basic care items.', perks: { tier: 1 } },
+    { name: 'Forge', w: 4, h: 3, door: [2, 2], cost: { money: 4000, Brick: 10, 'Iron Ingot': 8 }, desc: 'Gears, wire, wheels, engine parts, orbs, sprinklers and the bicycle.', perks: { tier: 2 } },
+    { name: 'Master Forge', w: 5, h: 3, door: [2, 2], cost: { money: 10000, Brick: 20, 'Iron Ingot': 20, 'Crystal Shard': 10 }, req: { lit: true }, desc: 'Hover cores, rotors and the hoverboard.', perks: { tier: 3 } },
   ],
 });
 def('garage', {
+  enterable: true,
   name: 'Garage', cat: 'vehicle', homestead: true, unique: true, use: 'garage', useLabel: 'GARAGE', style: 'craft',
   desc: 'Stores your vehicles. Take one out to ride it, and bring it back to park it.',
   levels: [
-    { name: 'Garage', w: 4, h: 3, door: null, cost: { money: 2000, Plank: 15, Stone: 10 }, desc: 'Stores 2 vehicles.', perks: { slots: 2 } },
-    { name: 'Double Garage', w: 5, h: 3, door: null, cost: { money: 6000, Plank: 20, 'Iron Ingot': 10 }, desc: 'Stores 4 vehicles. Tune-ups and paint jobs.', perks: { slots: 4, tune: true, paint: true } },
-    { name: 'Motor Hall', w: 6, h: 4, door: null, cost: { money: 15000, Brick: 20, 'Iron Ingot': 20, 'Copper Ingot': 10 }, desc: 'Stores 7 vehicles, and unlocks the Helipad.', perks: { slots: 7, tune: true, paint: true, helipad: true } },
+    { name: 'Garage', w: 4, h: 3, door: [2, 2], cost: { money: 2000, Plank: 15, Stone: 10 }, desc: 'Stores 2 vehicles.', perks: { slots: 2 } },
+    { name: 'Double Garage', w: 5, h: 3, door: [2, 2], cost: { money: 6000, Plank: 20, 'Iron Ingot': 10 }, desc: 'Stores 4 vehicles. Tune-ups and paint jobs.', perks: { slots: 4, tune: true, paint: true } },
+    { name: 'Motor Hall', w: 6, h: 4, door: [3, 3], cost: { money: 15000, Brick: 20, 'Iron Ingot': 20, 'Copper Ingot': 10 }, desc: 'Stores 7 vehicles, and unlocks the Helipad.', perks: { slots: 7, tune: true, paint: true, helipad: true } },
   ],
 });
 def('helipad', {
@@ -125,9 +132,10 @@ def('well', {
   levels: [{ name: 'Well', w: 2, h: 2, door: null, cost: { money: 300, Stone: 10, Wood: 5 }, desc: 'Fresh water for your garden.', perks: {} }],
 });
 def('greenhouse', {
+  enterable: true,
   name: 'Greenhouse', cat: 'farm', homestead: true, use: 'greenhouse', useLabel: 'GREENHOUSE',
   desc: 'Warm glass walls: plots within 3 tiles grow twice as fast.',
-  levels: [{ name: 'Greenhouse', w: 5, h: 4, door: null, cost: { money: 8000, Glass: 20, Plank: 20, 'Iron Ingot': 5 }, req: { struct: { house: 2 } }, desc: 'Watered plots within 3 tiles grow 2 days a day.', perks: { radius: 3, boost: 1 } }],
+  levels: [{ name: 'Greenhouse', w: 5, h: 4, door: [2, 3], cost: { money: 8000, Glass: 20, Plank: 20, 'Iron Ingot': 5 }, req: { struct: { house: 2 } }, desc: 'Watered plots within 3 tiles grow 2 days a day.', perks: { radius: 3, boost: 1 } }],
 });
 
 // ---- Decorations and landscaping -------------------------------------------------------------

@@ -70,10 +70,13 @@ const says = t => G.story.says(t);
   // Keep the 7x5 house spot and the ground in front of the door clear (last, over anything above).
   rect(m, HX, HY, 7, 5, 'g'); rect(m, HX - 1, HY - 1, 9, 1, 'g'); rect(m, 27, 31, 2, 13, 'p');
 
+  // Five parcels, released as you earn Arena badges (0, 1, 3, 5, 7). The first is a small yard around the cabin.
   m.zones = [
-    { deed: 1, x: 15, y: 23, w: 26, h: 19 },
-    { deed: 2, x: 6, y: 10, w: 44, h: 32 },
-    { deed: 3, x: 1, y: 1, w: 54, h: 42 },
+    { deed: 1, x: 19, y: 24, w: 18, h: 17 },
+    { deed: 2, x: 15, y: 23, w: 26, h: 19 },
+    { deed: 3, x: 6, y: 10, w: 44, h: 32 },
+    { deed: 4, x: 3, y: 5, w: 50, h: 37 },
+    { deed: 5, x: 1, y: 1, w: 54, h: 42 },
   ];
   m.landing = { x: 33, y: 37 };
   m.labels = [{ x: 26, y: 36, text: 'LAND OFFICE', style: 'home' }];

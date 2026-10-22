@@ -65,10 +65,10 @@ t('homestead: map basics, a clear 7x5 house spot, nested deeds and a walkable la
     const x = H.x + i, y = H.y + j; assert('gfy'.includes(m.t[y][x]), `house spot ${x},${y} is '${m.t[y][x]}'`);
     assert(!m.objs.some(o => o.x === x && o.y === y) && !m.npcs.some(e => Math.abs(e.x - x) + Math.abs(e.y - y) <= (e.roam || 0)) && !propCells(m).has(x + ',' + y), `house spot ${x},${y} is occupied`);
   }
-  const [z1, z2, z3] = [1, 2, 3].map(d => m.zones.find(z => z.deed === d));
+  const [z1, z2, z3, z4, z5] = [1, 2, 3, 4, 5].map(d => m.zones.find(z => z.deed === d));
   const inside = (a, b) => a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h;
-  assert(inside(z1, z2) && inside(z2, z3), 'deeds nest'); assert(inside({ x: H.x, y: H.y, w: 7, h: 6 }, z1), 'house spot inside deed 1');
-  assert(z1.w * z1.h >= 400 && z3.w * z3.h > z2.w * z2.h && z2.w * z2.h > z1.w * z1.h);
+  assert(inside(z1, z2) && inside(z2, z3) && inside(z3, z4) && inside(z4, z5), 'deeds nest'); assert(inside({ x: H.x, y: H.y, w: 7, h: 6 }, z1), 'house spot inside deed 1');
+  assert(z1.w * z1.h >= 250 && z1.w * z1.h < 400 && z5.w * z5.h > z4.w * z4.h && z4.w * z4.h > z3.w * z3.h && z3.w * z3.h > z2.w * z2.h && z2.w * z2.h > z1.w * z1.h, 'five parcels, the first one small');
   assert(!solidT(m.t[m.landing.y][m.landing.x]), 'landing walkable');
   assert(m.objs.some(o => o.prompt === 'Land Office') && m.objs.some(o => o.prompt === 'Mailbox') && m.npcs.length >= 1);
   assert(m.warps.some(w => w.to === 'lanternrest' && !w._b) && maps.lanternrest.warps.some(w => w.to === 'homestead' && w.need));
@@ -76,7 +76,7 @@ t('homestead: map basics, a clear 7x5 house spot, nested deeds and a walkable la
 });
 t('homestead at deed 1 with the house at every level: thicket applied, everything still reachable from the road', () => {
   const m = maps.homestead, H = m.homeSpot, arrive = maps.lanternrest.warps.find(w => w.to === 'homestead');
-  for (let deed = 1; deed <= 3; deed++) for (const [li, l] of G.STRUCTURES.house.levels.entries()) {
+  for (let deed = 1; deed <= 5; deed++) for (const [li, l] of G.STRUCTURES.house.levels.entries()) {
     const own = m.zones.filter(z => z.deed <= deed), owned = (x, y) => own.some(z => x >= z.x && y >= z.y && x < z.x + z.w && y < z.y + z.h);
     const tile = (x, y) => { const c = m.t[y][x]; return !owned(x, y) && 'gGfy'.includes(c) && !m.warps.some(w => w.x === x && w.y === y && !w._b) ? 'X' : c; };
     const door = [H.x + l.door[0], H.y + l.door[1]], foot = new Set(); for (let j = 0; j < l.h; j++) for (let i = 0; i < l.w; i++) foot.add((H.x + i) + ',' + (H.y + j));
@@ -94,7 +94,7 @@ t('homestead at deed 1 with the house at every level: thicket applied, everythin
     const gather = new Set(); for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) if ('#nudr'.includes(m.t[y][x]) && near(R, x, y) && owned(x, y)) gather.add(m.t[y][x]);
     assert(['#', 'u', 'd', 'r'].every(c => gather.has(c)), `${tag}: something to gather of every kind (${[...gather]})`);
     let open = 0; R.forEach(k => { const [x, y] = k.split(',').map(Number); if (m.t[y][x] === 'g' && owned(x, y) && !foot.has(k)) open++; });
-    assert(open >= 150 * deed, `${tag}: only ${open} open grass tiles to build on`);
+    assert(open >= 60 + 90 * (deed - 1), `${tag}: only ${open} open grass tiles to build on`);
   }
 });
 t('every shop counter and healing post points at a real shop, every shop has stock, a name plate marks it', () => {
