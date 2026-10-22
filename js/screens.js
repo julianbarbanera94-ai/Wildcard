@@ -378,8 +378,13 @@ G.startMenu = async function () {
           if (i % 2 === 0) { K.rr(ctx, 28, 35.5 + i * 15, 184, 13, 6.5); ctx.fillStyle = 'rgba(255,190,90,.18)'; ctx.fill(); }
           G.text(ctx, k, 34, 38 + i * 15, { color: '#f7843f', shadow: false, font: G.FONT_B }); G.text(ctx, String(v), 206, 38 + i * 15, { align: 'right' }); });
         spot(ctx, 120, 121, 13, '#41c7b4');
-        ctx.drawImage(G.charSprite(S.style)[0][0], 112, 112, 16, 20); } });
+        ctx.drawImage(G.charSprite(S.style)[0][0], 112, 112, 16, 20);
+        // Arena badges: a row of the eight, earned ones lit; A opens the badge case
+        if (G.BADGES) { if (G.drawBadgeRow) G.drawBadgeRow(ctx, 132, 110, 9); else G.text(ctx, `BADGES ${G.badgeCount()}/8`, 150, 112, { font: G.FONT_S, color: '#c08a1a' });
+          G.text(ctx, G.touch ? 'A: badge case' : 'Z: badge case', 206, 128, { align: 'right', font: G.FONT_S, color: '#9a8aa8', shadow: false }); }
+        G.tapZone(20, 12, 200, 124, () => G.tapKey('a')); } });
       await G.waitA(); pop(l);
+      if (G.badgeCase && G.input.pressed.a) await G.badgeCase();
     } else if (ch === 4) {
       if (await (async () => { await G.say('Would you like to save the game?', { auto: 1 }); return G.yesNo(); })()) { if (G.saveGame()) { G.audio.sfx('levelup'); await G.say(`${S.name} saved the game.`); } else await G.say('Saving failed! Storage may be full or disabled.'); }
       G.closeText();

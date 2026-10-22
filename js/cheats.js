@@ -96,6 +96,7 @@ function unlockEverything() {
   // homestead: all the land, every vehicle and recipe
   if (G.migrateState) G.migrateState(S);
   if (S.home) S.home.deed = 3;
+  for (const b of G.BADGES || []) S.flags['badge_' + b.id] = true;   // every Arena badge (opens the whole world)
   if (G.vehicles && G.vehicles.grant && G.VEHICLES) for (const id of Object.keys(G.VEHICLES)) if (!(S.vehicles.owned || []).includes(id)) G.vehicles.grant(id);
   S.energy = G.farm && G.farm.energyMax ? G.farm.energyMax() : 100;
   if (G.home && G.world.map) G.home.refresh();

@@ -20,6 +20,8 @@ const TT = G.TILES = {
   A: { solid: true }, H: { solid: true }, J: { solid: true }, K: { solid: true },
   // homestead: stone path, fence gate, wild thicket (land not yet owned), tiled kitchen/bathroom floor
   Z: { }, Y: { }, X: { solid: true }, v: { },
+  // world expansion (docs/WORLD.md section 5): plaza, road, tower, arena roof, lighthouse, waterfall, lava, castle
+  '%': { }, '=': { }, '+': { solid: true }, U: { solid: true }, '|': { solid: true }, '@': { solid: true }, '!': { solid: true }, '^': { solid: true },
 };
 TT.G.tall = TT.q.tall = true;
 
