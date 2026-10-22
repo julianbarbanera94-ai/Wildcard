@@ -761,7 +761,7 @@ function paintCrops(c, v, fi) {
   });
 }
 // Buildings: one piece per tile; pieces join into a single house (roof with ridge and eave overhang, walls, windows, door).
-const ROOFC = { R: '#ec5b52', Q: '#4f8ee6', A: '#2fb5a5', U: ARENA_C };
+const ROOFC = { R: '#ec5b52', Q: '#4f8ee6', A: '#2fb5a5', U: '#5a49c8' };
 function paintRoof(c, ch, o) {
   const base = ROOFC[ch], X0 = o.l ? 0 : -2, X1 = o.r ? 16 : 18, Y0 = o.u ? 0 : -2.5;
   const c0 = shade(base, 1.12 - .07 * o.ri), c1 = shade(base, 1.05 - .07 * o.ri);
@@ -1309,7 +1309,7 @@ function propSpec(s, m, x, y) {
   const ch = m.t[y][x], v = (hash(x, y, 1) * 4) | 0, ph = hash(x, y, 2), yb = (y + 1) * 16;
   const sm = (f, oob) => mask(m, x, y, f, oob);
   switch (ch) {
-    case '#': return spec('tree' + (v % 3), -5, -17.5, 26, 33.5, c => paintTree(c, v % 3), { yb, br: .014, ph });
+    case '#': return spec('tree' + (v % 3), -5, -17.5, 26, 33.5, c => paintTree(c, v % 3), { yb, br: .014, ph, fx: CB.glow && CB.tk[v % 3] === 'round' ? fxFlora : null, gcol: CB.glow });
     case 'n': return spec('pine' + (v % 2), -2, -13, 20, 29, c => paintPine(c, v % 2), { yb, br: .01, ph });
     case 'u': return spec('bush' + (v % 3), -2, -2.5, 20, 19, c => paintBush(c, v % 3), { yb, br: .02, ph });
     case 'd': { const l = at(m, x - 1, y) === 'd', r = at(m, x + 1, y) === 'd', lg_ = l || r;
@@ -1323,14 +1323,39 @@ function propSpec(s, m, x, y) {
     case 'X': { const stake = hash(x, y, 7) < .04; return spec('thicket' + v + (+stake), -3.5, -10, 23, 26, c => paintThicket(c, v, stake), { yb, br: .008, ph }); }
     case 'j': return spec('crop' + v, 0, -5, 16, 20, (c, fi) => paintCrops(c, v, fi), { yb, n: 4, anim: (t, tx, ty) => ((t / 14 + tx * 1.3 + ty) | 0) & 3 });
     case 'G': case 'q': return spec('tuft' + ch + (v & 3), -4, -6, 24, 23, (c, fi) => paintTuft(c, ch, v & 3, fi, false), { yb: y * 16 + 15.9, n: 8, anim: tuftFrame });
-    case 'R': case 'Q': case 'A': {
+    case 'R': case 'Q': case 'A': case 'U': {
       const l = ROOF(at(m, x - 1, y)), r = ROOF(at(m, x + 1, y)), u = ROOF(at(m, x, y - 1)), eave = !ROOF(at(m, x, y + 1));
       let ri = 0; while (ri < 3 && ROOF(at(m, x, y - ri - 1))) ri++;
-      const chim = !u && l && !ROOF(at(m, x - 2, y)) && r && ROOF(at(m, x + 2, y)) && hash(x, y, 5) < .7;
+      const chim = ch !== 'U' && !u && l && !ROOF(at(m, x - 2, y)) && r && ROOF(at(m, x + 2, y)) && hash(x, y, 5) < .7;
       let wy = y; while (wy < m.t.length - 1 && ROOF(at(m, x, wy + 1))) wy++; if (WALL(at(m, x, wy + 1))) wy++;
       const X0 = l ? 0 : -2, X1 = r ? 16 : 18, Y0 = u ? 0 : -3.2, top = chim ? -10.4 : Y0, bot = eave ? 18.6 : 16;
       const o = { l, r, u, eave, ri, chim };
+      if (ch === 'U') {   // arena: the gold emblem is centred on the whole roof block
+        let gx = 0, gr = 0, gu = 0, gd = 0; while (gx < 30 && ROOF(at(m, x - gx - 1, y))) gx++; while (gr < 30 && ROOF(at(m, x + gr + 1, y))) gr++;
+        while (gu < 12 && ROOF(at(m, x, y - gu - 1))) gu++; while (gd < 12 && ROOF(at(m, x, y + gd + 1))) gd++;
+        o.gx = gx; o.gw = gx + gr + 1; o.gh = gu + gd + 1; o.ri = gu;
+        return spec('arena' + (+l) + (+r) + (+u) + (+eave) + gu + '_' + gx + '_' + o.gw + '_' + o.gh, X0, top, X1 - X0, bot - top, c => { paintRoof(c, 'U', o); paintArena(c, o); }, { yb: (wy + 1) * 16 + .05, ph });
+      }
       return spec('roof' + ch + (+l) + (+r) + (+u) + (+eave) + ri + (+chim), X0, top, X1 - X0, bot - top, c => paintRoof(c, ch, o), { yb: (wy + 1) * 16 + .05, ph, fx: chim ? fxSmoke : null });
+    }
+    case '+': {
+      const T = inSet('+'), l = T(at(m, x - 1, y)), r = T(at(m, x + 1, y)), u = T(at(m, x, y - 1)), d = T(at(m, x, y + 1));
+      let cl = 0, cr = 0, cu = 0, wy = y; while (cl < 30 && T(at(m, x - cl - 1, y))) cl++; while (cr < 30 && T(at(m, x + cr + 1, y))) cr++; while (cu < 30 && T(at(m, x, y - cu - 1))) cu++; while (T(at(m, x, wy + 1))) wy++;
+      const gw = cl + cr + 1, pi = (hash(x - cl, y - cu, 3) * 4) | 0, lv = (hash(x, y, 9) * 4) | 0, door = d && cl === ((gw - 1) >> 1);
+      const o = { l, r, u, d, ri: cu, ci: cl, pi, lv, door }, X0 = l ? 0 : -.8, X1 = r ? 16 : 16.8, Y0 = u ? 0 : -9;
+      return spec('tw' + pi + (+l) + (+r) + (+u) + (+d) + (+door) + '_' + lv + (u ? '' : '_' + (cl & 3)) + '_' + (cu ? 1 : 0), X0, Y0, X1 - X0, 16 - Y0, c => paintTower(c, o), { yb: (wy + 1) * 16 + .05, ph });
+    }
+    case '^': {
+      const C = inSet('^'), l = C(at(m, x - 1, y)), r = C(at(m, x + 1, y)), u = C(at(m, x, y - 1)), d = C(at(m, x, y + 1)), tower = !l && !r;
+      let cu = 0, wy = y; while (cu < 20 && C(at(m, x, y - cu - 1))) cu++; while (C(at(m, x, wy + 1))) wy++;
+      const o = { l, r, u, d, ri: cu, tower, v: tower ? 0 : v & 1, x, y }, X0 = tower ? -.8 : l ? 0 : -.6, X1 = tower ? 16.8 : r ? 16 : 16.6, Y0 = u ? 0 : tower ? -17 : -4;
+      const slit = hash(x, y, 11) < .4;
+      return spec('cas' + (tower ? 'T' : 'W') + (+l) + (+r) + (+u) + (+d) + o.v + (cu & 1) + (slit ? 's' : ''), X0, Y0, X1 - X0, 16 - Y0, (c, fi) => paintCastle(c, o, fi), { yb: (wy + 1) * 16 + .05, ph, n: tower && !u ? 4 : 1, anim: (t, tx, ty) => ((t / 9 + tx) | 0) & 3 });
+    }
+    case '|': {
+      const T = inSet('|'), top = !T(at(m, x, y - 1)), bot = !T(at(m, x, y + 1)); let rb = 0, ri = 0, wy = y; while (rb < 20 && T(at(m, x, y + rb + 1))) rb++; while (ri < 20 && T(at(m, x, y - ri - 1))) ri++; wy = y + rb;
+      const o = { top, bot, rb, ri }, ext = top && bot ? 14 : 0, Y0 = top ? -(ext + 19) : 0;
+      return spec('lh' + (+top) + (+bot) + (rb & 1) + (ri ? 1 : 0), 0, Y0, 16, 16 - Y0, c => paintLighthouse(c, o), { yb: (wy + 1) * 16 + .05, ph, fx: top ? fxBeam : null, ly: -ext - 6 });
     }
     case 'W': case 'N': case 'D': {
       const l = BLD(at(m, x - 1, y)) && !ROOF(at(m, x - 1, y)), r = BLD(at(m, x + 1, y)) && !ROOF(at(m, x + 1, y)), roof = ROOF(at(m, x, y - 1));
@@ -1428,7 +1453,7 @@ let lastCx = 0, lastCy = 0;
 // ---- Public API ---------------------------------------------------------------------
 G.terrain = {
   drawGround(ctx, m, x0, y0, x1, y1, cx, cy, t) {
-    const s = mapState(m); lastCx = cx; lastCy = cy;
+    const s = mapState(m); lastCx = cx; lastCy = cy; useBio(s.bio);
     const wf = ((t / 10) | 0) & 7;
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       const i = y * s.w + x, g = s.g[i] || groundInfo(s, m, x, y);
@@ -1437,7 +1462,7 @@ G.terrain = {
     }
   },
   collectProps(m, x0, y0, x1, y1, cx, cy, t, out) {
-    const s = mapState(m); poolN = 0;
+    const s = mapState(m); poolN = 0; useBio(s.bio);
     const xa = Math.max(0, x0 - 1), xb = Math.min(s.w - 1, x1 + 1), ya = Math.max(0, y0 - 1), yc = Math.min(s.h - 1, y1);
     for (let y = ya; y <= yc; y++) for (let x = xa; x <= xb; x++) {
       const i = y * s.w + x; let p = s.p[i];
