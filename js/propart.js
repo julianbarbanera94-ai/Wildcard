@@ -2108,11 +2108,189 @@ function helicopter(ctx, dir, x, y, t, info) {
   ctx.fillStyle = '#4a5060'; ctx.beginPath(); ctx.ellipse(hubX, hubY, 1.6, .9, 0, 0, TAU); ctx.fill();
 }
 
+
+// ---- Boats ------------------------------------------------------------------------------------------
+// Same conventions as the land vehicles: origin = the rider's feet (tile x+8, y+15); dir 0 down, 1 up, 2 left (3 mirrored), the rider is seated
+// between the 'back' layer (water ripples, wake, far side, interior, sail, far oar) and the 'front' layer (near hull wall or bow, windscreen, near oar).
+// The hull is cached per (boat, dir, layer, colour); bobbing, ripples, wake, oars, sail billow and spray are drawn live.
+const BOAT = {
+  rowboat: { col: '#c88a52', hw: 6.2, x0: -12, x1: 13.4, y0: -4.8, yc: -1.6, y1: -6.6, kb: 3.8, seat: [3, 1] },
+  motorboat: { col: '#3a8ee8', hw: 5.8, x0: -13.4, x1: 14, y0: -5, yc: -2.2, y1: -6.2, kb: 4.2, seat: [3, 3] },
+  sailboat: { col: '#e8503e', hw: 6.2, x0: -11, x1: 12, y0: -5.4, yc: -1.8, y1: -7, kb: 4.6, seat: [3, 4] },
+};
+const hullWood = id => id === 'rowboat';
+function sheerAt(S, x) { const u = (x - S.x0) / (S.x1 - S.x0); return (1 - u) * (1 - u) * S.y0 + 2 * u * (1 - u) * S.yc + u * u * S.y1; }
+function hullSidePaint(c, id, layer, col) {
+  const S = BOAT[id], mid = (S.x0 + S.x1) / 2, wood = hullWood(id), body = wood ? col : '#fbfbff';
+  const trim = wood ? shade(col, 1.3) : col;
+  if (layer === 'back') {
+    // interior between the far and near sheer lines
+    c.beginPath(); c.moveTo(S.x0 + .8, S.y0 - 2.2); c.quadraticCurveTo(mid, S.yc - 2.8, S.x1 - 1, S.y1 - 2.2); c.lineTo(S.x1 - .4, S.y1 + .4); c.quadraticCurveTo(mid, S.yc, S.x0, S.y0 + .2); c.closePath();
+    c.fillStyle = lg(c, 0, S.yc - 3, 0, S.yc + 1, wood ? '#8a5a34' : '#b8c8dc', wood ? '#6a4020' : '#8a9cb8'); c.fill();
+    c.strokeStyle = wood ? 'rgba(60,30,10,.4)' : 'rgba(40,60,90,.3)'; c.lineWidth = .4; for (let x = S.x0 + 3; x < S.x1 - 2; x += 3.4) { c.beginPath(); c.moveTo(x, sheerAt(S, x) - 2); c.lineTo(x, sheerAt(S, x)); c.stroke(); }
+    // far gunwale
+    c.beginPath(); c.moveTo(S.x0 + .8, S.y0 - 2.2); c.quadraticCurveTo(mid, S.yc - 2.8, S.x1 - 1, S.y1 - 2.2); c.strokeStyle = shade(trim, .6); c.lineWidth = 1.6; c.stroke(); c.strokeStyle = trim; c.lineWidth = 1; c.stroke();
+    if (id === 'rowboat') for (const bx of [-2.4, 7]) { rr(c, bx, sheerAt(S, bx) - 2.6, 3.6, 3.2, .5); c.fillStyle = lg(c, bx, 0, bx + 3.6, 0, '#e8b074', '#c08044'); c.fill(); c.strokeStyle = '#7a4a22'; c.lineWidth = .45; c.stroke(); }
+    if (id === 'motorboat') { rr(c, -4.6, sheerAt(S, -4) - 2.4, 6.4, 3, .8); c.fillStyle = '#4a5a78'; c.fill(); rr(c, 3.4, sheerAt(S, 4) - 2.8, 7, 3.4, 1); c.fillStyle = lg(c, 0, -9, 0, -3, '#e8f0fa', '#9ab0cc'); c.fill(); c.strokeStyle = '#5a6a88'; c.lineWidth = .4; c.stroke(); }
+    if (id === 'sailboat') { rr(c, -6, sheerAt(S, -5) - 2.2, 5, 2.8, .6); c.fillStyle = '#e8d8b8'; c.fill(); c.strokeStyle = '#8a7a5a'; c.lineWidth = .4; c.stroke(); }
+    return;
+  }
+  const path = () => { c.beginPath(); c.moveTo(S.x0, S.y0); c.quadraticCurveTo(mid, S.yc, S.x1, S.y1); c.quadraticCurveTo(S.x1 - 1, (S.y1 + S.kb) / 2, S.x1 - 5.4, S.kb); c.lineTo(S.x0 + 5, S.kb); c.quadraticCurveTo(S.x0 - .8, (S.y0 + S.kb) / 2, S.x0, S.y0); c.closePath(); };
+  path(); c.fillStyle = lg(c, 0, S.yc, 0, S.kb, shade(body, 1.14), body, shade(body, .72)); c.fill();
+  c.save(); path(); c.clip();
+  if (wood) { c.strokeStyle = 'rgba(80,44,16,.5)'; c.lineWidth = .45; for (const dy of [2.2, 4.4]) { c.beginPath(); c.moveTo(S.x0, S.y0 + dy); c.quadraticCurveTo(mid, S.yc + dy + .4, S.x1, S.y1 + dy); c.stroke(); } c.strokeStyle = 'rgba(255,230,190,.3)'; c.lineWidth = .35; for (const dy of [2.7, 4.9]) { c.beginPath(); c.moveTo(S.x0, S.y0 + dy); c.quadraticCurveTo(mid, S.yc + dy + .4, S.x1, S.y1 + dy); c.stroke(); } }
+  else { c.strokeStyle = col; c.lineWidth = 1.8; c.beginPath(); c.moveTo(S.x0 - 1, S.y0 + 2.4); c.quadraticCurveTo(mid, S.yc + 2.8, S.x1 + 1, S.y1 + 2.4); c.stroke(); c.strokeStyle = shade(col, 1.5); c.lineWidth = .4; c.beginPath(); c.moveTo(S.x0 - 1, S.y0 + 1.7); c.quadraticCurveTo(mid, S.yc + 2.1, S.x1 + 1, S.y1 + 1.7); c.stroke(); c.fillStyle = id === 'motorboat' ? '#d8403a' : '#ffffff'; c.fillRect(S.x0, S.kb - 1.6, S.x1 - S.x0, 1.6); c.fillStyle = 'rgba(40,60,100,.18)'; c.fillRect(S.x0, S.kb - 3, S.x1 - S.x0, 1.4); }
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(-2, S.yc + 1.6, 6, .9, -.04, 0, TAU); c.fill();
+  c.restore();
+  path(); c.strokeStyle = shade(body === '#fbfbff' ? '#6a7a98' : body, .55); c.lineWidth = .65; c.stroke();
+  c.beginPath(); c.moveTo(S.x0, S.y0); c.quadraticCurveTo(mid, S.yc, S.x1, S.y1); c.strokeStyle = shade(trim, .6); c.lineWidth = 1.9; c.stroke(); c.strokeStyle = trim; c.lineWidth = 1.2; c.stroke(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = .35; c.save(); c.translate(0, -.45); c.stroke(); c.restore();
+  if (id === 'rowboat') for (const lx of [-1.6]) { el(c, lx, sheerAt(S, lx) - .2, .8, .8, '#3a2a1c'); el(c, lx - .2, sheerAt(S, lx) - .4, .3, .3, '#e8d0a0'); }
+  if (id === 'sailboat') { el(c, S.x1 - 3.4, S.y1 + 3, .7, .7, '#f2c230'); }
+  c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = .5; c.beginPath(); c.moveTo(S.x0 + 5, S.kb + .1); c.lineTo(S.x1 - 5.4, S.kb + .1); c.stroke();
+}
+function hullEndPoints(S, f, dy, sc) {   // outline of the hull seen end-on (bow down for f=0); returns a path builder
+  return c => {
+    const hw = S.hw * sc, ys = -15 * sc, ym = -4 * sc, yb = 13 * sc, m = v => (f ? -v : v) + dy;
+    c.beginPath(); c.moveTo(-hw * .72, m(ys)); c.lineTo(hw * .72, m(ys)); c.bezierCurveTo(hw * 1.02, m(ys + 1), hw * 1.08, m(ym), hw * .6, m(yb - 4)); c.quadraticCurveTo(hw * .25, m(yb - .8), 0, m(yb));
+    c.quadraticCurveTo(-hw * .25, m(yb - .8), -hw * .6, m(yb - 4)); c.bezierCurveTo(-hw * 1.08, m(ym), -hw * 1.02, m(ys + 1), -hw * .72, m(ys)); c.closePath();
+  };
+}
+function hullEndPaint(c, id, dir, layer, col) {
+  const S = BOAT[id], f = dir === 1 ? 1 : 0, wood = hullWood(id), body = wood ? col : '#fbfbff', trim = wood ? shade(col, 1.3) : col;
+  const side = hullEndPoints(S, f, 2.8, 1), top = hullEndPoints(S, f, 0, 1), inner = hullEndPoints(S, f, -.2, .66);
+  const clipFront = () => { c.beginPath(); c.rect(-24, -1.4, 48, 40); c.clip(); };
+  if (layer === 'front') { c.save(); clipFront(); }
+  side(c); c.fillStyle = lg(c, 0, -10, 0, 16, shade(body, .92), shade(body, .62)); c.fill();
+  if (!wood) { c.save(); side(c); c.clip(); c.fillStyle = col; c.fillRect(-12, f ? -13 : 8, 24, 1.8); c.fillStyle = id === 'motorboat' ? '#d8403a' : '#fff'; c.fillRect(-12, f ? -15.6 : 10.6, 24, 1.6); c.restore(); }
+  side(c); c.strokeStyle = shade(wood ? body : '#6a7a98', .55); c.lineWidth = .6; c.stroke();
+  top(c); c.fillStyle = lg(c, -S.hw, 0, S.hw, 0, shade(trim, 1.18), trim, shade(trim, .85)); c.fill(); c.strokeStyle = shade(trim, .55); c.lineWidth = .6; c.stroke();
+  if (layer === 'back' || f === 1 || true) {   // interior (open part); the foredeck of dir 0 / transom of dir 1 is drawn over it in the front layer
+    inner(c); c.fillStyle = lg(c, 0, -14, 0, 8, wood ? '#8a5a34' : '#b8c8dc', wood ? '#6a4020' : '#8a9cb8'); c.fill();
+  }
+  if (layer === 'front') {   // the near end is decked
+    top(c); c.fillStyle = lg(c, -S.hw, 0, S.hw, 0, shade(body, 1.12), body, shade(body, .8)); c.fill();
+    c.save(); top(c); c.clip(); c.strokeStyle = wood ? 'rgba(80,44,16,.4)' : 'rgba(80,100,140,.3)'; c.lineWidth = .4; for (let k = -4; k <= 4; k += 2.2) { c.beginPath(); c.moveTo(k * .8, f ? -1.4 : -1.4); c.lineTo(k * .25, f ? -14 : 14); c.stroke(); } c.restore();
+    top(c); c.strokeStyle = shade(trim, .55); c.lineWidth = .6; c.stroke();
+    c.strokeStyle = trim; c.lineWidth = 1; top(c); c.stroke();
+    c.restore();
+    // the rim across the cut so the deck reads as an edge
+    c.beginPath(); c.moveTo(-S.hw * 1.05, -1.4); c.lineTo(S.hw * 1.05, -1.4); c.strokeStyle = shade(trim, .6); c.lineWidth = 1.5; c.stroke(); c.strokeStyle = trim; c.lineWidth = .9; c.stroke();
+    return;
+  }
+  // back layer extras: bench
+  c.save(); inner(c); c.clip(); rr(c, -S.hw * .6, -2.4, S.hw * 1.2, 2.6, .5); c.fillStyle = wood ? '#e8b074' : '#e8eef8'; c.fill(); c.strokeStyle = wood ? '#7a4a22' : '#7a8aa8'; c.lineWidth = .4; c.stroke(); c.restore();
+}
+const boatBox = [-24, -17, 48, 36];
+function boatSprite(id, dir, layer, col) {
+  return make('bt:' + id + ':' + dir + ':' + layer + ':' + col, boatBox[0], boatBox[1], boatBox[2], boatBox[3], c => {
+    if (dir === 2) c.scale(-1, 1);
+    if (dir === 0 || dir === 1) hullEndPaint(c, id, dir, layer, col); else hullSidePaint(c, id, layer, col);
+  });
+}
+const rippleSprite = k => make('brip' + k, -22, -10, 44, 20, c => { c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = .6; c.beginPath(); c.ellipse(0, 0, 21, 8.6, 0, 0, TAU); c.stroke(); });
+const boatShadow = side => make('bsh' + side, -22, -12, 44, 24, c => { c.save(); c.scale(side ? 1 : .62, 1); ovalShadow(c, 0, 1, side ? 17 : 15, 6.4, .34); c.restore(); });
+function boatWater(ctx, ax, ay, dir, t, moving, id) {
+  const side = dir > 1, sh = boatShadow(side);
+  ctx.drawImage(sh.cv, ax + sh.x0 + (dir === 3 ? 1 : dir === 2 ? -1 : 0), ay + 1 + sh.y0, sh.w, sh.h);
+  const rp = rippleSprite(0), sx = side ? 1 : .62;
+  for (let i = 0; i < 2; i++) { const f = ((t / (moving ? 40 : 90)) + i * .5) % 1; ctx.globalAlpha = (1 - f) * (moving ? .5 : .38); const w = 44 * (.62 + f * .5) * sx, h = 20 * (.62 + f * .5); ctx.drawImage(rp.cv, ax - w / 2, ay + 2 - h / 2, w, h); }
+  ctx.globalAlpha = 1;
+  if (!moving) return;
+  // V-shaped wake from the stern + bow foam
+  const dx = dir === 3 ? -1 : dir === 2 ? 1 : 0, dy = dir === 0 ? -1 : dir === 1 ? 1 : 0, ox = ax + dx * 12, oy = ay + dy * 13 + (dir > 1 ? 1.5 : 1);
+  const px = dx ? 0 : 1, py = dx ? .5 : 0;
+  ctx.lineCap = 'round';
+  for (let s = -1; s <= 1; s += 2) {
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = .9; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + dx * 17 + px * s * 7, oy + dy * 15 + py * s * 7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 2.2; ctx.stroke();
+  }
+  for (let k = 0; k < 7; k++) {
+    const f = ((t / 36) + k / 7) % 1, d = f * 17, sp = f * 6.4 * (k % 2 ? 1 : -1), r = 1 + f * 1.6;
+    ctx.globalAlpha = (1 - f) * .75; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(ox + dx * d + px * sp, oy + dy * d * (dir > 1 ? 1 : .9) + py * sp * (dir > 1 ? 1 : 0), r, r * .62, 0, 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  const bx = ax - dx * 13, by = ay - dy * 12 + 2.4;   // bow foam
+  for (let k = 0; k < 3; k++) { const a = .5 + .4 * Math.sin(t / 5 + k * 2); ctx.fillStyle = `rgba(255,255,255,${a * .8})`; ctx.beginPath(); ctx.ellipse(bx + (dx ? 0 : (k - 1) * 3) - dx * k * .6, by + (dx ? (k - 1) * 1.8 : 0) - dy * k * .5, 1.5, .9, 0, 0, TAU); ctx.fill(); }
+}
+function oar(ctx, x0, y0, x1, y1) {
+  ctx.strokeStyle = '#7a4a22'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.strokeStyle = '#d29a5c'; ctx.lineWidth = .5; ctx.beginPath(); ctx.moveTo(x0, y0 - .2); ctx.lineTo(x1, y1 - .2); ctx.stroke();
+  const a = Math.atan2(y1 - y0, x1 - x0); ctx.save(); ctx.translate(x1, y1); ctx.rotate(a); ctx.fillStyle = '#e8b074'; ctx.strokeStyle = '#7a4a22'; ctx.lineWidth = .4; ctx.beginPath(); ctx.ellipse(1.4, 0, 2.6, 1.3, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore();
+}
+function spray(ctx, x, y, t, dx, dy) {
+  for (let k = 0; k < 6; k++) { const f = ((t / 18) + k / 6) % 1; ctx.globalAlpha = (1 - f) * .85; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(x + dx * f * 8 + Math.sin(k * 5 + t / 3) * 1.1, y + dy * f * 8 - Math.sin(f * PI) * 3.4, .7 + f * 1.1, .6 + f * .9, 0, 0, TAU); ctx.fill(); }
+  ctx.globalAlpha = 1;
+}
+function outboard(ctx, x, y, side, moving) {   // cowl at (x, y), leg into the water; side views draw it facing right
+  ctx.fillStyle = '#5a6278'; ctx.fillRect(x - .5, y + 2.4, 1.6, 6); ctx.fillStyle = '#c8cedf'; ctx.fillRect(x - .5, y + 2.4, .5, 6);
+  rr(ctx, x - 3, y - 2.6, 6, 5.4, 1.6); ctx.fillStyle = lg(ctx, x - 3, y, x + 3, y, '#ffffff', '#cfd6e6', '#8e9ab4'); ctx.fill(); ctx.strokeStyle = '#5a6a88'; ctx.lineWidth = .5; ctx.stroke();
+  rf(ctx, x - 3, y - .6, 6, 1.6, .5, '#3a8ee8'); ctx.strokeStyle = '#2a2e3a'; ctx.lineWidth = .9; ctx.beginPath(); ctx.moveTo(x - 2.6, y - 1.4); ctx.lineTo(x - 6.4, y - 3.4); ctx.stroke();
+  el(ctx, x + .3, y + 8.8, 1.7, .8, '#3a3e4c');
+}
+const BDYN = {
+  rowboat(ctx, ax, ay, dir, layer, t, moving) {
+    const sw = moving ? Math.sin(t / 7) : Math.sin(t / 60) * .25, dip = moving ? Math.max(0, Math.sin(t / 7)) : 0;
+    if (dir > 1) {   // side view drawn facing right: the far oar behind, the near oar in front
+      if (layer === 'back') oar(ctx, ax - 1.6, ay - 5.4, ax - 3 + sw * 2.4, ay - 11.4 - sw);
+      else oar(ctx, ax - 1.6, ay - 3, ax - 6 - sw * 3.4, ay + 7 + dip * 2);
+      return;
+    }
+    if (layer === 'front') for (const s of [-1, 1]) oar(ctx, ax + s * 6.2, ay - 2.6, ax + s * (15 + sw * 1.4), ay + 3 + (dir === 0 ? -1 : 1) * sw * 1.6 + dip);
+  },
+  motorboat(ctx, ax, ay, dir, layer, t, moving) {
+    if (dir > 1) {
+      if (layer === 'back') { outboard(ctx, ax - 16, ay - 4, true, moving); if (moving) spray(ctx, ax - 17.4, ay + 4, t, -1, -.35); }
+      else { rr(ctx, ax + 3.4, ay - 9.6, 4.2, 6.2, .6); ctx.fillStyle = 'rgba(190,230,250,.55)'; ctx.fill(); ctx.strokeStyle = '#f4f8ff'; ctx.lineWidth = .7; ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(ax + 4.2, ay - 8.6, .6, 3.6); }
+    } else if (dir === 0) {
+      if (layer === 'back') { outboard(ctx, ax, ay - 16, false, moving); if (moving) spray(ctx, ax, ay - 17, t, 0, -1); }
+      else { ctx.beginPath(); ctx.moveTo(ax - 5, ay + 3.4); ctx.lineTo(ax + 5, ay + 3.4); ctx.lineTo(ax + 3.8, ay - 1.4); ctx.lineTo(ax - 3.8, ay - 1.4); ctx.closePath(); ctx.fillStyle = 'rgba(190,230,250,.5)'; ctx.fill(); ctx.strokeStyle = '#f4f8ff'; ctx.lineWidth = .8; ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fillRect(ax - 3, ay + .2, .7, 2.4); }
+    } else {
+      if (layer === 'back') { ctx.beginPath(); ctx.moveTo(ax - 4.6, ay - 7); ctx.lineTo(ax + 4.6, ay - 7); ctx.lineTo(ax + 3.8, ay - 12); ctx.lineTo(ax - 3.8, ay - 12); ctx.closePath(); ctx.fillStyle = 'rgba(190,230,250,.55)'; ctx.fill(); ctx.strokeStyle = '#f4f8ff'; ctx.lineWidth = .7; ctx.stroke(); }
+      else { outboard(ctx, ax, ay + 10, false, moving); if (moving) spray(ctx, ax, ay + 19, t, 0, 1); }
+    }
+  },
+  sailboat(ctx, ax, ay, dir, layer, t, moving) {
+    if (layer !== 'back') return;
+    const bil = Math.sin(t / 26) * 1.2 + (moving ? 1.8 : .4), fl = Math.sin(t / 9) * .6;
+    if (dir > 1) {
+      const mx = ax + 3, top = ay - 41, deck = ay - 4;
+      ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(mx, deck); ctx.lineTo(mx, top); ctx.stroke(); ctx.strokeStyle = '#c89a62'; ctx.lineWidth = .4; ctx.beginPath(); ctx.moveTo(mx - .3, deck); ctx.lineTo(mx - .3, top); ctx.stroke();
+      // main sail toward the stern, billowing
+      ctx.beginPath(); ctx.moveTo(mx - .8, top + 2); ctx.quadraticCurveTo(mx - 7 - bil * 1.4, ay - 24, mx - 12.4, ay - 9.4); ctx.lineTo(mx - .8, ay - 9); ctx.closePath();
+      ctx.fillStyle = lg(ctx, mx - 12, top, mx, ay - 9, '#ffffff', '#f4f0e8', '#d8d0c0'); ctx.fill(); ctx.strokeStyle = '#a89a80'; ctx.lineWidth = .5; ctx.stroke();
+      ctx.save(); ctx.clip(); ctx.strokeStyle = 'rgba(150,130,100,.4)'; ctx.lineWidth = .35; for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(mx - .8, ay - 9 - k * 7); ctx.quadraticCurveTo(mx - 6 - bil * (1 + k * .2), ay - 9 - k * 7 + 1.4, mx - 11 + k * 2.6, ay - 9.6 - k * 1.2); ctx.stroke(); } ctx.restore();
+      rf(ctx, mx - 12.8, ay - 10, 12.4, 1.1, .5, '#8a5a30');   // boom
+      // jib
+      ctx.beginPath(); ctx.moveTo(mx + .8, top + 4); ctx.quadraticCurveTo(mx + 6 + bil * .6, ay - 22, mx + 9.4, ay - 6.4); ctx.lineTo(mx + .8, ay - 6.4); ctx.closePath(); ctx.fillStyle = '#ffd8d0'; ctx.fill(); ctx.strokeStyle = '#c89a8a'; ctx.lineWidth = .45; ctx.stroke();
+      // pennant
+      ctx.fillStyle = '#e8503e'; ctx.beginPath(); ctx.moveTo(mx, top - .4); ctx.lineTo(mx - 5 - fl, top + 1 + fl * .3); ctx.lineTo(mx, top + 2.2); ctx.closePath(); ctx.fill();
+    } else {
+      const top = ay - 41, deck = ay - 4, d = dir === 0 ? 1 : -1;
+      ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(ax, deck - 6); ctx.lineTo(ax, top); ctx.stroke();
+      const w = 3.4 + bil;   // edge-on sail: a slim billowing leaf
+      ctx.beginPath(); ctx.moveTo(ax + .8, top + 2); ctx.quadraticCurveTo(ax + 1 + w * 1.4, ay - 24, ax + 1.6, ay - 8); ctx.lineTo(ax + .8, ay - 8); ctx.closePath(); ctx.fillStyle = lg(ctx, ax, 0, ax + w, 0, '#ffffff', '#e4dccb'); ctx.fill(); ctx.strokeStyle = '#a89a80'; ctx.lineWidth = .45; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ax - .8, top + 4); ctx.quadraticCurveTo(ax - 1 - w, ay - 22, ax - 1.6, ay - 8); ctx.lineTo(ax - .8, ay - 8); ctx.closePath(); ctx.fillStyle = '#f4ece0'; ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e8503e'; ctx.beginPath(); ctx.moveTo(ax, top - .4); ctx.lineTo(ax + 4.4 + fl, top + 1); ctx.lineTo(ax, top + 2.2); ctx.closePath(); ctx.fill();
+    }
+  },
+};
+function boat(ctx, id, dir, x, y, t, info) {
+  const d = BOAT[id], layer = info.layer === 'front' ? 'front' : 'back', col = info.color || d.col, moving = !!info.moving, ax = x + 8, ay = y + 15;
+  const bob = Math.sin(t / 22 + ax * .05) * .8 + (moving ? Math.sin(t / 7) * .25 : 0);
+  if (layer === 'back') boatWater(ctx, ax, ay, dir, t, moving, id);
+  const s = boatSprite(id, dir, layer, col);
+  ctx.drawImage(s.cv, ax + s.x0, ay + bob + s.y0, s.w, s.h);
+  ctx.save(); ctx.translate(0, bob); if (dir === 2) { ctx.translate(ax, 0); ctx.scale(-1, 1); ctx.translate(-ax, 0); }
+  BDYN[id](ctx, ax, ay, dir, layer, t, moving);
+  ctx.restore();
+}
+
 // ---- vehicle() / seat() -------------------------------------------------------------
 HA.vehicle = function (ctx, id, dir, x, y, t, info) {
   info = info || {}; t = t || 0; dir = dir | 0; if (dir < 0 || dir > 3) dir = 0;
   if (id === 'hoverboard') return hoverboard(ctx, dir, x, y, t, info);
   if (id === 'helicopter') return helicopter(ctx, dir, x, y, t, info);
+  if (BOAT[id]) return boat(ctx, id, dir, x, y, t, info);
   const d = V[id] || V.bicycle, layer = info.layer === 'front' ? 'front' : 'back', col = info.color || d.col;
   const fr = info.moving ? Math.floor(t / 4) % 3 : 0;
   const ax = x + 8, ay = y + 15;
@@ -2124,10 +2302,12 @@ HA.vehicle = function (ctx, id, dir, x, y, t, info) {
 const SEATS = { bicycle: [-3, 1.2], scooter: [-3, 2.6], quad: [-4, 1.4], motorbike: [-4, 2.6] };
 HA.seat = function (id, dir) {
   if (id === 'car' || id === 'helicopter') return { dx: 0, dy: 0, hide: true };
+  if (BOAT[id]) { const sd = BOAT[id].seat, side = dir === 3 ? -1 : dir === 2 ? 1 : 0; return { dx: side * sd[1], dy: Math.round((sd[0] + Math.sin((G.frameNo || 0) / 22 + 0) * .8) * 4) / 4, hide: false }; }
   if (id === 'hoverboard') return { dx: 0, dy: Math.round((-3.2 + hoverBob(G.frameNo || 0)) * 4) / 4 - 1, hide: false };
   const s = SEATS[id] || SEATS.bicycle, side = dir === 3 ? -1 : dir === 2 ? 1 : 0;
   return { dx: side * s[1], dy: s[0], hide: false };
 };
-HA.vehicleIds = ORDER.slice();
+HA.vehicleIds = ORDER.concat(['rowboat', 'motorboat', 'sailboat']);
+HA.boatIds = Object.keys(BOAT);
 
 })();

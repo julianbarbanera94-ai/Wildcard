@@ -20,6 +20,8 @@ const OUT = process.env.OUT || '/tmp';
   const step = n => console.log('✓', n);
   const lastText = () => ev(() => G.ui.text ? G.ui.text.lines.join(' ') : '');
   const waitText = async (re, ms = 8000) => { const t = Date.now(); while (Date.now() - t < ms) { const s = await lastText(); if (re.test(s)) return s; await page.waitForTimeout(50); } await shot('timeout'); throw new Error('no text matching ' + re + ' (last: ' + (await lastText()) + ')'); };
+  // press A through text until a menu with an entry matching re is open
+  const toMenu = async re => { for (let i = 0; i < 60; i++) { if (await ev(r => G.ui.layers.some(l => l.items && l.items.some(s => new RegExp(r).test(String(s)))), re.source)) return; if (await ev(() => G.ui.text && G.ui.text.arrow)) await key('z', 50); else await page.waitForTimeout(100); } await shot('timeout'); throw new Error('no menu ' + re); };
   const where = () => ev(() => ({ map: G.world.mapId, x: G.world.p.x, y: G.world.p.y }));
 
   // Past the title; then a fresh game on a fully owned homestead
@@ -180,7 +182,7 @@ const OUT = process.env.OUT || '/tmp';
     await key('z'); await until(() => G.ui.layers.length > 0, 4000, 'barn menu'); assert.deepEqual(await hits(), ['barn:' + b.id]); await closeAll();
     await ev(() => { window.__hits.length = 0; });
     await ev(id => { const o = T.obj(id, 'Pen'); T.go(id, o.x, o.y); }, id); await key('z'); const t1 = await waitText(/lives here/); assert(/BULBASAUR|CHARMANDER|[A-Z]{4}/.test(t1) && /a day/.test(t1), t1);
-    await key('z'); await until(() => G.ui.layers.some(l => l.items && l.items.some(s => /BARN MENU/.test(String(s)))), 4000, 'offer'); await key('z'); await until(() => window.__hits.length === 1, 4000, 'barn menu from the pen'); await closeAll();
+    await toMenu(/BARN MENU/); await key('z'); await until(() => window.__hits.length === 1, 4000, 'barn menu from the pen'); await closeAll();
     await ev(id => { const o = T.obj(id, 'Milk can'); T.go(id, o.x, o.y); }, id); await key('z'); await waitText(/Ready to collect: 2 Wool, 1 Coal/); await closeAll();
     await ev(id => { const n = G.MAPS[id].npcs[0]; T.go(id, n.x, n.y); }, id); await key('z'); await waitText(/FARMHAND: 2 happy creatures/); await closeAll();
     await ev(id => { const [ex, ey] = G.home.interiorEntry(id); G.placePlayer(ex, ey, 1); window.__mini = []; const o = G.drawCreatureMini; G.drawCreatureMini = (c, id, ...r) => { window.__mini.push(id); return o(c, id, ...r); }; window.__miniOrig = o; }, id); await page.waitForTimeout(600);
@@ -236,16 +238,16 @@ const OUT = process.env.OUT || '/tmp';
   await T('fresh'); await ev(() => T.spy('garage'));
   { const b = await T('put', 'garage', 1, 'homestead'), id = 'in_' + b.id;
     await ev(id => { G.loadMap(id); const o = T.obj(id, 'Garage'); T.go(id, o.x, o.y); }, id); await key('z'); await until(() => G.ui.layers.length > 0 || G.ui.text, 4000, 'garage menu'); assert((await hits()).length === 1); await closeAll();
-    await ev(id => { const n = G.MAPS[id].npcs[0]; T.go(id, n.x, n.y); }, id); await key('z'); await waitText(/MECHANIC/); await key('z'); await until(() => G.ui.layers.some(l => l.items && l.items.some(s => /VEHICLE MENU/.test(String(s)))), 4000, 'mechanic offer'); await key('z');
+    await ev(id => { const n = G.MAPS[id].npcs[0]; T.go(id, n.x, n.y); }, id); await key('z'); await waitText(/MECHANIC/); await toMenu(/VEHICLE MENU/); await key('z');
     await until(() => window.__hits.length === 2, 4000, 'garage from the mechanic'); await closeAll();
     const drawn = async () => { await ev(id => { const [ex, ey] = G.home.interiorEntry(id); G.loadMap(id); G.placePlayer(ex, ey, 1); window.__v = []; const o = G.homeArt.vehicle; window.__vo = o; G.homeArt.vehicle = (c, vid, d, x, y, t, info) => { if (info.layer === 'back') window.__v.push(vid + ':' + (info.color || '')); return o(c, vid, d, x, y, t, info); }; }, id); await page.waitForTimeout(500); return ev(() => { G.homeArt.vehicle = window.__vo; return [...new Set(window.__v)]; }); };
     await ev(() => { G.state.vehicles.owned = ['bicycle', 'scooter', 'quad']; G.state.vehicles.paint = { scooter: '#40c080' }; });
     let v = await drawn(); assert.deepEqual(v.map(s => s.split(':')[0]).sort(), ['bicycle', 'scooter'], 'Lv1 fits 2 vehicles: ' + v);
     assert(v.some(s => s === 'scooter:#40c080'), 'painted colour used: ' + v);
-    await ev(() => { G.state.vehicles.riding = 'bicycle'; }); v = await drawn(); assert.deepEqual(v.map(s => s.split(':')[0]), ['scooter'], 'the vehicle you ride is not parked inside: ' + v);
-    await ev(() => { G.state.vehicles.riding = null; G.state.vehicles.owned = []; }); v = await drawn(); assert.equal(v.length, 0, 'an empty garage shows nothing');
+    await ev(() => { G.state.vehicles.parked = { id: 'bicycle', map: 'homestead', x: 5, y: 5 }; }); v = await drawn(); assert.deepEqual(v.map(s => s.split(':')[0]), ['scooter'], 'a vehicle parked outside is not shown inside: ' + v);
+    await ev(() => { G.state.vehicles.parked = null; G.state.vehicles.owned = []; }); v = await drawn(); assert.equal(v.length, 0, 'an empty garage shows nothing');
     await ev(() => { G.state.vehicles.owned = ['bicycle', 'scooter', 'quad', 'motorbike']; G.state.builds.find(x => x.type === 'garage').lvl = 2; G.home.refresh(); }); v = await drawn(); assert.equal(v.length, 4, 'Lv2 shows 4: ' + v);
-    step('garage: counter and mechanic open the garage, parked vehicles are drawn in the bays (painted, slot-limited, not the one outside)'); }
+    step('garage: counter and mechanic open the garage, parked vehicles are drawn in the bays (painted, slot-limited, not the one parked outside)'); }
   await ev(() => T.unspy());
 
   // greenhouse: the potting table reports the plots, the hose refills the can
