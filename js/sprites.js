@@ -1382,8 +1382,8 @@ function peopleSlug(st) {
 }
 G.WREN_LOOK = PEOPLE_LOOKS.wren;
 // The decoded image for a slug and screen direction (0 down, 1 up, 2 left, 3 right), or null while it is still loading.
-function peopleView(slug, dir) {
-  const view = dir === 0 ? 'front' : dir === 1 ? 'back' : 'side', k = slug + ':' + view; let e = peopleImg[k];
+function peopleView(slug, dir, frame) {
+  const view = (dir === 0 ? 'front' : dir === 1 ? 'back' : 'side') + (frame ? '-walk' + frame : ''), k = slug + ':' + view; let e = peopleImg[k];
   if (e === undefined) { const src = G.PEOPLE_IMG[slug] && G.PEOPLE_IMG[slug][view]; if (src) { e = new Image(); e.src = src; } else e = null; peopleImg[k] = e; }
   return e && e.complete && e.naturalWidth ? e : null;
 }
@@ -1407,9 +1407,9 @@ G.charSprite = function (st) { const k = JSON.stringify(st); const slug = people
 // drawChar: a person whose tile's top-left is (x, y) in logical px; feet at (x+8, y+15).
 // noShadow: skip the foot shadow (a rider sitting on a vehicle).
 G.drawChar = function (ctx, style, dir, frame, x, y, t, noShadow) {
-  const slug = peopleSlug(style), pimg = slug && peopleView(slug, dir);
-  if (pimg) {   // painted person: a bob and a little lean instead of stepping frames
-    const bob = frame ? Math.abs(Math.sin((t || 0) / 3.2)) * 1.1 : Math.sin((t || 0) / 26) * .3, lean = frame ? (frame === 1 ? -.05 : .05) : 0, [w, h] = peopleFit(slug, pimg, 26);
+  const slug = peopleSlug(style), walkImg = slug && frame ? peopleView(slug, dir, frame) : null, pimg = walkImg || (slug && peopleView(slug, dir));
+  if (pimg) {   // painted person: real walking frames when the character has them, otherwise a bob and a little lean
+    const bob = walkImg ? .5 : frame ? Math.abs(Math.sin((t || 0) / 3.2)) * 1.1 : Math.sin((t || 0) / 26) * .3, lean = !walkImg && frame ? (frame === 1 ? -.05 : .05) : 0, [w, h] = peopleFit(slug, pimg, 26);
     if (!noShadow) { ctx.fillStyle = 'rgba(30,40,60,.2)'; ctx.beginPath(); ctx.ellipse(x + 8, y + 15, 6.2 - bob * .4, 1.9, 0, 0, TAU); ctx.fill(); }
     ctx.save(); ctx.translate(x + 8, y + 15.4 - bob); ctx.rotate(lean); if (dir === 3) ctx.scale(-1, 1); ctx.drawImage(pimg, -w / 2, -h, w, h); ctx.restore();
     return;
