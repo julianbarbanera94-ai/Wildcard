@@ -162,11 +162,11 @@ sp(15, 'Boulderon', ['Rock', 'Ground'], [70, 105, 130, 45, 60, 35], 120, 175, {
   learn: [[1, 'Tackle'], [1, 'Rock Throw'], [1, 'Mud Shot'], [28, 'Rock Slide'], [34, 'Quake']]
 });
 sp(16, 'Wingly', ['Flying'], [40, 50, 40, 35, 40, 70], 255, 52, {
-  evo: [18, 17], look: { stage: 1, form: 'round', feat: ['wings', 'tail'] }, desc: 'A tiny flier that chirps at sunrise.',
+  evo: [18, 17], look: { stage: 1, form: 'round', feat: ['wings', 'tail'] }, desc: 'A round little bluebird that chirps at sunrise.',
   learn: [[1, 'Peck'], [1, 'Growl'], [5, 'Gust'], [10, 'Quick Attack'], [15, 'Wing Attack']]
 });
 sp(17, 'Skyrant', ['Flying', 'Normal'], [70, 85, 65, 60, 65, 100], 90, 155, {
-  look: { stage: 3, form: 'tall', feat: ['wings', 'tail', 'horns'] }, desc: 'It rides storm winds with ease.',
+  look: { stage: 3, form: 'tall', feat: ['wings', 'tail', 'horns'] }, desc: 'Its broad violet wings ride storm winds with ease.',
   learn: [[1, 'Peck'], [1, 'Gust'], [1, 'Wing Attack'], [24, 'Air Slash'], [30, 'Slam']]
 });
 sp(18, 'Crawlet', ['Bug'], [45, 40, 55, 30, 35, 35], 255, 54, {
