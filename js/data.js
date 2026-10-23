@@ -182,7 +182,7 @@ sp(20, 'Venomite', ['Bug', 'Poison'], [50, 60, 45, 60, 45, 60], 150, 110, {
   learn: [[1, 'Poison Sting'], [1, 'Bug Bite'], [8, 'Poison Powder'], [13, 'Sludge'], [18, 'Cross Cut']]
 });
 sp(21, 'Burrowl', ['Ground'], [50, 65, 55, 35, 45, 70], 150, 95, {
-  look: { stage: 2, form: 'round', feat: ['ears', 'arms', 'fangs'] }, desc: 'It tunnels through soil searching for snacks.',
+  look: { stage: 2, form: 'round', feat: ['ears', 'arms', 'fangs'] }, desc: 'A stony-feathered owl that tunnels through soil searching for snacks.',
   learn: [[1, 'Scratch'], [1, 'Growl'], [7, 'Mud Shot'], [12, 'Bite'], [18, 'Slam'], [24, 'Quake']]
 });
 sp(22, 'Gloomoth', ['Dark'], [60, 65, 50, 60, 60, 65], 120, 120, {
