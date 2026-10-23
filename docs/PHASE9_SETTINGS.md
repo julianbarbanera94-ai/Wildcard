@@ -1,4 +1,4 @@
-# Phase 9: Settings, Controls & Player Preferences (queued, not started)
+# Phase 9: Settings, Controls & Player Preferences (done: see docs/SETTINGS.md)
 
 Do this after all earlier phases (the last is Phase 8, more optional quests). Implementation model: Claude Opus 5.5 (as the player requested).
 

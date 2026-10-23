@@ -23,9 +23,13 @@ On phones and tablets a thumbstick (drag to walk) and A, B, MENU and ORB buttons
 
 There are three save slots. On the title screen, CONTINUE loads the game you saved most recently, LOAD GAME lets you pick a slot, and NEW GAME asks which slot to use (and checks before overwriting one). START → SAVE saves to your current slot, or SAVE TO ANOTHER SLOT makes a copy. Saves from older versions are slot 1.
 
+## Settings
+
+START → SETTINGS has six categories: **Gameplay & Battle** (battle memory, battle and text speed, auto-advance, skip seen intros, damage numbers, effect messages, confirm valuable items), **HUD** (each piece of the HUD, size, opacity, reduce clutter), **Controls** (stick sensitivity, fixed or floating, size and position, button size and opacity, left-handed layout, hold/tap/always run, vibration), **Audio** (master, music, effects, battle and menu volumes, mute), **Accessibility** (screen shake, reduced motion, reduced flashes, text size, no vibration, colour-friendly colours) and **System** (save info, graphics, load last save, credits, reset all settings, version). Settings save instantly, separately from your game saves. See `docs/SETTINGS.md`.
+
 ## Test Mode
 
-START → SETTINGS → TEST MODE, then enter the password (`abc610`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), every quest done and every region at Hero reputation; **Fly Anywhere** (any creature carries you to any place; Unlock Everything turns it on), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
+START → SETTINGS → SYSTEM: press A five times on the version to reveal DEVELOPER, open it, then enter the password (`abc610`; type it on a keyboard, or use the on-screen keyboard with the arrow keys and A). It offers: **Unlock Everything** (complete Dex, all three shards placed, Great Lantern lit so the Hollow Gate is open, every item at 99, lots of money), **Infinite Money**, **Infinite Items**, **Infinite PP**, **God Mode** (your creatures take no damage), **Sure Catch**, **Add Creature** (any species, Lv 5 to 100, with a live preview), every quest done and every region at Hero reputation; **Fly Anywhere** (any creature carries you to any place; Unlock Everything turns it on), and **Heal Team**. The check happens in the browser, so it is a convenience for testing, not security.
 
 ## Android APK
 
@@ -103,7 +107,7 @@ The journal records what you chose for each one.
 
 ## Roadmap
 
-Phases 1 to 8 are the story and quest work (8 is more optional quests, done). **Phase 9** is queued: a full Settings, Controls and Player Preferences upgrade. See `docs/PHASE9_SETTINGS.md`.
+Phases 1 to 8 are the story and quest work (8 is more optional quests, done). **Phase 9** (Settings, Controls and Player Preferences) is done. See `docs/SETTINGS.md` (the spec is `docs/PHASE9_SETTINGS.md`).
 
 ## Journal, quests and reputation
 
@@ -239,6 +243,7 @@ node tests/e2e-threads.js                       # the five optional quests, both
 node tests/e2e-story2.js                        # Chapters 2-4: guardian shard, lighthouse, Tam, Tide Stone, drowned shrine, boats
 node tests/e2e-story3.js                        # Chapters 5-8, finale (BALANCE), epilogue, Leader rematches
 node tests/e2e-threads2.js                      # six more optional quests (Phase 8)
+node tests/e2e-settings.js                      # settings: persistence, battle memory, HUD, controls, audio, accessibility
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles

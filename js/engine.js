@@ -46,14 +46,20 @@ const TUNES = {
 };
 const parse = s => s.split(' ').map(t => { const [n, b] = t.split(':'); return [n, +b]; });
 const audio = G.audio = {
-  ctx: null, muted: false, cur: null, timer: null,
-  init() { if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume(); return; } try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.master = this.ctx.createGain(); this.master.gain.value = .12; this.master.connect(this.ctx.destination); if (this.want) this.music(this.want); } catch (e) { } },
-  tone(f, t, d, type, vol) {
+  // Volume buses (js/settings.js): music, sfx, battle (battle music and sounds) and ui (menu blips), all into the master gain.
+  ctx: null, cur: null, timer: null, bus: {},
+  get muted() { return !!(G.pref && G.pref('audio.mute')); },
+  init() { if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume(); return; } try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.master = this.ctx.createGain(); this.master.connect(this.ctx.destination);
+    for (const b of ['music', 'sfx', 'battle', 'ui']) { this.bus[b] = this.ctx.createGain(); this.bus[b].connect(this.master); } this.applyVolumes(); if (this.want) this.music(this.want); } catch (e) { } },
+  applyVolumes() { if (!this.ctx) return; const P = k => (G.pref ? G.pref('audio.' + k) : 80) / 100;
+    this.master.gain.value = this.muted ? 0 : .12 * P('master') * 1.25; for (const b of ['music', 'sfx', 'battle', 'ui']) this.bus[b].gain.value = P(b); },
+  tone(f, t, d, type, vol, bus) {
     if (!this.ctx || !f) return; const o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = type || 'square'; o.frequency.value = f; g.gain.setValueAtTime(vol || 1, t); g.gain.exponentialRampToValueAtTime(.001, t + d + .02);
-    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + d + .05);
+    o.connect(g); g.connect(this.bus[bus] || this.master); o.start(t); o.stop(t + d + .05);
   },
-  sfx(name) { if (!this.ctx || this.muted) return; let t = this.ctx.currentTime; for (const [n, d, w] of SFX[name] || []) { this.tone(freq(n), t, d, w, .9); t += d; } },
+  sfx(name) { if (!this.ctx || this.muted) return; const bus = name === 'select' || name === 'bump' ? 'ui' : G.scene && G.scene.battle ? 'battle' : 'sfx';
+    let t = this.ctx.currentTime; for (const [n, d, w] of SFX[name] || []) { this.tone(freq(n), t, d, w, .9, bus); t += d; } },
   music(name) {
     this.want = name; if (!this.ctx || this.cur === name) return; this.cur = name; clearInterval(this.timer);
     if (!name) return;
@@ -66,14 +72,16 @@ const audio = G.audio = {
         const s = st[k];
         s.t = Math.max(s.t, this.ctx.currentTime - .05);   // never replay notes missed while backgrounded
         while (s.t < this.ctx.currentTime + .3) {
-          const [n, b] = c[s.i]; this.tone(freq(n), s.t, b * spb * .9, k ? tu.wave === 'triangle' ? 'triangle' : 'triangle' : tu.wave, k ? .9 : .5);
+          const [n, b] = c[s.i]; this.tone(freq(n), s.t, b * spb * .9, k ? tu.wave === 'triangle' ? 'triangle' : 'triangle' : tu.wave, k ? .9 : .5, name === 'battle' ? 'battle' : 'music');
           s.t += b * spb; s.done += b; s.i++;
           if (s.i >= c.length) { s.i = 0; if (s.done < len) { s.t += (len - s.done) * spb; } s.done = 0; }
         }
       });
     }, 60);
   },
-  toggle() { this.muted = !this.muted; },
+  toggle() { if (G.setPref) G.setPref('audio.mute', !this.muted); },
+  // a short beep on one bus, so a volume slider can be heard as it moves
+  preview(bus) { if (!this.ctx || this.muted) return; const t = this.ctx.currentTime; if (bus === 'music') { this.tone(523, t, .12, 'triangle', .9, bus); this.tone(659, t + .12, .12, 'triangle', .9, bus); } else this.tone(bus === 'battle' ? 330 : 660, t, .08, 'square', .9, bus); },
 };
 
 // ---- Loop -----------------------------------------------------------------
@@ -152,17 +160,17 @@ G.start = function (canvas) {
     const r = canvas.getBoundingClientRect(), w = r.width || 960, h = r.height || w / 1.5, a = w / h;
     if (a >= 1.5) { G.H = BASE_H; G.W = Math.max(BASE_W, Math.min(420, Math.round(BASE_H * a))); }   // wider: see more sideways
     else { G.W = BASE_W; G.H = Math.max(BASE_H, Math.min(400, Math.round(BASE_W / a))); }           // taller: see more up and down
-    const s = Math.max(3, Math.min(8, Math.round(w * (window.devicePixelRatio || 1) / G.W)));
+    const s = Math.max(3, Math.min(G.pref && G.pref('system.graphics') === 'balanced' ? 3 : 8, Math.round(w * (window.devicePixelRatio || 1) / G.W)));
     if (canvas.width !== G.W * s || canvas.height !== G.H * s) { canvas.width = G.W * s; canvas.height = G.H * s; }
     G.S = s; ctx.setTransform(s, 0, 0, s, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   };
-  fit(); addEventListener('resize', fit);
+  fit(); addEventListener('resize', fit); G.refit = fit;
   let last = performance.now(), acc = 0;
   const dt = 1000 / 60;
   (function frame(now) {
     acc = Math.min(acc + now - last, dt * 2); last = now;
     if (acc >= dt - 1) {   // update and draw once per game tick, so 120Hz screens don't do double work
-      acc = Math.max(0, acc - dt); try { tick(); } catch (e) { console.error(e); }
+      acc = Math.max(0, acc - dt); try { tick(); if (G.scene && G.scene.battle && G.battleFast && G.battleFast()) tick(); } catch (e) { console.error(e); }
       try { draw(ctx); } catch (e) { console.error(e); }
     }
     requestAnimationFrame(frame);
@@ -170,8 +178,11 @@ G.start = function (canvas) {
 };
 
 // ---- Fades ----------------------------------------------------------------
+const bright = c => { const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(c || ''); if (!m) return false; const h = m[1].length === 3 ? m[1].replace(/./g, x => x + x) : m[1]; const v = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); return v[0] + v[1] + v[2] > 640; };
 G.fadeTo = async (a, frames, color) => {
-  const f = G.ui.fade; if (color) f.color = color; const a0 = f.a;
+  const f = G.ui.fade; if (color) f.color = color;
+  if (G.flashOK && !G.flashOK() && bright(f.color)) f.color = '#2a2040';   // reduced flashes: bright fades become a soft dark fade
+  const a0 = f.a;
   for (let i = 1; i <= frames; i++) { await G.nextFrame(); f.a = a0 + (a - a0) * i / frames; }
   f.a = a;
 };
@@ -194,14 +205,16 @@ G.wrap = (s, w) => wrap(measure, s, w);
 // opts: { auto: frames to wait instead of A, style: 'light'|'dark' }
 G.say = async function (str, opts) {
   opts = opts || {};
-  const style = opts.style || G.ui.style || 'light', lines = wrap(measure, str, 212);
+  const style = opts.style || G.ui.style || 'light', lines = wrap(measure, str, 212 * 8 / (G.textPx ? G.textPx() : 8));
   for (let p = 0; p < lines.length; p += 2) {
     const page = lines.slice(p, p + 2), total = page.join('').length;
     const t = G.ui.text = { lines: page, shown: 0, arrow: false, style };
     await G.nextFrame();
-    while (t.shown < total) { t.shown += input.held.a || input.held.b ? 4 : 1; if (input.pressed.a || input.pressed.b) t.shown = total; await G.nextFrame(); }
+    const rate = G.textRate ? G.textRate() : 1;
+    while (t.shown < total) { t.shown += input.held.a || input.held.b ? Math.max(4, rate) : rate; if (input.pressed.a || input.pressed.b) t.shown = total; await G.nextFrame(); }
     t.shown = total;
-    if (opts.auto) { for (let i = 0; i < opts.auto; i++) { await G.nextFrame(); if (input.pressed.a || input.pressed.b) break; } }
+    if (opts.auto) { const n = G.msgWait && style === 'dark' ? G.msgWait(opts.auto) : opts.auto; for (let i = 0; i < n; i++) { await G.nextFrame(); if (input.pressed.a || input.pressed.b) break; } }
+    else if (G.pref && G.pref('battle.autoAdvance')) { t.arrow = true; for (let i = 0; i < 110; i++) { await G.nextFrame(); if (input.pressed.a || input.pressed.b) break; } }   // auto-advance
     else { t.arrow = true; await G.waitA(); G.audio.sfx('select'); }
   }
 };

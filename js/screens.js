@@ -432,7 +432,7 @@ G.startMenu = async function () {
       const n = how === 0 ? G.slot : how === 1 ? await G.pickSlot('save') : 0;
       if (n) { if (G.saveGame(n)) { G.audio.sfx('levelup'); await G.say(`${S.name} saved the game in slot ${n}.`); } else await G.say('Saving failed! Storage may be full or disabled.'); }
       G.closeText();
-    } else if (ch === 5) await G.settingsMenu();
+    } else if (ch === 5) { if (await G.settingsMenu() === 'reloaded') break; }   // LOAD LAST SAVE closes the menus
   }
 };
 })();

@@ -57,7 +57,7 @@ function arrowDown(ctx, x, y, col) {
 }
 
 G.hooks.overlay.push((ctx, cx, cy, t) => {
-  const m = G.world.map; if (!m || !G.state || !m.outdoor) return;
+  const m = G.world.map; if (!m || !G.state || !m.outdoor || !G.hudOn('navHints')) return;   // entrance markers are navigation hints (settings)
   const P = G.world.p, ptx = P.x + P.ox / 16, pty = P.y + P.oy / 16;
   for (const g of gatesOf(m)) {
     const sx0 = g.x0 * 16 - cx, sx1 = (g.x1 + 1) * 16 - cx, sy0 = g.y0 * 16 - cy, sy1 = (g.y1 + 1) * 16 - cy;
@@ -108,9 +108,9 @@ function miniMap(m) {
 }
 const COMPASS = ['EAST', 'SOUTH-EAST', 'SOUTH', 'SOUTH-WEST', 'WEST', 'NORTH-WEST', 'NORTH', 'NORTH-EAST'];
 G.hooks.overlay.push((ctx, cx, cy, t) => {
-  const m = G.world.map; if (!m || !m.sea || !G.state) return;
+  const m = G.world.map; if (!m || !m.sea || !G.state || !G.hudOn('minimap')) return;
   const w = 76, h = 51, x = G.W - w - 8, y = 8, P = G.world.p, ptx = P.x + P.ox / 16, pty = P.y + P.oy / 16;
-  ctx.save();
+  ctx.save(); { const hs = G.hudScale(); ctx.translate(G.W - 8, 8); ctx.scale(hs, hs); ctx.translate(-(G.W - 8), -8); ctx.globalAlpha *= G.hudAlpha(); }   // HUD scale and opacity (settings)
   ctx.fillStyle = 'rgba(30,20,50,.28)'; G.kit.rr(ctx, x + 1, y + 2, w + 6, h + 6, 5); ctx.fill();
   ctx.fillStyle = '#fffaf0'; G.kit.rr(ctx, x - 3, y - 3, w + 6, h + 6, 5); ctx.fill(); ctx.strokeStyle = '#ffb648'; ctx.lineWidth = 1.2; ctx.stroke();
   ctx.save(); G.kit.rr(ctx, x, y, w, h, 3); ctx.clip(); ctx.imageSmoothingEnabled = true; ctx.drawImage(miniMap(m), x, y, w, h);

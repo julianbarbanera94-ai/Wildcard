@@ -105,7 +105,8 @@ function panelArt(w, h, kind) {
 G.frame = function (ctx, x, y, w, h, kind) { kit.blit(ctx, panelArt(Math.round(w), Math.round(h), kind === 'dark' ? 'dark' : 'light'), x, y); };
 
 // ---- HP bar ---------------------------------------------------------------
-G.hpColor = r => r > .5 ? '#3fd46a' : r > .2 ? '#ffc43a' : '#ff5a4e';
+// Colour-friendly mode (settings) swaps green/yellow/red for blue/orange/magenta, which stay distinct for colour-blind players.
+G.hpColor = r => G.pref && G.pref('access.colourFriendly') ? (r > .5 ? '#3a8ad8' : r > .2 ? '#f0a030' : '#c03a8a') : r > .5 ? '#3fd46a' : r > .2 ? '#ffc43a' : '#ff5a4e';
 G.hpBar = function (ctx, x, y, w, ratio) {
   ratio = Math.max(0, Math.min(1, ratio || 0));
   kit.rr(ctx, x - 1.2, y - 1.2, w + 2.4, 5.4, 2.7); ctx.fillStyle = '#3d3352'; ctx.fill();
@@ -163,7 +164,8 @@ G.drawTextbox = function (ctx, t) {
   G.frame(ctx, 2, 110, 236, 48, t.style);
   let used = 0;
   t.lines.forEach((l, i) => {
-    G.text(ctx, l.slice(0, Math.max(0, t.shown - used)), 12, 118 + i * 15, dark ? { color: '#fff', shadow: '#0c2a40' } : {});
+    const font = G.textPx && G.textPx() !== 8 ? `800 ${G.textPx()}px ${G.FONT_FAM}` : undefined;   // text size (settings)
+    G.text(ctx, l.slice(0, Math.max(0, t.shown - used)), 12, 118 + i * 15, Object.assign(dark ? { color: '#fff', shadow: '#0c2a40' } : {}, font ? { font } : {}));
     used += l.length;
   });
   if (t.arrow) {
@@ -220,9 +222,9 @@ G.drawSignPlate = function (ctx, text, cx, y, t, style) {
   G.text(ctx, text, cx + (style === 'heal' ? 2 : 0), yy + 1.5, { align: 'center', color: ink, shadow: false, font: f });
 };
 // A small "A: something" chip near the bottom of the screen for whatever the player faces.
-G.drawHint = function (ctx, text, t) {
+G.drawHint = function (ctx, text, t, cx, cy) {   // cx, cy: centre it somewhere else (the settings preview)
   const f = G.FONT_S || G.FONT; ctx.save(); ctx.font = f; const w = Math.ceil(ctx.measureText(text).width) + 22; ctx.restore();
-  const x = Math.round(G.W / 2 - w / 2), y = G.H - 18;
+  const x = Math.round((cx === undefined ? G.W / 2 : cx) - w / 2), y = cy === undefined ? G.H - 18 : cy - 6;
   ctx.fillStyle = 'rgba(30,20,50,.55)'; kit.rr(ctx, x, y, w, 12, 6); ctx.fill();
   ctx.fillStyle = '#4cc95a'; ctx.beginPath(); ctx.arc(x + 7, y + 6, 4.2, 0, 7); ctx.fill();
   G.text(ctx, G.touch ? 'A' : 'Z', x + 7, y + 2.2, { align: 'center', color: '#fff', shadow: false, font: f });

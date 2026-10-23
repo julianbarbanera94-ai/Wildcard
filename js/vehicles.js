@@ -154,7 +154,7 @@ G.hooks.enter = function (x, y, ch) {
   showToast(refusal(id, ch));
   return false;
 };
-G.hooks.speed = function (held) { const id = riding(); return id ? speedOf(id) : (held.b ? 2 : 1); };
+G.hooks.speed = function (held) { const id = riding(); return id ? speedOf(id) : (G.running(held) ? 2 : 1); };   // run: hold B, toggle or always (settings)
 G.hooks.turn = function () { const id = riding(); return id ? V$(id).turn : 5; };
 G.hooks.encRate = function (rate) { const id = riding(); return id ? rate * (V$(id).enc || 0) : rate; };
 

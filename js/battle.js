@@ -130,7 +130,7 @@ function drawFighter(ctx, f, back, bx, by) {
   const dx = bx + f.ox + (64 - sw) / 2, dy = by + f.oy + (64 - sh) - Math.max(0, bob) * 1.6;
   if (f.glow) { ctx.globalCompositeOperation = 'lighter'; K.drawGlow(ctx, '#ffe066', fx, by + 34, 40 + Math.sin(t / 4) * 3, Math.min(1, f.glow / 30) * .8); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = f.alpha; }
   ctx.drawImage(img, dx, dy, sw, sh);
-  if (f.flash > 0) { ctx.globalAlpha = f.alpha * Math.min(1, f.flash / 4); ctx.drawImage(G.tint(G.creatureSprite(f.c.id, back), '#ffffff'), dx, dy, sw, sh); }
+  if (f.flash > 0 && G.flashOK()) { ctx.globalAlpha = f.alpha * Math.min(1, f.flash / 4); ctx.drawImage(G.tint(G.creatureSprite(f.c.id, back), '#ffffff'), dx, dy, sw, sh); }
   ctx.globalAlpha = 1;
 }
 function infoArt(w, h, mine) {
@@ -147,12 +147,15 @@ function infoArt(w, h, mine) {
 function infoBox(ctx, f, x, y, w, mine) {
   const h = mine ? 31 : 26;
   K.blit(ctx, infoArt(w, h, mine), x, y);
-  G.text(ctx, G.name(f.c), x + 6, y + 3, { color: '#3d3352', shadow: 'rgba(160,120,80,.25)' });
-  const lv = 'Lv' + f.c.lvl; ctx.font = G.FONT_S; const lw = ctx.measureText(lv).width + 6;
-  K.pill(ctx, x + w - 5 - lw, y + 3.5, lw, 7, mine ? '#41c7b4' : '#ff8a6a', lv, '900 6px ' + G.FONT_FAM);
-  if (f.c.status) K.pill(ctx, x + 5, y + 13, 17, 7, K.STATUS_COL[f.c.status], G.STATUS_NAME[f.c.status]);
+  if (G.hudOn('namesLevels')) {
+    G.text(ctx, G.name(f.c), x + 6, y + 3, { color: '#3d3352', shadow: 'rgba(160,120,80,.25)' });
+    const lv = 'Lv' + f.c.lvl; ctx.font = G.FONT_S; const lw = ctx.measureText(lv).width + 6;
+    K.pill(ctx, x + w - 5 - lw, y + 3.5, lw, 7, mine ? '#41c7b4' : '#ff8a6a', lv, '900 6px ' + G.FONT_FAM);
+  }
+  if (f.c.status && G.pref('battle.statusIcons')) K.pill(ctx, x + 5, y + 13, 17, 7, K.STATUS_COL[f.c.status], G.STATUS_NAME[f.c.status]);
   K.pill(ctx, x + 24, y + 13, 12, 7, '#ff9f43', 'HP');
-  G.hpBar(ctx, x + 38, y + 14.8, w - 46, f.dispHp / f.c.stats.hp);
+  if (G.hudOn('healthBars')) G.hpBar(ctx, x + 38, y + 14.8, w - 46, f.dispHp / f.c.stats.hp);
+  else if (!mine) G.text(ctx, Math.ceil(100 * f.dispHp / f.c.stats.hp) + '%', x + w - 6, y + 13.5, { align: 'right', color: '#3d3352', shadow: false, font: '900 6.5px ' + G.FONT_FAM });   // health bars off: still show how much is left
   if (mine) {
     G.text(ctx, `${Math.ceil(f.dispHp)}/${f.c.stats.hp}`, x + w - 6, y + 20.5, { align: 'right', color: '#3d3352', shadow: false, font: '900 6.5px ' + G.FONT_FAM });
     const r = Math.max(0, Math.min(1, f.dispExp === null ? expRatio(f.c) : f.dispExp));
@@ -186,6 +189,7 @@ const PSTYLE = {
 };
 function burst(type, x, y, n, o) {
   o = o || {}; const st = PSTYLE[type] || PSTYLE[G.TYPE_COL[type] ? 'Normal' : 'Sparkle'];
+  if (G.pref('battle.reduceAnims') || !G.motionOK()) n = Math.ceil(n / 3);   // fewer particles (settings)
   for (let i = 0; i < n; i++) {
     const a = o.up ? -Math.PI / 2 + (Math.random() - .5) * 2 : Math.random() * 6.28, sp = (o.speed || 1.6) * (.4 + Math.random());
     b.parts.push({ x: x + (Math.random() - .5) * (o.spread || 6), y: y + (Math.random() - .5) * (o.spread || 6), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: st.g, life: 0, max: (o.life || 30) * (.6 + Math.random() * .6), col: st.cols[i % 3], shape: st.shape, glow: st.glow, r: (o.size || 3) * (.7 + Math.random() * .6), rot: Math.random() * 6, vr: (Math.random() - .5) * .3 });
@@ -213,6 +217,7 @@ function stepVisuals() {
   if (!b) return;
   if (b.parts) for (let i = b.parts.length - 1; i >= 0; i--) { const p = b.parts[i]; p.x += p.vx; p.y += p.vy; p.vy += p.g; p.vx *= .96; p.rot += p.vr; if (++p.life >= p.max) b.parts.splice(i, 1); }
   if (b.shake > 0) b.shake--;
+  if (b.floats) for (let i = b.floats.length - 1; i >= 0; i--) if (++b.floats[i].t > 50) b.floats.splice(i, 1);
   for (const f of [b.me, b.foe]) if (f) {
     if (f.flash > 0) f.flash--;
     if (f.glow > 0) { f.glow--; if (f.glow % 5 === 0 && !f.hidden) { const [cx, cy] = center(f); burst('Sparkle', cx + (Math.random() - .5) * 40, cy + 14, 1, { up: true, speed: .8, life: 40, spread: 4 }); } }
@@ -236,7 +241,7 @@ function draw(ctx) {
   const cave = b.bg === 'cave';
   if (!b.parts) b.parts = [];
   ctx.save();
-  if (b.shake > 0) { const s = b.shake * .5; ctx.translate(Math.sin(b.shake * 2.1) * s, Math.cos(b.shake * 1.7) * s * .5); }
+  if (b.shake > 0 && G.shakeOK()) { const s = b.shake * .5; ctx.translate(Math.sin(b.shake * 2.1) * s, Math.cos(b.shake * 1.7) * s * .5); }
   drawBackdrop(ctx, cave);
   drawFighter(ctx, b.foe, false, 150, 10);
   drawFighter(ctx, b.me, true, 30, 42);
@@ -249,6 +254,7 @@ function draw(ctx) {
   if (b.orb) drawOrb(ctx, b.orb.x, b.orb.y, b.orb.rot, b.orb.s, b.orb.style);
   if (b.fx) drawFx(ctx, b.fx);
   for (const p of b.parts) drawPart(ctx, p);
+  if (b.floats && G.pref('battle.damageNumbers')) for (const d of b.floats) { const k = d.t / 50; ctx.globalAlpha = Math.max(0, 1 - k * k); G.text(ctx, d.text, d.x, d.y - (G.motionOK() ? k * 14 : 0), { align: 'center', font: '900 9px ' + G.FONT_FAM, color: d.col, shadow: '#3d2a52' }); ctx.globalAlpha = 1; }
   ctx.restore();
   // info boxes slide in when first shown
   b.fT = b.showFoe ? (b.fT || 0) + 1 : 0; b.mT = b.showMe ? (b.mT || 0) + 1 : 0;
@@ -276,7 +282,7 @@ function drawFx(ctx, fx) {
   }
   ctx.restore();
 }
-const scene = { update: stepVisuals, draw };
+const scene = { update: stepVisuals, draw, battle: true };   // battle: true lets Fast battle speed run two ticks a frame (engine)
 
 // ---- Animations -----------------------------------------------------------
 async function slide(o, key, from, to, frames) { for (let i = 0; i <= frames; i++) { const k = i / frames, e = 1 - Math.pow(1 - k, 3); o[key] = from + (to - from) * e; await G.nextFrame(); } }
@@ -357,9 +363,11 @@ async function useMove(att, def, move) {
     if (r.eff === 0) { await msg(`It doesn't affect ${nm(def)}...`); return; }
     await animAttack(att, def, move, r.eff);
     if (G.cheat('god') && G.state.party.includes(def.c)) r.dmg = 0;
-    def.c.hp = Math.max(0, def.c.hp - r.dmg); await drain(def);
+    def.c.hp = Math.max(0, def.c.hp - r.dmg);
+    if (r.dmg > 0) { const [fx, fy] = center(def); (b.floats = b.floats || []).push({ x: fx, y: fy - 18, text: '-' + r.dmg, t: 0, col: r.eff > 1 ? '#ffd23a' : '#ffffff' }); }
+    await drain(def);
     if (crit) await msg('A critical hit!');
-    if (r.eff > 1) await msg("It's super effective!"); else if (r.eff < 1) await msg("It's not very effective...");
+    if (G.pref('battle.effectMsgs')) { if (r.eff > 1) await msg("It's super effective!"); else if (r.eff < 1) await msg("It's not very effective..."); }
     if (move.recoil) { att.c.hp = Math.max(0, att.c.hp - Math.max(1, Math.floor(r.dmg / 4))); await drain(att); await msg(`${nm(att)} is hit with recoil!`); }
     if (def.c.hp > 0 && move.status && rnd(100) < move.chance) await inflict(def, move.status);
   } else {
@@ -443,17 +451,27 @@ async function sendOutFoe(c) {
 
 // ---- Player menus ---------------------------------------------------------
 const prompt = lines => { G.ui.text = { lines, shown: 999, arrow: false, style: 'dark' }; };
+// Battle memory (settings): the last action (FIGHT/BAG/PARTY/RUN) is kept in the save (S.battleMem), and each creature keeps
+// its own last move (c.lastMove), so both survive between turns, switches, battles and reloads. They only preselect the
+// cursor; nothing is chosen for you. A remembered move that has no PP or was forgotten falls back to the first usable move.
+G.battleMemory = {
+  action: () => { const M = G.state.battleMem; return G.pref('battle.rememberAction') && M && M.action >= 0 && M.action < 4 ? M.action : 0; },
+  move: c => { const mvs = c.moves; if (!G.pref('battle.rememberMove')) return 0; const i = mvs.findIndex(m => m.id === c.lastMove && m.pp > 0); return i >= 0 ? i : Math.max(0, mvs.findIndex(m => m.pp > 0)); },
+  // single battles: the target is the foe in front of you; remembered by species, and anything else falls back to that foe
+  target: () => { const M = G.state.battleMem; return b && b.foe && b.foe.c.hp > 0 && M && M.target === b.foe.c.id ? b.foe : b && b.foe; },
+};
 async function chooseAction() {
-  let last = 0;
+  const M = G.state.battleMem = G.state.battleMem || {};
+  let last = G.battleMemory.action();
   for (;;) {
     prompt(['What will', G.name(b.me.c) + ' do?']);
     const ch = await G.choose(['FIGHT', 'BAG', 'PARTY', 'RUN'], { cols: 2, right: 238, y: 112, rowH: 15, style: 'dark', cancel: false, index: last, minW: 34 });
-    last = ch;
+    last = ch; M.action = ch;
     if (ch === 0) {
       const mvs = b.me.c.moves;
       if (!mvs.some(m => m.pp > 0)) { G.ui.text = null; return { t: 'move', move: STRUGGLE }; }
       const i = await G.choose(mvs.map(m => m.id), {
-        cols: 2, x: 2, y: 111, rowH: 16, style: 'dark', cancel: true, minW: 56,
+        cols: 2, x: 2, y: 111, rowH: 16, style: 'dark', cancel: true, minW: 56, index: G.battleMemory.move(b.me.c),
         extra(ctx, i) {
           const m = mvs[i], mv = G.MOVES[m.id];
           G.frame(ctx, 160, 110, 78, 48, 'dark');
@@ -464,12 +482,14 @@ async function chooseAction() {
       });
       if (i < 0) continue;
       if (mvs[i].pp <= 0) { await msg('There\'s no PP left for this move!', 0); continue; }
+      b.me.c.lastMove = mvs[i].id; M.target = b.foe.c.id;
       return { t: 'move', move: G.MOVES[mvs[i].id] };
     }
     if (ch === 1) {
       G.ui.text = null;
       const r = await G.bagScreen('battle');
       if (!r) continue;
+      if (G.pref('battle.confirmValuable') && G.isValuable(r.item)) { await G.say(`Use your ${r.item.toUpperCase()}? It is valuable.`, { auto: 1, style: 'dark' }); const ok = await G.yesNo({ style: 'dark' }); G.closeText(); if (!ok) continue; }
       if (G.ITEMS[r.item].kind === 'orb') {
         if (!b.wild) { await msg("The trainer blocked the ORB!\nDon't be a thief!"); continue; }
         return { t: 'orb', item: r.item };
@@ -628,8 +648,10 @@ G.startBattle = async function (opts) {
     b.foe.hidden = false; b.showFoe = true; await slide(b.foe, 'ox', 110, 0, 24);
     await msg(`A wild ${G.name(b.foe.c)} appeared!`, 40);
   } else {
-    b.tFoe.ox = 110; await slide(b.tFoe, 'ox', 110, 0, 24);
-    await msg(`${opts.trainer.cls} ${opts.trainer.name}\nwould like to battle!`, 50);
+    const seen = G.state.seenIntro = G.state.seenIntro || {}, key = opts.trainer.cls + ':' + opts.trainer.name, skip = G.pref('battle.skipSeenIntros') && seen[key];
+    b.tFoe.ox = 110; await slide(b.tFoe, 'ox', 110, 0, skip ? 8 : 24);
+    if (!skip) await msg(`${opts.trainer.cls} ${opts.trainer.name}\nwould like to battle!`, 50);
+    seen[key] = true;
     await msg(`${opts.trainer.name} sent out ${G.name(b.foe.c)}!`, 24);
     await slide(b.tFoe, 'ox', 0, 110, 18); b.tFoe = null;
     b.showFoe = true; mark(b.foe.c.id, Math.max(1, G.state.dex[b.foe.c.id] || 0)); await popIn(b.foe);
@@ -686,7 +708,7 @@ G.runEvolutions = async function () {
     G.ui.style = 'dark'; G.audio.music(null);
     await G.fadeTo(0, 14, '#000');
     await msg(`What? ${G.name(c)} is evolving!`, 40);
-    for (let i = 0; i < 60; i++) { if (i % 6 === 0) { show = show === from ? to : from; flash = i > 24 ? 1 : 0; } else if (i % 6 === 3) flash = 0; await G.nextFrame(); }
+    for (let i = 0; i < 60; i++) { if (i % 6 === 0) { show = show === from ? to : from; flash = i > 24 && G.flashOK() ? 1 : 0; } else if (i % 6 === 3) flash = 0; await G.nextFrame(); }
     show = to; flash = 0; c.id = to; c.stats = G.calcStats(c);
     G.audio.sfx('levelup'); G.state.dex[to] = 2;
     c.hp = Math.min(c.stats.hp, c.hp + 5);

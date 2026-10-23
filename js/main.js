@@ -144,28 +144,53 @@ addEventListener('DOMContentLoaded', () => {
   addEventListener('pointerdown', e => { if (e.pointerType === 'touch') G.touch = true; }, { capture: true });
   // The orb button shows the real Terra Orb art.
   if (G.orbImage) { const ob = document.querySelector('#pad .orb'); if (ob) try { ob.style.background = `url(${G.orbImage('terra').toDataURL()}) center / contain no-repeat`; } catch (e) { /* keep the CSS fallback */ } }
-  // Thumbstick: the knob follows the finger; the strongest axis past a small dead zone is held as a direction.
-  const stick = document.getElementById('stick');
+  // Thumbstick: the knob follows the finger; the strongest axis past a dead zone is held as a direction.
+  // Settings (js/settings.js): sensitivity (dead zone), fixed or floating (the ring jumps to where you touch), size,
+  // position, button size and opacity, left-handed layout and haptics. G.applyControls() re-applies them live.
+  const stick = document.getElementById('stick'), pad = document.getElementById('pad'), ab = pad && pad.querySelector('.ab');
+  let home = [0, 0];   // the stick's resting offset from its layout position (from the position settings)
+  G.applyControls = function () {
+    if (!stick || !pad) return;
+    const P = G.pref, left = P('controls.layout') === 'left', sx = P('controls.stickX') === 'inward' ? 26 : 0, sy = { low: 22, middle: 0, high: -34 }[P('controls.stickY')];
+    pad.style.flexDirection = left ? 'row-reverse' : '';
+    home = [left ? -sx : sx, sy];
+    stick.style.scale = P('controls.stickSize') / 100; stick.style.translate = `${home[0]}px ${home[1]}px`;
+    if (ab) { ab.style.scale = P('controls.buttonSize') / 100; ab.style.opacity = P('controls.buttonOpacity') / 100; }
+  };
   if (stick) {
-    const knob = stick.querySelector('.knob'); let held = null, id = null;
-    const set = k => { if (k === held) return; if (held) G.release(held); held = k; if (k) G.press(k); };
+    const knob = stick.querySelector('.knob'); let held = null, id = null, origin = null;
+    const set = k => { if (k === held) return; if (held) G.release(held); held = k; if (k) { G.press(k); G.haptic(4); } };
+    const dead = () => ({ low: 22, medium: 14, high: 7 }[G.pref('controls.sensitivity')]);
     const move = e => {
-      const r = stick.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
-      const max = r.width / 2 - 20, d = Math.hypot(dx, dy), k = Math.min(1, max / (d || 1));
-      knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
-      set(d < 14 ? null : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+      const r = stick.getBoundingClientRect(), cx = origin ? origin[0] : r.left + r.width / 2, cy = origin ? origin[1] : r.top + r.height / 2, dx = e.clientX - cx, dy = e.clientY - cy;
+      const max = r.width / 2 - 20, d = Math.hypot(dx, dy), k = Math.min(1, max / (d || 1)), sc = G.pref('controls.stickSize') / 100;
+      knob.style.transform = `translate(${dx * k / sc}px, ${dy * k / sc}px)`;
+      set(d < dead() ? null : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
     };
-    const end = e => { if (e.pointerId !== id) return; id = null; stick.classList.remove('on'); knob.style.transform = ''; set(null); };
-    stick.addEventListener('pointerdown', e => { e.preventDefault(); id = e.pointerId; stick.setPointerCapture(id); stick.classList.add('on'); G.audio.init(); move(e); });
+    const end = e => { if (e.pointerId !== id) return; id = null; origin = null; stick.classList.remove('on'); knob.style.transform = ''; stick.style.translate = `${home[0]}px ${home[1]}px`; set(null); };
+    const begin = (e, float) => {
+      e.preventDefault(); id = e.pointerId; stick.setPointerCapture(id); stick.classList.add('on'); G.audio.init();
+      if (float) {   // floating: move the ring so its centre is under the finger
+        const r = stick.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+        stick.style.translate = `${home[0] + dx}px ${home[1] + dy}px`; origin = [e.clientX, e.clientY];
+      }
+      move(e);
+    };
+    stick.addEventListener('pointerdown', e => begin(e, G.pref('controls.joystick') === 'floating'));
+    // floating also starts anywhere on the stick's half of the control area
+    if (pad) pad.addEventListener('pointerdown', e => { if (G.pref('controls.joystick') !== 'floating' || e.target.closest('button') || stick.contains(e.target)) return;
+      const pr = pad.getBoundingClientRect(), leftHalf = e.clientX < pr.left + pr.width / 2, stickLeft = G.pref('controls.layout') !== 'left';
+      if (leftHalf === stickLeft) begin(e, true); });
     stick.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => stick.addEventListener(ev, end));
   }
   document.querySelectorAll('[data-k]').forEach(b => {
     const k = b.dataset.k;
-    const down = e => { e.preventDefault(); b.classList.add('on'); G.press(k); };
+    const down = e => { e.preventDefault(); b.classList.add('on'); G.press(k); G.haptic(8); };
     const up = e => { e.preventDefault(); b.classList.remove('on'); G.release(k); };
     b.addEventListener('pointerdown', down); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, up));
     b.addEventListener('pointerup', () => G.audio.init());
   });
+  G.applySettings();
 });
 })();

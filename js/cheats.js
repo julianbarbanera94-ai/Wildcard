@@ -112,7 +112,7 @@ async function testMenu() {
   const S = G.state, say = G.worldApi.says;
   let idx = 0;
   for (;;) {
-    const items = ['UNLOCK EVERYTHING', ...OPTIONS.map(([k, n]) => `${n}: ${S.cheats[k] ? 'ON' : 'OFF'}`), 'ADD CREATURE', 'HEAL TEAM', 'TEST MODE OFF', 'BACK'];
+    const items = ['UNLOCK EVERYTHING', ...OPTIONS.map(([k, n]) => `${n}: ${S.cheats[k] ? 'ON' : 'OFF'}`), 'ADD CREATURE', 'HEAL TEAM', 'TELEPORT', 'WILD BATTLE', 'TEST MODE OFF', 'BACK'];
     const c = await G.choose(items, { x: 4, y: 4, rowH: 12, index: idx, minW: 100 }); if (c < 0 || c === items.length - 1) break; idx = c;
     if (c === 0) { unlockEverything(); S.options = S.options || {}; for (const [k] of OPTIONS) S.cheats[k] = true; G.audio.sfx('levelup'); await say(['Everything is unlocked!', 'The Dex is complete, all three shards are placed and the Great Lantern is lit (the Hollow Gate is open), every item and material is at 99, and all the infinite options are on.', 'Your homestead owns all its land, and every vehicle is yours.', 'Every quest is complete and every region knows you as a HERO.']); }
     else if (c <= OPTIONS.length) { const k = OPTIONS[c - 1][0]; S.cheats[k] = !S.cheats[k]; G.audio.sfx('select'); }
@@ -124,23 +124,26 @@ async function testMenu() {
       await say(`${G.name(cr)} Lv${cr.lvl} was added to your ${S.party.includes(cr) ? 'party' : 'PC'}!`);
     }
     else if (c === OPTIONS.length + 2) { S.party.forEach(G.healFull); G.audio.sfx('heal'); await say('Your team is fully healed!'); }
-    else if (c === OPTIONS.length + 3) { S.cheats.on = false; await say('Test Mode is off. The settings stay saved; turn it back on from SETTINGS (no password needed again).'); break; }
+    else if (c === OPTIONS.length + 3) {   // teleport to any place on the world map
+      const P = G.WORLD.places, i = await G.choose(P.map(p => G.worldShort(p.id)), { x: 4, y: 4, rowH: 9, cols: 3, minW: 60 }); if (i < 0) continue;
+      const m = G.MAPS[P[i].id], L = m.landing || m.dock || { x: m.w >> 1, y: m.h >> 1 }; G.closeText();
+      await G.fadeTo(1, 8, '#000'); G.loadMap(m.id); G.placePlayer(L.x, L.y, 0); G.scene = G.world.scene; await G.fadeTo(0, 8); break;
+    }
+    else if (c === OPTIONS.length + 4) {   // a wild battle against a random creature near your level
+      const ids = Object.keys(G.SPECIES).map(Number).filter(n => n !== 25), lv = Math.max(...S.party.map(c => c.lvl), 5);
+      G.closeText(); await G.storyBattle({ wild: G.makeCreature(ids[G.rand(ids.length)], lv) }); break;
+    }
+    else if (c === OPTIONS.length + 5) { S.cheats.on = false; await say('Test Mode is off. Turn it back on from SETTINGS > SYSTEM > DEVELOPER (no password needed again).'); break; }
   }
   G.closeText();
 }
 
-G.settingsMenu = async function () {
-  const S = G.state; let idx = 0;
-  for (;;) {
-    const t = S.cheats && S.cheats.on ? 'TEST MODE: ON' : 'TEST MODE';
-    const c = await G.choose([G.audio.muted ? 'SOUND: OFF' : 'SOUND: ON', t, 'BACK'], { right: 236, y: 4, index: idx, minW: 70 }); if (c < 0 || c === 2) break; idx = c;
-    if (c === 0) G.audio.toggle();
-    else {
-      if (S.cheats && S.cheats.unlocked) { S.cheats.on = true; await testMenu(); continue; }
-      const pw = await G.textEntry('Enter password', 20, true); if (pw === null) continue;
-      if (pw === PASSWORD) { S.cheats = Object.assign({ money: false, items: false, pp: false, god: false, catch: false, fly: false }, S.cheats, { on: true, unlocked: true }); G.audio.sfx('levelup'); await G.worldApi.says('Test Mode unlocked.'); await testMenu(); }
-      else { G.audio.sfx('bump'); await G.worldApi.says('Wrong password.'); }
-    }
-  }
+// The Developer menu (SETTINGS > SYSTEM > DEVELOPER, hidden until revealed): Test Mode behind its password.
+G.devMenu = async function () {
+  const S = G.state;
+  if (S.cheats && S.cheats.unlocked) { S.cheats.on = true; await testMenu(); return; }
+  const pw = await G.textEntry('Enter password', 20, true); if (pw === null) return;
+  if (pw === PASSWORD) { S.cheats = Object.assign({ money: false, items: false, pp: false, god: false, catch: false, fly: false }, S.cheats, { on: true, unlocked: true }); G.audio.sfx('levelup'); await G.worldApi.says('Test Mode unlocked.'); await testMenu(); }
+  else { G.audio.sfx('bump'); await G.worldApi.says('Wrong password.'); }
 };
 })();

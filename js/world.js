@@ -325,8 +325,9 @@ async function afterBattle(r) {
 }
 async function runBattle(opts) { const r = await G.startBattle(opts); await afterBattle(r); return r; }
 async function trainerBattle(n) {
-  const t = n.trainer;
-  await says(t.pre);
+  const t = n.trainer, seen = G.state.seenIntro = G.state.seenIntro || {};
+  if (!(G.pref('battle.skipSeenIntros') && seen['pre:' + t.id])) await says(t.pre);   // a rematch after a loss skips the speech you've heard
+  seen['pre:' + t.id] = true;
   const r = await runBattle({ trainer: { name: t.name, cls: t.cls, style: t.style, win: t.win, prize: t.prize, team: (G.scaledTeam ? G.scaledTeam(t.team, world.map) : t.team).map(([id, l]) => G.makeCreature(id, l)) }, bg: world.map.bg });
   if (r === 'win') {
     flags()[t.id] = true; if (G.onTrainerWin) G.onTrainerWin(t, world.mapId);
@@ -400,6 +401,7 @@ function update() {
     if (inp.pressed.start) { run(async () => { G.audio.sfx('select'); await G.startMenu(); }); return; }
     if (inp.pressed.a) { run(interact); return; }
     if (inp.pressed.orb) { run(throwOrbAt); return; }
+    if (inp.pressed.b && G.pref('controls.run') === 'toggle') { G.runToggle(); G.audio.sfx('select'); }   // tap B to switch running on and off (settings)
     const d = heldDir();
     if (d >= 0) {
       if (p.dir !== d) { p.dir = d; p.turn = hooks.turn ? hooks.turn() : 5; }
@@ -469,13 +471,13 @@ function draw(ctx) {
     const prog = Math.max(Math.abs(p.ox), Math.abs(p.oy)), fx = fol.x * 16 + (fol.tx - fol.x) * prog - cx, fy = fol.y * 16 + (fol.ty - fol.y) * prog - cy;
     const st = G.SPECIES[lead.id].look.stage || 1, size = 18 + st * 3, moving = prog > 0 && prog < 16;
     const hop = moving ? Math.abs(Math.sin(prog / 16 * Math.PI * 2)) * 2 : (Math.sin(t / 22) > .85 ? 1 : 0);
-    const run = !!(G.input.held.b && !(G.vehicles && G.vehicles.riding && G.vehicles.riding())), fdir = fol.dir === undefined ? DOWN : fol.dir;
+    const run = !!(G.running(G.input.held) && !(G.vehicles && G.vehicles.riding && G.vehicles.riding())), fdir = fol.dir === undefined ? DOWN : fol.dir;
     items.push({ y: fy + cy + 16.25 - .5, draw: c => { G.drawCreatureMini(c, lead.id, fx, fy, size, t, moving, hop, { run, dir: fdir }); grassAt(c, fx, fy, Math.round((fx + cx) / 16), Math.round((fy + cy) / 16), t); } });
   }
   for (const r of m.roamers || []) {
     const x = r.x * 16 + r.ox - cx, y = r.y * 16 + r.oy - cy; if (x < -24 || x > G.W + 8 || y < -24 || y > G.H + 8) continue;
     const size = 15 + (G.SPECIES[r.c.id].look.stage || 1) * 3, pr = Math.abs(r.ox) + Math.abs(r.oy), hop = r.moving ? Math.abs(Math.sin(pr / 16 * Math.PI * 2)) * 2.5 : 0;
-    items.push({ y: r.y * 16 + r.oy + 16.15, draw: c => { G.drawCreatureMini(c, r.c.id, x, y, size, t + r.x * 13, r.moving, hop, { run: r.run, dir: r.dir }); grassAt(c, x, y, Math.round((r.x * 16 + r.ox) / 16), Math.round((r.y * 16 + r.oy) / 16), t); if (r.alert > 0) G.drawBubble(c, x, y, t); } });
+    items.push({ y: r.y * 16 + r.oy + 16.15, draw: c => { G.drawCreatureMini(c, r.c.id, x, y, size, t + r.x * 13, r.moving, hop, { run: r.run, dir: r.dir }); grassAt(c, x, y, Math.round((r.x * 16 + r.ox) / 16), Math.round((r.y * 16 + r.oy) / 16), t); if (r.alert > 0 && G.hudOn('wildIndicators')) G.drawBubble(c, x, y, t); } });
   }
   if (world.extraDraw) world.extraDraw(items, cx, cy, t);
   for (const h of hooks.draw) h(items, cx, cy, t);
@@ -492,10 +494,10 @@ function draw(ctx) {
    const x = L.x * 16 + 8 - cx, y = L.y * 16 - cy; if (x > -80 && x < G.W + 80 && y > -20 && y < G.H + 20) G.drawSignPlate(ctx, L.text, x, y, t, L.style); }
   // Context hint for whatever the player is facing.
   if (!world.busy && !p.moving && G.scene === world.scene && !G.ui.layers.length && !G.ui.text) {
-    const hint = promptFor(p.x + VEC[p.dir][0], p.y + VEC[p.dir][1]); if (hint) G.drawHint(ctx, hint, t);
+    const hint = G.hudOn('prompts') && promptFor(p.x + VEC[p.dir][0], p.y + VEC[p.dir][1]); if (hint) G.hud(ctx, G.W / 2, G.H - 12, () => G.drawHint(ctx, hint, t));
   }
   if (world.bubble) { const n = world.bubble.n; G.drawBubble(ctx, n.x * 16 + n.ox - cx, n.y * 16 + n.oy - cy, t); }
-  if (world.banner) G.drawBanner(ctx, world.banner.text, world.banner.t);
+  if (world.banner && G.hudOn('navHints')) G.hud(ctx, 0, 0, () => G.drawBanner(ctx, world.banner.text, world.banner.t));
 }
 world.scene = { update, draw, wide: true };
 // Species packs declare where they live: habitat [[mapId, minLv, maxLv, weight], ...]. Merge into encounter tables.

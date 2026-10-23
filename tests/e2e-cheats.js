@@ -21,10 +21,16 @@ const OUT = process.env.OUT || '/tmp';
   for (let i = 0; i < 40 && await ev(() => !G.state || G.world.busy); i++) await key('z', 50);
   await idle();
   assert(!(await ev(() => G.cheat('god') || !!G.state.cheats)), 'test mode starts off');
-  const openSettings = async () => { await key('Enter'); await until(() => G.ui.layers.length > 0, 3000, 'start menu'); for (let i = 0; i < 9; i++) await key('ArrowDown'); await key('z'); await until(() => G.ui.layers.length > 0, 3000, 'settings'); };
+  const openSettings = async () => { await key('Enter'); await until(() => G.ui.layers.length > 0, 3000, 'start menu'); for (let i = 0; i < 9; i++) await key('ArrowDown'); await key('z'); await until(() => G.ui.layers.length > 0, 3000, 'settings'); }
+  // Test Mode lives in SETTINGS > SYSTEM > DEVELOPER, revealed by pressing A five times on the Version row
+  const openDev = async () => {
+    await openSettings(); for (let i = 0; i < 5; i++) await key('ArrowDown'); await key('ArrowRight'); for (let i = 0; i < 6; i++) await key('ArrowDown');
+    if (!(await ev(() => G.pref('system.dev')))) { for (let i = 0; i < 5; i++) await key('z', 150); for (let i = 0; i < 6 && await ev(() => !!G.ui.text); i++) await key('z', 150); }
+    assert(await ev(() => G.pref('system.dev')), 'developer menu revealed'); await key('ArrowDown'); await key('z');
+  };;
 
   // wrong password via keyboard typing
-  await openSettings(); await shot('settings'); await key('ArrowDown'); await key('z');
+  await openDev(); await shot('settings');
   await until(() => !!G.keyHook, 3000, 'text entry'); await typeKeys('nope'); await shot('password-entry'); await key('Enter');
   await advance(() => G.ui.layers.length > 0 && !G.keyHook && !G.ui.text, 8000);
   assert(!(await ev(() => G.state.cheats && G.state.cheats.unlocked)), 'wrong password rejected'); step('a wrong password is rejected');
@@ -32,7 +38,7 @@ const OUT = process.env.OUT || '/tmp';
   await idle();
 
   // right password with the on-screen keyboard (arrow keys + A): J = shift page, then walk the grid
-  await openSettings(); await key('ArrowDown'); await key('z'); await until(() => !!G.keyHook, 3000, 'text entry');
+  await openDev(); await until(() => !!G.keyHook, 3000, 'text entry');
   await ev(() => { window.__hook = G.keyHook; G.keyHook = null; });    // force the on-screen path; the keyboard path was covered above
   const pick = async ch => { const c = await ev(ch => { const P = [['abcdefghij', 'klmnopqrst', 'uvwxyz0123', '456789-_.@'], ['ABCDEFGHIJ', 'KLMNOPQRST', 'UVWXYZ0123', '456789-_.@']]; for (const [pi, pg] of P.entries()) for (const [r, line] of pg.entries()) { const i = line.indexOf(ch); if (i >= 0) return [pi, r, i]; } }, ch); return c; };
   const probe = () => ev(() => G.textEntryProbe());
