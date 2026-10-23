@@ -150,7 +150,7 @@ sp(12, 'Voltick', ['Electric'], [35, 45, 35, 50, 40, 80], 190, 55, {
   learn: [[1, 'Tackle'], [1, 'Thunder Shock'], [4, 'Growl'], [9, 'Quick Attack'], [14, 'Thunder Wave'], [19, 'Bite']]
 });
 sp(13, 'Voltaro', ['Electric'], [60, 70, 55, 95, 70, 100], 75, 160, {
-  look: { stage: 2, form: 'tall', feat: ['ears', 'bolt', 'legs', 'arms'] }, desc: 'It stores enough charge to light a village.',
+  look: { stage: 2, form: 'tall', feat: ['ears', 'bolt', 'legs', 'arms'] }, desc: 'A crackling fox. Its spiky tail stores enough charge to light a village.',
   learn: [[1, 'Thunder Shock'], [1, 'Quick Attack'], [1, 'Thunder Wave'], [26, 'Thunderbolt'], [30, 'Slam']]
 });
 sp(14, 'Pebblit', ['Rock'], [40, 70, 100, 30, 40, 20], 255, 60, {
@@ -158,7 +158,7 @@ sp(14, 'Pebblit', ['Rock'], [40, 70, 100, 30, 40, 20], 255, 60, {
   learn: [[1, 'Tackle'], [1, 'Harden'], [6, 'Rock Throw'], [11, 'Mud Shot'], [17, 'Slam']]
 });
 sp(15, 'Boulderon', ['Rock', 'Ground'], [70, 105, 130, 45, 60, 35], 120, 175, {
-  look: { stage: 3, form: 'wide', feat: ['spikes', 'legs', 'arms', 'horns'] }, desc: 'Its steps cause tremors for miles.',
+  look: { stage: 3, form: 'wide', feat: ['spikes', 'legs', 'arms', 'horns'] }, desc: 'A hulking boulder golem. Its steps cause tremors for miles.',
   learn: [[1, 'Tackle'], [1, 'Rock Throw'], [1, 'Mud Shot'], [28, 'Rock Slide'], [34, 'Quake']]
 });
 sp(16, 'Wingly', ['Flying'], [40, 50, 40, 35, 40, 70], 255, 52, {
