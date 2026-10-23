@@ -91,11 +91,19 @@ Five side stories, each with a choice that changes the world afterwards:
 - **Duel at Dawn** (Rook): three battles in three towns. Win them all and Rook moves to your homestead for daily sparring.
 - **The Unusual Footprints** (Researcher Fenna, Lanternrest): follow glowing prints to a Lemurmur in Mirewood. Watch it, befriend it or battle it.
 
+Six more (Phase 8), eleven side stories in all:
+- **Who Took the Tomatoes** (Dilla, Lanternrest): three clues lead to a hungry Fluffur family. Build a scarecrow, or give them a patch of their own (one joins you).
+- **Lantern Night Lights** (Pim, Lanternrest): bring 3 Glowcap, 3 Honey and 3 Wool from across Aurelis, and paper lanterns light the village.
+- **Bridge Repairs** (Tobin, Stonebridge): donate 12 Plank and 8 Brick, or pay $4,000. The old bridge gets a bench and lantern.
+- **The Cobalt Cup** (Referee Sparks, Cobalt City): three tournament rounds with one team, healed between rounds. Faint and you start over.
+- **Lost Little Pilfet** (Jory, Sandsreach): ask around, find the runaway in the Badlands, then return it or keep it.
+- **A Salve for the Hermit** (Whispering Woods): bring her a Herb Salve from the forge.
+
 The journal records what you chose for each one.
 
 ## Roadmap
 
-Phases 1 to 8 are the story and quest work (8 is more optional quests). **Phase 9** is queued: a full Settings, Controls and Player Preferences upgrade. See `docs/PHASE9_SETTINGS.md`.
+Phases 1 to 8 are the story and quest work (8 is more optional quests, done). **Phase 9** is queued: a full Settings, Controls and Player Preferences upgrade. See `docs/PHASE9_SETTINGS.md`.
 
 ## Journal, quests and reputation
 
@@ -230,6 +238,7 @@ node tests/e2e-story1.js                        # Prologue and Chapter 1: Tam, A
 node tests/e2e-threads.js                       # the five optional quests, both sides of the choices, deadlines
 node tests/e2e-story2.js                        # Chapters 2-4: guardian shard, lighthouse, Tam, Tide Stone, drowned shrine, boats
 node tests/e2e-story3.js                        # Chapters 5-8, finale (BALANCE), epilogue, Leader rematches
+node tests/e2e-threads2.js                      # six more optional quests (Phase 8)
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles
