@@ -1,6 +1,6 @@
 # Painted creature art
 
-Species can use painted art from a reference sheet instead of the generated sprite (`js/sprites.js`). Done so far: #1 Embrit, #2 Emberon, #3 Infernox, from `docs/reference/creatures_001-003_views.png` (front and back views).
+Species can use painted art from a reference sheet instead of the generated sprite (`js/sprites.js`). Done so far: #1 Embrit, #2 Emberon, #3 Infernox, from the 3D-rendered sheet `docs/reference/creatures_001-003_3d.png` (front and back views; `tools/creatures-001-003.sh` re-cuts them). `creatures_001-003_views.png` is the earlier flat illustrated sheet, kept for reference.
 
 ## How it works
 - `assets/creatures/NNN-front.png` and `NNN-back.png` are transparent cut-outs (the back is optional; without it the front is mirrored).
@@ -10,8 +10,9 @@ Species can use painted art from a reference sheet instead of the generated spri
 ## Adding or replacing a creature from a reference
 1. Put the reference sheet in `docs/reference/`. Use a sheet with separate front and back views and clear space around each one.
 2. Cut each view out (box = the creature's cell, seed = a point on its body):
-   `python3 tools/extract-creature.py SHEET X0 Y0 X1 Y1 assets/creatures/NNN-front.png --seed X,Y`
-   The tool floods away the paper colour, keeps only the shapes connected to the creature (plus embers close to it) and un-blends edge pixels so there is no halo.
+   - Rendered/3D sheets (dark backdrop, pedestals, glow): `python3 tools/extract-creature-ai.py SHEET X0 Y0 X1 Y1 assets/creatures/NNN-front.png --seed X,Y [--mask badge box] [--model u2net|isnet-general-use]` (needs `pip install "rembg[cpu]" scipy`). An AI matte drops the backdrop and pedestal; masks clear titles and badges. If a head or flames come out see-through, try the other model for that view.
+   - Flat paper-coloured sheets: `python3 tools/extract-creature.py ...` (same arguments) floods away the paper colour and un-blends the edges.
+   Both keep only the shapes connected to the creature (plus embers close to it).
 3. `python3 tools/build-creature-images.py`, then look at the creature in a battle (front = foe side, back = your side) on a dark and a light background.
 
 ## QA checklist
