@@ -117,11 +117,11 @@ sp(4, 'Splashling', ['Water'], [48, 48, 60, 50, 56, 40], 45, 63, {
   learn: [[1, 'Tackle'], [1, 'Tail Whip'], [5, 'Water Gun'], [9, 'Harden'], [12, 'Bite']]
 });
 sp(5, 'Torrentle', ['Water'], [64, 62, 76, 66, 72, 52], 45, 142, {
-  evo: [32, 6], look: { stage: 2, form: 'wide', feat: ['fin', 'legs', 'arms'] }, desc: 'Powerful jets of water shoot from its shell.',
+  evo: [32, 6], look: { stage: 2, form: 'wide', feat: ['fin', 'legs', 'arms'] }, desc: 'Its fins flare into sprays of water as it darts through rivers.',
   learn: [[1, 'Tackle'], [1, 'Water Gun'], [1, 'Tail Whip'], [14, 'Bite'], [20, 'Bubble Beam'], [27, 'Slam'], [30, 'Surf']]
 });
 sp(6, 'Tidalord', ['Water', 'Ground'], [84, 82, 100, 86, 98, 62], 45, 239, {
-  look: { stage: 3, form: 'wide', feat: ['fin', 'legs', 'arms', 'spikes'] }, desc: 'It can flood a valley with a single stomp.',
+  look: { stage: 3, form: 'wide', feat: ['fin', 'legs', 'arms', 'spikes'] }, desc: 'A coiled river serpent. It stirs the mud of the riverbed into floods.',
   learn: [[1, 'Tackle'], [1, 'Water Gun'], [1, 'Bubble Beam'], [30, 'Surf'], [36, 'Quake'], [42, 'Crunch']]
 });
 sp(7, 'Sproutle', ['Grass'], [45, 48, 50, 52, 54, 45], 45, 64, {
