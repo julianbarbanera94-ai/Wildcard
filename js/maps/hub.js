@@ -155,7 +155,7 @@ const { newMap, set, rect, border, scatter, building, interior, warp, npc, sign,
 (function () {
   const m = interior('shrine', 'HEARTH SHRINE', 10, 9, 5);
   scatter(m, 'S', [[1, 1], [2, 1], [7, 1], [8, 1]]); scatter(m, 'O', [[3, 3], [5, 3], [7, 3]]);
-  npc(m, 5, 5, UP, 'elder', null, { talk: () => G.story.wren() });
+  npc(m, 5, 5, UP, 'elder', null, { talk: () => G.story.wren(), style: G.WREN_LOOK });
   npc(m, 2, 6, RIGHT, 'girl', ['Three Bondlings sleep on the hearth stones. They only wake for someone who truly wants a partner.', 'Press START to check your DEX and see everything you have met.']);
   [1, 4, 7].forEach((id, i) => m.objs.push({ x: 3 + i * 2, y: 3, orb: id, hide: () => G.state.flags.starter, fn: () => G.story.chooseStarter(id) }));
   warp(m, 5, 8, 'lanternrest', 39, 7, DOWN);

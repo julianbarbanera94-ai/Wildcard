@@ -1349,12 +1349,71 @@ function makeChar(st, shadow) {
   for (let d = 0; d < 4; d++) { out[d] = []; for (let f = 0; f < 3; f++) out[d][f] = charFrame(st, d, f, shadow); }
   return out;
 }
-G.charSprite = function (st) { const k = JSON.stringify(st); return charCache[k] || (charCache[k] = makeChar(st, true)); };
+// ---- Painted people (js/peopleimg.js) ----------------------------------------------------------------------------------
+// A look whose colours match a known character is drawn from that character's painted views instead of the generated chibi:
+// down = front, up = back, left = side, right = side mirrored. Looks without art (and images that have not decoded yet) fall
+// back to the generated sprite. The player keeps his painting whatever shirt the wardrobe picked (the colours are painted in).
+const PEOPLE_LOOKS = {
+  tam: { hair: '#2a8a8a', skin: '#f0c8a0', shirt: '#f0a030', pants: '#3a3a50', hat: '#2a8a8a' },
+  vesper: { hair: '#e8e8f0', skin: '#e8c8b0', shirt: '#2a2a3a', pants: '#1a1a24', hat: '#6a2a4a' },
+  ashen: { hair: '#3a3440', skin: '#e8c0a0', shirt: '#4a4450', pants: '#2a2630', hat: '#8a3a3a' },
+  wren: { hair: '#e8e8f4', skin: '#e8c098', shirt: '#3a5a3a', pants: '#403060', hat: '#6a4a9a' },
+  mason: { hair: '#4a3a30', skin: '#e0b088', shirt: '#9a7a55', pants: '#4a4048', hat: '#c8a050' },
+  ferna: { hair: '#3a7a3a', skin: '#f8d0a8', shirt: '#6cc060', pants: '#8a6a40', hat: '#f0a8c8' },
+  marlo: { hair: '#2a5aa0', skin: '#f0c8a0', shirt: '#3a9cf0', pants: '#284870', hat: '#f8f8f8' },
+  zephyra: { hair: '#f0e0a0', skin: '#f8d0a8', shirt: '#9ad0f8', pants: '#e8e8f4', hat: '#e8f4ff' },
+  osha: { hair: '#2a2018', skin: '#c89868', shirt: '#e0b050', pants: '#8a5a30', hat: '#e8d0a0' },
+  rayne: { hair: '#f0d030', skin: '#f8d0a8', shirt: '#2a2a40', pants: '#ffd830', hat: '#ffd830' },
+  isolde: { hair: '#e8f4ff', skin: '#f4e0d8', shirt: '#7fb8e8', pants: '#e8f4ff', hat: '#cfeeff' },
+  pyrra: { hair: '#d03a20', skin: '#e8b890', shirt: '#e8502a', pants: '#3a2a30', hat: '#ffb040' },
+};
+const PEOPLE_ST = { boy: 'boy', girl: 'girl', old: 'oldman', mom: 'mum', clerk: 'clerk', hiker: 'hiker', camper: 'camper', bug: 'bug', kade: 'kade' };
+const lookKey = st => [st.hair, st.skin, st.shirt, st.pants, st.hat || ''].join('|');
+let peopleMap = null; const peopleImg = {};
+function peopleSlug(st) {
+  if (!G.PEOPLE_IMG || !st) return null;
+  if (!peopleMap) {
+    peopleMap = {}; const ST = (G.mk && G.mk.ST) || {};
+    for (const k in PEOPLE_ST) if (ST[k]) peopleMap[lookKey(ST[k])] = PEOPLE_ST[k];
+    for (const k in PEOPLE_LOOKS) peopleMap[lookKey(PEOPLE_LOOKS[k])] = k;
+  }
+  const P = G.PLAYER_STYLE; if (P && st.hair === P.hair && st.skin === P.skin && st.pants === P.pants) return G.PEOPLE_IMG['player-a'] ? 'player-a' : null;
+  const slug = peopleMap[lookKey(st)]; return slug && G.PEOPLE_IMG[slug] ? slug : null;
+}
+G.WREN_LOOK = PEOPLE_LOOKS.wren;
+// The decoded image for a slug and screen direction (0 down, 1 up, 2 left, 3 right), or null while it is still loading.
+function peopleView(slug, dir) {
+  const view = dir === 0 ? 'front' : dir === 1 ? 'back' : 'side', k = slug + ':' + view; let e = peopleImg[k];
+  if (e === undefined) { const src = G.PEOPLE_IMG[slug] && G.PEOPLE_IMG[slug][view]; if (src) { e = new Image(); e.src = src; } else e = null; peopleImg[k] = e; }
+  return e && e.complete && e.naturalWidth ? e : null;
+}
+// Draw size in logical px: every view of a character shares the front view's scale so turning does not change his height.
+function peopleFit(slug, img, H) {
+  const f = peopleView(slug, 0) || img, s = Math.min(H / f.naturalHeight, (H * 1.05) / Math.max(f.naturalWidth, img.naturalWidth));
+  return [img.naturalWidth * s, img.naturalHeight * s];
+}
+function paintedChar(slug) {   // [dir][frame] canvases for portraits (battle intros, start menu), filled in as the images decode
+  const out = [];
+  for (let d = 0; d < 4; d++) {
+    out[d] = []; const [c, x] = cv(256, 320);
+    const draw = () => { const img = peopleView(slug, d); if (!img) { setTimeout(draw, 60); return; } const [w, h] = peopleFit(slug, img, 300); x.clearRect(0, 0, 256, 320); x.imageSmoothingQuality = 'high'; x.save(); x.translate(128, 0); if (d === 3) x.scale(-1, 1); x.drawImage(img, -w / 2, 307 - h, w, h); x.restore(); };
+    draw(); for (let f = 0; f < 3; f++) out[d][f] = c;
+  }
+  return out;
+}
+G.charSprite = function (st) { const k = JSON.stringify(st); const slug = peopleSlug(st); return charCache[k] || (charCache[k] = slug ? paintedChar(slug) : makeChar(st, true)); };
 
 // ---- Overworld drawing API used by world.js ----------------------------------------------
 // drawChar: a person whose tile's top-left is (x, y) in logical px; feet at (x+8, y+15).
 // noShadow: skip the foot shadow (a rider sitting on a vehicle).
 G.drawChar = function (ctx, style, dir, frame, x, y, t, noShadow) {
+  const slug = peopleSlug(style), pimg = slug && peopleView(slug, dir);
+  if (pimg) {   // painted person: a bob and a little lean instead of stepping frames
+    const bob = frame ? Math.abs(Math.sin((t || 0) / 3.2)) * 1.1 : Math.sin((t || 0) / 26) * .3, lean = frame ? (frame === 1 ? -.05 : .05) : 0, [w, h] = peopleFit(slug, pimg, 26);
+    if (!noShadow) { ctx.fillStyle = 'rgba(30,40,60,.2)'; ctx.beginPath(); ctx.ellipse(x + 8, y + 15, 6.2 - bob * .4, 1.9, 0, 0, TAU); ctx.fill(); }
+    ctx.save(); ctx.translate(x + 8, y + 15.4 - bob); ctx.rotate(lean); if (dir === 3) ctx.scale(-1, 1); ctx.drawImage(pimg, -w / 2, -h, w, h); ctx.restore();
+    return;
+  }
   let a = charBare.get(style); if (!a) charBare.set(style, a = []);
   const i = dir * 3 + frame, fr = a[i] || (a[i] = charFrame(style, dir, frame, false));
   const breathe = frame ? 0 : Math.sin((t || 0) / 26) * .35, bob = frame ? .8 : 0;
