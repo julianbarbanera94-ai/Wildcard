@@ -125,15 +125,15 @@ sp(6, 'Tidalord', ['Water', 'Ground'], [84, 82, 100, 86, 98, 62], 45, 239, {
   learn: [[1, 'Tackle'], [1, 'Water Gun'], [1, 'Bubble Beam'], [30, 'Surf'], [36, 'Quake'], [42, 'Crunch']]
 });
 sp(7, 'Sproutle', ['Grass'], [45, 48, 50, 52, 54, 45], 45, 64, {
-  evo: [14, 8], look: { stage: 1, form: 'round', feat: ['leaf', 'legs'] }, desc: 'The sprout on its back drinks sunlight.',
+  evo: [14, 8], look: { stage: 1, form: 'round', feat: ['leaf', 'legs'] }, desc: 'A leafy pup. The leaves on its head drink in the sunlight.',
   learn: [[1, 'Tackle'], [1, 'Growl'], [5, 'Vine Whip'], [9, 'Sleep Powder'], [12, 'Razor Leaf']]
 });
 sp(8, 'Thornling', ['Grass'], [60, 63, 64, 68, 68, 60], 45, 141, {
-  evo: [32, 9], look: { stage: 2, form: 'round', feat: ['leaf', 'legs', 'arms', 'spikes'] }, desc: 'Thorny vines lash out to guard its trainer.',
+  evo: [32, 9], look: { stage: 2, form: 'round', feat: ['leaf', 'legs', 'arms', 'spikes'] }, desc: 'Its leafy mane bristles when it guards its trainer.',
   learn: [[1, 'Tackle'], [1, 'Vine Whip'], [1, 'Sleep Powder'], [14, 'Razor Leaf'], [20, 'Poison Powder'], [27, 'Slam'], [30, 'Petal Blast']]
 });
 sp(9, 'Verdantus', ['Grass', 'Rock'], [80, 84, 86, 92, 90, 72], 45, 236, {
-  look: { stage: 3, form: 'wide', feat: ['leaf', 'legs', 'arms', 'spikes', 'horns'] }, desc: 'Ancient moss covers its stony back.',
+  look: { stage: 3, form: 'wide', feat: ['leaf', 'legs', 'arms', 'spikes', 'horns'] }, desc: 'A great leaf-shelled beast. Ancient moss covers its stony back.',
   learn: [[1, 'Vine Whip'], [1, 'Razor Leaf'], [1, 'Sleep Powder'], [30, 'Petal Blast'], [36, 'Rock Slide'], [42, 'Slam']]
 });
 // Wild creatures
