@@ -9,6 +9,8 @@ const rnd = n => G.rand(n);
 function mkF(c) {
   return { c, stages: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }, dispHp: c.hp, dispExp: null, ox: 0, oy: 0, alpha: 1, scale: 1, tint: null, hidden: true, participants: new Set(), sleep: 0 };
 }
+// The 3D actor for a fighter (js/c3d.js), or null for a 2D sprite. Side is fixed by which slot the fighter is in.
+const act = f => { if (!f || !b || !G.c3d) return null; if (f.actor === undefined) { f.actor = G.c3d.actor(f.c.id, f === b.me ? 'back' : 'front'); if (f.actor) G.c3d.watch(f.actor); } return f.actor; };
 const nm = f => f === b.me ? G.name(f.c) : (b.wild ? 'Wild ' : 'Foe ') + G.name(f.c);
 const msg = (t, auto) => G.say(t, { auto: auto === undefined ? 36 : auto, style: 'dark' });
 const mark = (id, k) => { G.state.dex[id] = Math.max(G.state.dex[id] || 0, k); }; // 1 seen, 2 caught
@@ -119,9 +121,10 @@ const orbArt = () => K.cache('borb', 14, 14, x => {
 
 function drawFighter(ctx, f, back, bx, by) {
   if (f.hidden || f.alpha <= 0) return;
-  let img = G.creatureSprite(f.c.id, back);
-  if (f.tint) img = G.tint(img, f.tint);
-  const t = G.frameNo + (back ? 40 : 0), idle = f.scale === 1 && !f.tint;
+  const a = act(f); let img = a ? a.frame() : null;
+  if (!img) img = G.creatureSprite(f.c.id, back);
+  if (f.tint) img = a ? G.c3d.tint(img, f.tint) : G.tint(img, f.tint);
+  const t = G.frameNo + (back ? 40 : 0), idle = f.scale === 1 && !f.tint && !a;   // 3D actors breathe on their own
   const bob = idle ? Math.sin(t / 18) : 0, sq = idle ? Math.sin(t / 9) * .018 : 0;
   const size = 64 * f.scale, sw = size * (1 + sq), sh = size * (1 - sq);
   // contact shadow on the platform
@@ -130,7 +133,7 @@ function drawFighter(ctx, f, back, bx, by) {
   const dx = bx + f.ox + (64 - sw) / 2, dy = by + f.oy + (64 - sh) - Math.max(0, bob) * 1.6;
   if (f.glow) { ctx.globalCompositeOperation = 'lighter'; K.drawGlow(ctx, '#ffe066', fx, by + 34, 40 + Math.sin(t / 4) * 3, Math.min(1, f.glow / 30) * .8); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = f.alpha; }
   ctx.drawImage(img, dx, dy, sw, sh);
-  if (f.flash > 0 && G.flashOK()) { ctx.globalAlpha = f.alpha * Math.min(1, f.flash / 4); ctx.drawImage(G.tint(G.creatureSprite(f.c.id, back), '#ffffff'), dx, dy, sw, sh); }
+  if (f.flash > 0 && G.flashOK()) { ctx.globalAlpha = f.alpha * Math.min(1, f.flash / 4); ctx.drawImage(a ? G.c3d.tint(a.canvas, '#ffffff') : G.tint(G.creatureSprite(f.c.id, back), '#ffffff'), dx, dy, sw, sh); }
   ctx.globalAlpha = 1;
 }
 function infoArt(w, h, mine) {
@@ -219,6 +222,7 @@ function stepVisuals() {
   if (b.shake > 0) b.shake--;
   if (b.floats) for (let i = b.floats.length - 1; i >= 0; i--) if (++b.floats[i].t > 50) b.floats.splice(i, 1);
   for (const f of [b.me, b.foe]) if (f) {
+    act(f);
     if (f.flash > 0) f.flash--;
     if (f.glow > 0) { f.glow--; if (f.glow % 5 === 0 && !f.hidden) { const [cx, cy] = center(f); burst('Sparkle', cx + (Math.random() - .5) * 40, cy + 14, 1, { up: true, speed: .8, life: 40, spread: 4 }); } }
   }
@@ -288,6 +292,7 @@ const scene = { update: stepVisuals, draw, battle: true };   // battle: true let
 async function slide(o, key, from, to, frames) { for (let i = 0; i <= frames; i++) { const k = i / frames, e = 1 - Math.pow(1 - k, 3); o[key] = from + (to - from) * e; await G.nextFrame(); } }
 async function popIn(f) {
   f.hidden = false; f.tint = '#ffffff'; f.alpha = 1;
+  const a = act(f); if (a) { a.reset(); a.play('enter'); }
   const [cx, cy] = center(f); burst('Sparkle', cx, cy + 6, 12, { speed: 1.8, life: 26 });
   for (let i = 1; i <= 16; i++) { const k = i / 16; f.scale = k < .7 ? k / .7 * 1.12 : 1.12 - (k - .7) / .3 * .12; await G.nextFrame(); }
   f.tint = null; f.scale = 1; f.ox = 0; f.oy = 0; f.flash = 6;
@@ -295,23 +300,29 @@ async function popIn(f) {
 async function popOut(f) { f.tint = '#ffffff'; for (let i = 13; i >= 0; i--) { f.scale = Math.max(.05, i / 14); await G.nextFrame(); } f.hidden = true; f.scale = 1; f.tint = null; }
 async function animAttack(att, def, move, eff) {
   const dir = att === b.me ? 1 : -1, [x, y] = center(def), special = !G.PHYS.has(move.type), col = G.TYPE_COL[move.type];
+  const aA = act(att), aD = act(def);
+  if (aA) {   // 3D: anticipation, then the species' own attack (physical) or cast (special) up to its impact moment
+    await aA.play('anticipate');
+    await aA.play(special ? 'cast' : 'attack').at('impact');
+  }
   if (special) {   // charge up, then fire a glowing shot
     const [ax, ay] = center(att);
-    for (let i = 0; i < 6; i++) { att.oy = -Math.sin(i / 6 * Math.PI) * 4; if (i % 2 === 0) burst(move.type, ax, ay, 1, { speed: .6, life: 14 }); await G.nextFrame(); }
+    if (!aA) for (let i = 0; i < 6; i++) { att.oy = -Math.sin(i / 6 * Math.PI) * 4; if (i % 2 === 0) burst(move.type, ax, ay, 1, { speed: .6, life: 14 }); await G.nextFrame(); }
     att.oy = 0; b.proj = { x: ax, y: ay, col };
     for (let i = 1; i <= 8; i++) { const k = i / 8; b.proj.x = ax + (x - ax) * k; b.proj.y = ay + (y - ay) * k - Math.sin(k * Math.PI) * 10; if (i % 2) burst(move.type, b.proj.x, b.proj.y, 1, { speed: .4, life: 12, size: 1.8 }); await G.nextFrame(); }
     b.proj = null;
-  } else {         // wind up and lunge
+  } else if (!aA) {   // 2D: wind up and lunge
     for (let i = 0; i < 4; i++) { att.ox -= dir * 1.2; att.oy += dir * .4; await G.nextFrame(); }
     for (let i = 0; i < 6; i++) { att.ox += dir * 4.4; att.oy -= dir * 1.6; await G.nextFrame(); }
   }
   b.fx = { kind: special ? 'burst' : 'impact', x, y, color: col, t: 0, dur: 18 };
   burst(move.type, x, y, eff > 1 ? 26 : 16, { speed: eff > 1 ? 2.4 : 1.8, life: 30 });
   def.flash = 10; b.shake = eff > 1 ? 12 : eff < 1 ? 4 : 8;
+  if (aD) aD.play(eff > 1 ? 'hitHeavy' : 'hit');
   G.audio.sfx(eff > 1 ? 'super' : eff < 1 ? 'weak' : 'hit');
   for (let i = 0; i < 16; i++) {
     b.fx.t = Math.min(b.fx.dur, b.fx.t + 1.2);
-    def.ox = (i < 12 ? (i % 2 ? 1 : -1) * (3 - i / 4) : 0) * -dir;
+    if (!aD) def.ox = (i < 12 ? (i % 2 ? 1 : -1) * (3 - i / 4) : 0) * -dir;
     if (i < 8) { att.ox *= .7; att.oy *= .7; }
     if (i === 4) def.flash = 6;
     await G.nextFrame();
@@ -323,7 +334,7 @@ async function drain(f) {
   while (Math.abs(f.dispHp - target) > .01) { f.dispHp += Math.sign(target - f.dispHp) * Math.min(step, Math.abs(target - f.dispHp)); await G.nextFrame(); }
   f.dispHp = target;
 }
-async function shake(f) { f.flash = 8; for (let i = 0; i < 8; i++) { f.ox = (i % 2 ? 3 : -3) * (1 - i / 10); await G.nextFrame(); await G.nextFrame(); } f.ox = 0; }
+async function shake(f) { f.flash = 8; const a = act(f); if (a) { await a.play('hit'); return; } for (let i = 0; i < 8; i++) { f.ox = (i % 2 ? 3 : -3) * (1 - i / 10); await G.nextFrame(); await G.nextFrame(); } f.ox = 0; }
 async function animExp(f, to, frames) {
   let from = f.dispExp === null ? expRatio(f.c) : f.dispExp; f.dispExp = from;
   for (let i = 1; i <= frames; i++) { f.dispExp = from + (to - from) * i / frames; await G.nextFrame(); }
@@ -371,6 +382,7 @@ async function useMove(att, def, move) {
     if (move.recoil) { att.c.hp = Math.max(0, att.c.hp - Math.max(1, Math.floor(r.dmg / 4))); await drain(att); await msg(`${nm(att)} is hit with recoil!`); }
     if (def.c.hp > 0 && move.status && rnd(100) < move.chance) await inflict(def, move.status);
   } else {
+    { const a = act(att); if (a) await a.play(a.spec.clips.status ? 'status' : 'cast').at('impact'); }   // 3D: growl, howl, glare...
     if (move.stat) { const t = move.self ? att : def; await changeStage(t, move.stat[0], move.stat[1]); }
     else if (move.status) { if (!(await inflict(def, move.status))) await msg('But it failed!'); }
   }
@@ -430,7 +442,8 @@ async function awardExp(foe) {
 }
 async function faint(f) {
   G.audio.sfx('faint');
-  const [fx, fy] = center(f); f.flash = 8;
+  const [fx, fy] = center(f); f.flash = 8; const a = act(f);
+  if (a) { await a.play('faint'); burst('Dust', fx, fy + 22, 10, { speed: 1, life: 24, spread: 30, size: 3 }); for (let i = 0; i < 20; i++) { f.alpha = 1 - i / 20; await G.nextFrame(); } f.hidden = true; f.alpha = 1; await msg(`${nm(f)} fainted!`); return; }
   for (let i = 0; i < 6; i++) { f.oy = -Math.sin(i / 6 * Math.PI) * 3; await G.nextFrame(); }
   burst('Dust', fx, fy + 22, 14, { speed: 1.2, life: 28, spread: 30, size: 3 });
   for (let i = 0; i < 20; i++) { f.oy += 3 + i * .15; f.alpha = 1 - i / 20; await G.nextFrame(); }
@@ -645,7 +658,7 @@ G.startBattle = async function (opts) {
   // intro
   if (b.wild) {
     mark(b.foe.c.id, Math.max(1, G.state.dex[b.foe.c.id] || 0));
-    b.foe.hidden = false; b.showFoe = true; await slide(b.foe, 'ox', 110, 0, 24);
+    b.foe.hidden = false; b.showFoe = true; { const a = act(b.foe); if (a) { a.reset(); a.play('walk'); } } await slide(b.foe, 'ox', 110, 0, 24);
     await msg(`A wild ${G.name(b.foe.c)} appeared!`, 40);
   } else {
     const seen = G.state.seenIntro = G.state.seenIntro || {}, key = opts.trainer.cls + ':' + opts.trainer.name, skip = G.pref('battle.skipSeenIntros') && seen[key];
@@ -667,7 +680,8 @@ G.startBattle = async function (opts) {
   }
   // battle loop
   while (!result) result = await turn();
-  // wrap-up
+  // wrap-up: the winner celebrates (3D actors)
+  { const w = result === 'win' ? b.me : result === 'lose' ? b.foe : null, a = w && !w.hidden && act(w); if (a) await a.play('victory'); }
   if (result === 'win' && !b.wild) {
     const t = b.trainer, last = t.team[t.team.length - 1];
     b.tFoe = { img: big(G.charSprite(t.style)[0][0]), x: 160, y: 10, ox: 110 }; await slide(b.tFoe, 'ox', 110, 0, 18);
@@ -681,7 +695,7 @@ G.startBattle = async function (opts) {
   party.forEach(c => { if (c.status === 'slp') c.status = null; });
   G.closeText(); G.ui.style = 'light';
   await G.fadeTo(1, 14, '#000000');
-  G.scene = prev; b = null;
+  G.scene = prev; b = null; if (G.c3d && G.c3d.live) G.c3d.live.clear();
   return result;
 };
 

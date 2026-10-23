@@ -1186,6 +1186,7 @@ function measure(parts, mode) {
 const SPR = 256, spriteCache = {};
 function genCreature(id) {
   const sp = G.SPECIES[id] || { id: id | 0, types: ['Normal'], look: { stage: 1, form: 'round', feat: [] } };
+  if (G.c3d && G.c3d.has(id)) try { const f = G.c3d.still(id, false), b = G.c3d.still(id, true); return { f, b, k: f }; } catch (e) { console.warn('3D still failed for', id, e); }   // 3D species (js/c3d.js)
   if (G.CREATURE_IMG && G.CREATURE_IMG[id]) return painted(G.CREATURE_IMG[id]);
   let parts;
   try { parts = buildParts(sp); } catch (e) { console.warn('creature art fallback for', id, e); parts = buildParts(Object.assign({}, sp, { id: -1 - (id | 0) })); }
