@@ -1,0 +1,15 @@
+Batch sheet manifest
+01_creatures_001-013.png — creatures #1–13
+02_creatures_014-026.png — creatures #14–26
+03_creatures_027-039.png — creatures #27–39
+04_creatures_040-052.png — creatures #40–52
+05_creatures_053-065.png — creatures #53–65
+06_creatures_066-078.png — creatures #66–78
+07_creatures_079-091.png — creatures #79–91
+08_creatures_092-104.png — creatures #92–104
+09_creatures_105-117.png — creatures #105–117
+10_creatures_118-130.png — creatures #118–130
+11_creatures_131-143.png — creatures #131–143
+12_creatures_144-156.png — creatures #144–156
+
+These are visual reference sheets/contact sheets, not individual transparent sprites.
