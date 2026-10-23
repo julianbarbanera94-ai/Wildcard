@@ -170,6 +170,13 @@ const OUT = process.env.OUT || '/tmp';
   const fast = await ev(async () => { const sc = G.scene, fake = { battle: true, update() {}, draw() {} }; G.scene = fake; const n = async () => { const f0 = G.frameNo; await new Promise(r => setTimeout(r, 500)); return G.frameNo - f0; };
     G.setPref('battle.animSpeed', 'normal'); const a = await n(); G.setPref('battle.animSpeed', 'fast'); const b = await n(); G.setPref('battle.animSpeed', 'normal'); G.scene = sc; return [a, b]; });
   assert(fast[1] > fast[0] * 1.6, 'fast battles run about twice the ticks: ' + fast);
+  // fast battles must still hear every press: the extra tick used to wipe A and B before the battle menu saw them
+  const heard = await ev(async () => { const sc = G.scene, fake = { battle: true, update() {}, draw() {} }; G.scene = fake; G.setPref('battle.animSpeed', 'fast');
+    let got = 0; for (let i = 0; i < 6; i++) { G.press('a'); for (let f = 0; f < 3; f++) { await G.nextFrame(); if (G.input.pressed.a) { got++; break; } } G.release('a'); await G.nextFrame(); }
+    const t0 = G.frameNo; await G.wait(20); const w = G.frameNo - t0;
+    G.setPref('battle.animSpeed', 'normal'); G.scene = sc; return [got, w]; });
+  assert.equal(heard[0], 6, 'every A press is heard in a fast battle');
+  assert(heard[1] <= 24, 'fast battles halve the waits: ' + heard[1]);
   assert.deepEqual(await ev(() => [G.isValuable('Revive'), G.isValuable('Mythic Orb'), G.isValuable('Potion'), G.isValuable("Warden's Lamp")]), [true, true, false, false]);
   step('accessibility: shake, reduced motion and flashes (no white-outs), text size, colour-friendly HP, vibration; instant text and fast battles; valuables are flagged for confirmation');
 

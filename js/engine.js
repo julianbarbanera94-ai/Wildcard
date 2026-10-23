@@ -88,13 +88,15 @@ const audio = G.audio = {
 G.frameNo = 0; G.scene = null;
 const waiters = [];
 G.nextFrame = () => new Promise(r => waiters.push(r));
-G.wait = async n => { for (let i = 0; i < n; i++) await G.nextFrame(); };
+G.wait = async n => { if (G.scene && G.scene.battle && G.battleFast && G.battleFast()) n = Math.ceil(n / 2); for (let i = 0; i < n; i++) await G.nextFrame(); };   // fast battles: half the waits
 G.waitA = async () => { for (;;) { await G.nextFrame(); if (input.pressed.a || input.pressed.b) return; } };
 
 G.ui = { text: null, layers: [], fade: { a: 0, color: '#000' }, wipe: 0 };
-function tick() {
-  input.pressed = input.next; input.next = {}; G.frameNo++;
-  if (input.pressed.mute) audio.toggle();
+// extra: the second tick of a fast-battle frame. It keeps this frame's presses: the code waiting on them only wakes after
+// both ticks (promises resolve after the frame), so clearing them there would swallow every A and B in battle.
+function tick(extra) {
+  if (!extra) { input.pressed = input.next; input.next = {}; if (input.pressed.mute) audio.toggle(); }
+  G.frameNo++;
   waiters.splice(0).forEach(r => r());
   G.scene && G.scene.update && G.scene.update();
 }
@@ -170,7 +172,7 @@ G.start = function (canvas) {
   (function frame(now) {
     acc = Math.min(acc + now - last, dt * 2); last = now;
     if (acc >= dt - 1) {   // update and draw once per game tick, so 120Hz screens don't do double work
-      acc = Math.max(0, acc - dt); try { tick(); if (G.scene && G.scene.battle && G.battleFast && G.battleFast()) tick(); } catch (e) { console.error(e); }
+      acc = Math.max(0, acc - dt); try { tick(); if (G.scene && G.scene.battle && G.battleFast && G.battleFast()) tick(true); } catch (e) { console.error(e); }
       try { draw(ctx); } catch (e) { console.error(e); }
     }
     requestAnimationFrame(frame);
