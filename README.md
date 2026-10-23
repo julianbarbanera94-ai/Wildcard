@@ -251,3 +251,6 @@ node tests/e2e-interiors.js                    # walking into every building, it
 ```
 
 The end-to-end tests drive the real game with keyboard input in headless Chromium. Set `PW` to the playwright module path, `CHROME` to a Chromium binary and `OUT` to a folder for screenshots if the defaults don't apply.
+
+### Entrances (3.12.2)
+Every dark cave mouth on the glacier, badlands, emberfall and Sandsreach maps now leads to a small cave (or the Dune Elders' Hall in Sandsreach), and the Cloudpeak castle doors open into the castle hall. Walk up into them; the exit is at the bottom of each room. `tests/e2e-mouths.js` walks into and out of each kind.

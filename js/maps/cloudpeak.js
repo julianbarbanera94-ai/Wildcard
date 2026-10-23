@@ -31,7 +31,7 @@ const H = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
   rect(m, 31, 6, 2, 1, 'D');
   rect(m, 18, 7, 28, 2, 'g'); rect(m, 31, 7, 2, 7, '%');
   scatter(m, 'l', [[30, 7], [33, 7]]); rect(m, 20, 7, 3, 2, 'f'); rect(m, 41, 7, 3, 2, 'f'); scatter(m, 'r', [[19, 7], [45, 8], [18, 8]]);
-  sign(m, 28, 8, 'CLOUDPEAK CASTLE\nThe gates are shut until a later chapter.');
+  sign(m, 28, 8, 'CLOUDPEAK CASTLE\nThe great doors are open. Welcome, traveller.');
 
   // switchback trails
   rect(m, 24, 50, 2, 10, 'p'); rect(m, 24, 50, 22, 2, 'p'); rect(m, 44, 41, 2, 10, 'p');           // T0 -> T1
@@ -91,9 +91,8 @@ const H = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
   sign(m, 33, 14, 'SUMMIT STAIR\nThe castle at the top is sealed. Visitors may look but not enter.');
   trainer(m, 'cloudpeak_warden1', 24, 16, UP, 'kade', { name: 'ROWAN', cls: 'SUMMIT GUARD', sight: 2, team: [[138, 30], [142, 31], [128, 32]], pre: 'Halt! Only the strong climb this stair, and even then only to look.', win: 'The stair is yours. The gate is not.', post: 'The castle will open in time. Not today.', prize: 1950 });
   // castle gate guards
-  npc(m, 31, 6, DOWN, 'kade', ['The gates are shut until a later chapter.', 'Do not ask me what lies inside.'], { still: true });
-  npc(m, 32, 6, DOWN, 'kade', ['The Castle has stood on the summit for a thousand years. Its gates are sealed for now.'], { still: true });
-  npc(m, 26, 8, RIGHT, 'elder', ['They say the castle keeps a secret that the whole region depends on.', 'It will open when the time comes.'], { still: true });
+  npc(m, 33, 8, DOWN, 'kade', ['The castle door is open to travellers. Wipe your boots on the way in.', 'Do not ask me what lies inside. Go and look.'], { still: true });
+  npc(m, 33, 9, LEFT, 'elder', ['They say the castle keeps a secret that the whole region depends on.', 'The doors are open now. Go and see.'], { still: true });
 
   // sprinkle pines and boulders over open slopes, keeping flats, routes, sight lines and people/items clear
   const keep = (x, y) => inKeep(x, y) || (y <= 9) ||

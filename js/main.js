@@ -147,6 +147,11 @@ addEventListener('DOMContentLoaded', () => {
   // Thumbstick: the knob follows the finger; the strongest axis past a dead zone is held as a direction.
   // Settings (js/settings.js): sensitivity (dead zone), fixed or floating (the ring jumps to where you touch), size,
   // position, button size and opacity, left-handed layout and haptics. G.applyControls() re-applies them live.
+  // Which touches are really down. Some phones lose a pointerup (a notification, a second finger, the app switcher); a button
+  // or the stick would then stay "held" forever and the game would ignore every new press. Everything below checks this set.
+  const downPtrs = new Set(); addEventListener('pointerdown', e => downPtrs.add(e.pointerId), true);
+  for (const t of ['pointerup', 'pointercancel']) addEventListener(t, e => downPtrs.delete(e.pointerId), true);
+  addEventListener('touchend', e => { if (!e.touches.length) downPtrs.clear(); }, true);
   const stick = document.getElementById('stick'), pad = document.getElementById('pad'), ab = pad && pad.querySelector('.ab');
   let home = [0, 0];   // the stick's resting offset from its layout position (from the position settings)
   G.applyControls = function () {
@@ -173,10 +178,9 @@ addEventListener('DOMContentLoaded', () => {
     const end = e => { if (e.pointerId !== id) return; reset(); };
     G.resetPad = () => { reset(); document.querySelectorAll('[data-k].on').forEach(b => b.classList.remove('on')); };   // called when the app loses focus
     // Safety net: if a finger lifts but the stick never hears about it (lost events on some phones), let go anyway.
-    const down = new Set(); addEventListener('pointerdown', e => down.add(e.pointerId), true);
-    for (const t of ['pointerup', 'pointercancel']) addEventListener(t, e => { down.delete(e.pointerId); if (e.pointerId === id) reset(); }, true);
-    addEventListener('touchend', e => { if (!e.touches.length) { down.clear(); if (id !== null) reset(); } }, true);
-    setInterval(() => { if (id !== null && !down.has(id)) reset(); }, 400);
+    for (const t of ['pointerup', 'pointercancel']) addEventListener(t, e => { if (e.pointerId === id) reset(); }, true);
+    addEventListener('touchend', e => { if (!e.touches.length && id !== null) reset(); }, true);
+    setInterval(() => { if (id !== null && !downPtrs.has(id)) reset(); }, 300);
     const begin = (e, float) => {
       e.preventDefault(); id = e.pointerId; stick.setPointerCapture(id); stick.classList.add('on'); G.audio.init();
       if (float) {   // floating: move the ring so its centre is under the finger
@@ -196,13 +200,20 @@ addEventListener('DOMContentLoaded', () => {
     });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => stick.addEventListener(ev, end));
   }
+  // Buttons (A, B, MENU, orb): remember which finger pressed each one and let go of it when that finger is gone, however it left.
+  const btnPtr = new Map();   // key -> pointerId
+  const letGo = k => { btnPtr.delete(k); G.release(k); document.querySelectorAll(`[data-k="${k}"]`).forEach(b => b.classList.remove('on')); };
   document.querySelectorAll('[data-k]').forEach(b => {
     const k = b.dataset.k;
-    const down = e => { e.preventDefault(); b.classList.add('on'); G.press(k); G.haptic(8); };
-    const up = e => { e.preventDefault(); b.classList.remove('on'); G.release(k); };
-    b.addEventListener('pointerdown', down); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, up));
+    const down = e => { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (_) {} b.classList.add('on'); btnPtr.set(k, e.pointerId); G.release(k); G.press(k); G.haptic(8); };   // release first: a stale "held" never swallows a new press
+    const up = e => { e.preventDefault(); if (btnPtr.get(k) === e.pointerId || !btnPtr.has(k)) letGo(k); };
+    b.addEventListener('pointerdown', down); ['pointerup', 'pointerleave', 'pointercancel', 'lostpointercapture'].forEach(ev => b.addEventListener(ev, up));
     b.addEventListener('pointerup', () => G.audio.init());
   });
+  for (const t of ['pointerup', 'pointercancel']) addEventListener(t, e => { for (const [k, id] of [...btnPtr]) if (id === e.pointerId) letGo(k); }, true);
+  addEventListener('touchend', e => { if (!e.touches.length) for (const k of [...btnPtr.keys()]) letGo(k); }, true);
+  setInterval(() => { for (const [k, id] of [...btnPtr]) if (!downPtrs.has(id)) letGo(k); }, 300);   // watchdog for a release that never arrived
+  const resetPad0 = G.resetPad; G.resetPad = () => { if (resetPad0) resetPad0(); for (const k of [...btnPtr.keys()]) letGo(k); };
   G.applySettings();
 });
 })();

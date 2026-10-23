@@ -133,6 +133,15 @@ const OUT = process.env.OUT || '/tmp';
   assert(await ev(() => G.input.held.right), 'the thumb never left, so the stick steers again');
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await page.waitForTimeout(100);
   assert(await ev(() => !G.input.held.right), 'letting go releases it');
+  // a lost release must never leave a button dead: with a stale "held" MENU and A, real taps still work
+  const btn = k => ev(k => { const r = document.querySelector(`[data-k=${k}]`).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }, k);
+  await ev(() => { G.scene = G.world.scene; G.world.busy = false; G.ui.layers.length = 0; G.ui.text = null; G.input.held.start = true; document.querySelector('[data-k=start]').classList.add('on'); });
+  const mb = await btn('start'); await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: mb[0], y: mb[1] }] }); await page.waitForTimeout(90); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await until(() => G.ui.layers.length > 0, 4000, 'MENU opens although the button looked held');
+  await ev(() => { G.input.held.b = true; document.querySelector('[data-k=b]').classList.add('on'); });
+  const bt = await btn('b'); await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: bt[0], y: bt[1] }] }); await page.waitForTimeout(90); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await until(() => G.ui.layers.length === 0, 4000, 'B closes the menu although it looked held');
+  assert.equal(await ev(() => document.querySelectorAll('[data-k].on').length), 0, 'no button stays drawn as pressed');
   // run modes
   assert.deepEqual(await ev(() => { const r = []; for (const m of ['hold', 'always']) { G.setPref('controls.run', m); r.push([G.running({ b: false }), G.running({ b: true })]); } G.setPref('controls.run', 'toggle'); r.push(G.running({ b: false })); G.runToggle(); r.push(G.running({ b: false })); G.runToggle(); G.setPref('controls.run', 'hold'); return r; }),
     [[false, true], [true, false], false, true], 'hold B, always run (B walks), tap to toggle');
