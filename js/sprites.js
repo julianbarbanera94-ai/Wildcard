@@ -1186,6 +1186,7 @@ function measure(parts, mode) {
 const SPR = 256, spriteCache = {};
 function genCreature(id) {
   const sp = G.SPECIES[id] || { id: id | 0, types: ['Normal'], look: { stage: 1, form: 'round', feat: [] } };
+  if (G.CREATURE_IMG && G.CREATURE_IMG[id]) return painted(G.CREATURE_IMG[id]);
   let parts;
   try { parts = buildParts(sp); } catch (e) { console.warn('creature art fallback for', id, e); parts = buildParts(Object.assign({}, sp, { id: -1 - (id | 0) })); }
   const a = measure(parts, 'f'), b = measure(parts, 'b');
@@ -1197,6 +1198,20 @@ function genCreature(id) {
     x.setTransform(U * s, 0, 0, U * s, U * (50 - (bx0 + bx1) / 2 * s), U * (95.5 - by1 * s));
     drawParts(x, parts, mode); out[mode] = c;
   }
+  return out;
+}
+// Painted species (js/creatureimg.js, from the reference art): front and back images fitted like generated sprites (centred,
+// feet at 95%) on a larger canvas so the detail stays sharp; every caller draws sprites at an explicit size. The images are
+// embedded data, so they decode almost at once; until then the canvas is blank, and the tint cache is cleared once drawn.
+const PSPR = 512;
+function painted(src) {
+  const out = {}, put = (keys, url, flip) => {
+    const cs = keys.map(k => out[k] = cv(PSPR, PSPR)[0]), im = new Image();
+    im.onload = () => { const s = Math.min(PSPR * .92 / im.height, PSPR * .95 / im.width), w = im.width * s, h = im.height * s;
+      for (const c of cs) { const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.save(); if (flip) { x.translate(PSPR, 0); x.scale(-1, 1); } x.drawImage(im, (PSPR - w) / 2, PSPR * .955 - h, w, h); x.restore(); tints.delete(c); } };
+    im.src = url;
+  };
+  put(['f', 'k'], src.f); put(['b'], src.b || src.f, !src.b);
   return out;
 }
 function sprites(id) { return spriteCache[id] || (spriteCache[id] = genCreature(id)); }
