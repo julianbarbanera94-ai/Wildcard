@@ -10,11 +10,14 @@
 const DOWN = 0, UP = 1, LEFT = 2, RIGHT = 3, TAU = Math.PI * 2;
 const F = () => G.state.flags, says = l => G.worldApi.says(l), Q = G.quest;
 const ASHEN = { hair: '#3a3440', skin: '#e8c0a0', shirt: '#4a4450', pants: '#2a2630', hat: '#8a3a3a' };
+// Named officers look like themselves (painted art in js/peopleimg.js); everyone else is a hooded grunt.
+const OFFICER_LOOK = { SABLE: G.SABLE_LOOK, MORDANT: G.MORDANT_LOOK };
+const lookOf = name => OFFICER_LOOK[name] || ASHEN;
 const VESPER = { hair: '#e8e8f0', skin: '#e8c8b0', shirt: '#2a2a3a', pants: '#1a1a24', hat: '#6a2a4a' };
 const TAM = { hair: '#2a8a8a', skin: '#f0c8a0', shirt: '#f0a030', pants: '#3a3a50', hat: '#2a8a8a' };
 const npc = (map, x, y, dir, style, o) => G.mk.npc(G.MAPS[map], x, y, dir, style, null, Object.assign({ still: true }, o));
-const ashen = (map, id, x, y, dir, name, team, pre, win, post, hide) => npc(map, x, y, dir, 'boy', { style: ASHEN, hide,
-  trainer: { id, style: ASHEN, name, cls: 'ASHEN WARDEN', sight: 3, team, pre, win, post, prize: 120 } });
+const ashen = (map, id, x, y, dir, name, team, pre, win, post, hide) => npc(map, x, y, dir, 'boy', { style: lookOf(name), hide,
+  trainer: { id, style: lookOf(name), name, cls: 'ASHEN WARDEN', sight: 3, team, pre, win, post, prize: 120 } });
 const grant = id => { if (G.vehicles && G.vehicles.grant && !(G.state.vehicles.owned || []).includes(id)) G.vehicles.grant(id); };
 G.SHARD_PLACES = { meadow: 'evergreen', marsh: 'tidefall', mine: 'aurora' };   // where each Ember Shard is found now
 

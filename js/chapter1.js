@@ -7,6 +7,9 @@ const DOWN = 0, UP = 1, LEFT = 2, RIGHT = 3;
 const F = () => G.state.flags, says = l => G.worldApi.says(l);
 const TAM_LOOK = { hair: '#2a8a8a', skin: '#f0c8a0', shirt: '#f0a030', pants: '#3a3a50', hat: '#2a8a8a' };
 const ASHEN_LOOK = { hair: '#3a3440', skin: '#e8c0a0', shirt: '#4a4450', pants: '#2a2630', hat: '#8a3a3a' };
+// Named officers look like themselves (painted art in js/peopleimg.js); everyone else is a hooded grunt.
+const OFFICER_LOOK = { SABLE: G.SABLE_LOOK, MORDANT: G.MORDANT_LOOK };
+const lookOf = name => OFFICER_LOOK[name] || ASHEN_LOOK;
 const COUNTER = { 1: 4, 4: 7, 7: 1 };   // Tam takes the Bondling that's strong against yours
 G.LAMP = "Warden's Lamp";
 G.ITEMS[G.LAMP] = { kind: 'key', price: 0, desc: "Elder Wren's lamp. It lights dark places, and its flame leans toward Ember Shards." };
@@ -21,8 +24,8 @@ if (G.FIELD) G.FIELD.light.tools = [G.LAMP];
 { // Stonebridge: two Ashen Wardens by the Arena, and later the guardian by the river
   const m = G.MAPS.stonebridge;
   const ashen = (id, x, y, dir, name, team, pre, win, post) => {
-    G.mk.npc(m, x, y, dir, 'boy', null, { style: ASHEN_LOOK, still: true, hide: () => !F().tam1,
-      trainer: { id, style: ASHEN_LOOK, name, cls: 'ASHEN WARDEN', sight: 3, team, pre, win, post, prize: 60 } });
+    G.mk.npc(m, x, y, dir, 'boy', null, { style: lookOf(name), still: true, hide: () => !F().tam1,
+      trainer: { id, style: lookOf(name), name, cls: 'ASHEN WARDEN', sight: 3, team, pre, win, post, prize: 60 } });
   };
   ashen('ashen_sb1', 45, 18, LEFT, 'CORVIN', [[20, 7], [77, 7]], ['Stand aside, apprentice. Warden Vesper needs these creatures more than this town does.', 'Calm creatures are safe creatures. We are only... borrowing them.'], 'You fight like an old-style Warden.', 'Vesper will hear about you.');
   ashen('ashen_sb2', 50, 20, DOWN, 'SABLE', [[22, 7], [76, 8]], 'Another one who thinks a Lantern and kind words can keep the wild in line?', 'Hmph. Lucky.', 'The big one by the river got away from us. It will not get away from Vesper.');

@@ -1358,6 +1358,8 @@ const PEOPLE_LOOKS = {
   vesper: { hair: '#e8e8f0', skin: '#e8c8b0', shirt: '#2a2a3a', pants: '#1a1a24', hat: '#6a2a4a' },
   ashen: { hair: '#3a3440', skin: '#e8c0a0', shirt: '#4a4450', pants: '#2a2630', hat: '#8a3a3a' },
   wren: { hair: '#e8e8f4', skin: '#e8c098', shirt: '#3a5a3a', pants: '#403060', hat: '#6a4a9a' },
+  sable: { hair: '#1a1418', skin: '#ecc8b0', shirt: '#3a3440', pants: '#2a2630', hat: '#a02a2a' },
+  mordant: { hair: '#1a1a20', skin: '#e0b898', shirt: '#2a2630', pants: '#1a1820', hat: '#b02a2a' },
   mason: { hair: '#4a3a30', skin: '#e0b088', shirt: '#9a7a55', pants: '#4a4048', hat: '#c8a050' },
   ferna: { hair: '#3a7a3a', skin: '#f8d0a8', shirt: '#6cc060', pants: '#8a6a40', hat: '#f0a8c8' },
   marlo: { hair: '#2a5aa0', skin: '#f0c8a0', shirt: '#3a9cf0', pants: '#284870', hat: '#f8f8f8' },
@@ -1367,7 +1369,7 @@ const PEOPLE_LOOKS = {
   isolde: { hair: '#e8f4ff', skin: '#f4e0d8', shirt: '#7fb8e8', pants: '#e8f4ff', hat: '#cfeeff' },
   pyrra: { hair: '#d03a20', skin: '#e8b890', shirt: '#e8502a', pants: '#3a2a30', hat: '#ffb040' },
 };
-const PEOPLE_ST = { boy: 'boy', girl: 'girl', old: 'oldman', mom: 'mum', clerk: 'clerk', hiker: 'hiker', camper: 'camper', bug: 'bug', kade: 'kade' };
+const PEOPLE_ST = { boy: 'boy', girl: 'girl', old: 'oldman', mom: 'mum', clerk: 'clerk', hiker: 'hiker', camper: 'camper', bug: 'bug', kade: 'kade' };   // generic looks (G.mk.ST) -> painted art
 const lookKey = st => [st.hair, st.skin, st.shirt, st.pants, st.hat || ''].join('|');
 let peopleMap = null; const peopleImg = {};
 function peopleSlug(st) {
@@ -1380,7 +1382,7 @@ function peopleSlug(st) {
   const P = G.PLAYER_STYLE; if (P && st.hair === P.hair && st.skin === P.skin && st.pants === P.pants) return G.PEOPLE_IMG['player-a'] ? 'player-a' : null;
   const slug = peopleMap[lookKey(st)]; return slug && G.PEOPLE_IMG[slug] ? slug : null;
 }
-G.WREN_LOOK = PEOPLE_LOOKS.wren;
+G.WREN_LOOK = PEOPLE_LOOKS.wren; G.SABLE_LOOK = PEOPLE_LOOKS.sable; G.MORDANT_LOOK = PEOPLE_LOOKS.mordant;
 // The decoded image for a slug and screen direction (0 down, 1 up, 2 left, 3 right), or null while it is still loading.
 function peopleView(slug, dir, frame) {
   const view = (dir === 0 ? 'front' : dir === 1 ? 'back' : 'side') + (frame ? '-walk' + frame : ''), k = slug + ':' + view; let e = peopleImg[k];
