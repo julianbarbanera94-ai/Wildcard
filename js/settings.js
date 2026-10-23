@@ -78,5 +78,5 @@ G.applySettings = function (changed) {
   if (!changed || changed === 'system.graphics') { if (G.refit) G.refit(); }
   if (!changed || changed.startsWith('hud.')) { const h = document.getElementById('help'); if (h) h.style.visibility = G.hudOn('tutorialHints') ? '' : 'hidden'; }
 };
-G.VERSION = '3.15.1';
+G.VERSION = '3.15.2';
 })();
