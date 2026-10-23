@@ -121,6 +121,18 @@ const OUT = process.env.OUT || '/tmp';
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: pr[0], y: pr[1] }] }); await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: pr[0] + 40, y: pr[1] }] });
   await page.waitForTimeout(100); const held = await ev(() => G.input.held.right); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   assert(held, 'floating stick: a drag from where you touched steers right');
+  // the stick recovers from a focus loss (notification shade, app switch): the knob snaps back and a held thumb keeps steering
+  await ev(() => { G.setPref('controls.joystick', 'fixed'); }); await page.waitForTimeout(100);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: pr[0] - 10, y: pr[1] + 300 }] });
+  const sc = await ev(() => { const r = document.getElementById('stick').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: sc[0], y: sc[1] }] }); await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sc[0] + 50, y: sc[1] }] }); await page.waitForTimeout(120);
+  await ev(() => window.dispatchEvent(new Event('blur'))); await page.waitForTimeout(80);
+  assert.deepEqual(await ev(() => [document.querySelector('#stick .knob').style.transform, !!G.input.held.right]), ['', false], 'focus lost mid-push: the knob snaps back and nothing stays held');
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sc[0] + 52, y: sc[1] }] }); await page.waitForTimeout(120);
+  assert(await ev(() => G.input.held.right), 'the thumb never left, so the stick steers again');
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await page.waitForTimeout(100);
+  assert(await ev(() => !G.input.held.right), 'letting go releases it');
   // run modes
   assert.deepEqual(await ev(() => { const r = []; for (const m of ['hold', 'always']) { G.setPref('controls.run', m); r.push([G.running({ b: false }), G.running({ b: true })]); } G.setPref('controls.run', 'toggle'); r.push(G.running({ b: false })); G.runToggle(); r.push(G.running({ b: false })); G.runToggle(); G.setPref('controls.run', 'hold'); return r; }),
     [[false, true], [true, false], false, true], 'hold B, always run (B walks), tap to toggle');

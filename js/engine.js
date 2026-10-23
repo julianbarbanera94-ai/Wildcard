@@ -17,12 +17,12 @@ G.press = k => { if (!input.held[k]) input.next[k] = true; input.held[k] = true;
 G.release = k => { input.held[k] = false; };
 addEventListener('keydown', e => { if (G.keyHook && G.keyHook(e)) { e.preventDefault(); return; } const k = KEYS[e.key]; if (k) { e.preventDefault(); if (!e.repeat) G.press(k); } });
 addEventListener('keyup', e => { const k = KEYS[e.key]; if (k) G.release(k); });
-addEventListener('blur', () => { input.held = {}; });
+addEventListener('blur', () => { input.held = {}; if (G.resetPad) G.resetPad(); });
 addEventListener('contextmenu', e => e.preventDefault());
 // Pause sound and drop held keys while the page/app is in the background; save progress when leaving.
 document.addEventListener('visibilitychange', () => {
   const a = G.audio;
-  if (document.hidden) { input.held = {}; if (a.ctx) a.ctx.suspend(); if (G.autosave) G.autosave(); }
+  if (document.hidden) { input.held = {}; if (G.resetPad) G.resetPad(); if (a.ctx) a.ctx.suspend(); if (G.autosave) G.autosave(); }
   else if (a.ctx) a.ctx.resume();
 });
 addEventListener('pagehide', () => { if (G.autosave) G.autosave(); });

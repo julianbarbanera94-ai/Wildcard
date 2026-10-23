@@ -159,7 +159,9 @@ addEventListener('DOMContentLoaded', () => {
   };
   if (stick) {
     const knob = stick.querySelector('.knob'); let held = null, id = null, origin = null;
-    const set = k => { if (k === held) return; if (held) G.release(held); held = k; if (k) { G.press(k); G.haptic(4); } };
+    // The stick's own idea of the held direction can go stale (the game drops all held keys when the app loses focus), so a
+    // direction counts as held only if the game agrees; otherwise pushing the same way again would do nothing.
+    const set = k => { if (k === held && (!k || G.input.held[k])) return; if (held && held !== k) G.release(held); held = k; if (k) { G.press(k); G.haptic(4); } };
     const dead = () => ({ low: 22, medium: 14, high: 7 }[G.pref('controls.sensitivity')]);
     const move = e => {
       const r = stick.getBoundingClientRect(), cx = origin ? origin[0] : r.left + r.width / 2, cy = origin ? origin[1] : r.top + r.height / 2, dx = e.clientX - cx, dy = e.clientY - cy;
@@ -167,7 +169,14 @@ addEventListener('DOMContentLoaded', () => {
       knob.style.transform = `translate(${dx * k / sc}px, ${dy * k / sc}px)`;
       set(d < dead() ? null : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
     };
-    const end = e => { if (e.pointerId !== id) return; id = null; origin = null; stick.classList.remove('on'); knob.style.transform = ''; stick.style.translate = `${home[0]}px ${home[1]}px`; set(null); };
+    const reset = () => { id = null; origin = null; stick.classList.remove('on'); knob.style.transform = ''; stick.style.translate = `${home[0]}px ${home[1]}px`; set(null); };
+    const end = e => { if (e.pointerId !== id) return; reset(); };
+    G.resetPad = () => { reset(); document.querySelectorAll('[data-k].on').forEach(b => b.classList.remove('on')); };   // called when the app loses focus
+    // Safety net: if a finger lifts but the stick never hears about it (lost events on some phones), let go anyway.
+    const down = new Set(); addEventListener('pointerdown', e => down.add(e.pointerId), true);
+    for (const t of ['pointerup', 'pointercancel']) addEventListener(t, e => { down.delete(e.pointerId); if (e.pointerId === id) reset(); }, true);
+    addEventListener('touchend', e => { if (!e.touches.length) { down.clear(); if (id !== null) reset(); } }, true);
+    setInterval(() => { if (id !== null && !down.has(id)) reset(); }, 400);
     const begin = (e, float) => {
       e.preventDefault(); id = e.pointerId; stick.setPointerCapture(id); stick.classList.add('on'); G.audio.init();
       if (float) {   // floating: move the ring so its centre is under the finger
@@ -181,7 +190,10 @@ addEventListener('DOMContentLoaded', () => {
     if (pad) pad.addEventListener('pointerdown', e => { if (G.pref('controls.joystick') !== 'floating' || e.target.closest('button') || stick.contains(e.target)) return;
       const pr = pad.getBoundingClientRect(), leftHalf = e.clientX < pr.left + pr.width / 2, stickLeft = G.pref('controls.layout') !== 'left';
       if (leftHalf === stickLeft) begin(e, true); });
-    stick.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
+    stick.addEventListener('pointermove', e => {
+      if (id === null && stick.hasPointerCapture && stick.hasPointerCapture(e.pointerId)) { id = e.pointerId; stick.classList.add('on'); }   // the thumb never left: pick the stick up again after a focus loss
+      if (e.pointerId === id) move(e);
+    });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => stick.addEventListener(ev, end));
   }
   document.querySelectorAll('[data-k]').forEach(b => {
