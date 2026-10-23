@@ -115,7 +115,7 @@ const hash = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.54
   scatter(m, 'i', [[7, 2], [8, 2], [7, 3], [32, 2], [31, 2], [32, 3], [7, 7], [32, 7], [12, 4], [27, 4], [19, 3], [20, 3], [15, 6], [24, 6], [9, 1], [30, 1]]);
   scatter(m, 'C', [[19, 7], [7, 6], [32, 6]]);
   m.objs.push({ x: 10, y: 3, id: 'mn_rev', item: 'Revive', ball: true }); m.objs.push({ x: 29, y: 3, id: 'mn_ultra', item: 'Mythic Orb', ball: true });
-  trainer(m, 'mn_kade', 19, 9, DOWN, 'kade', { name: 'KADE', cls: 'MINE WARDEN', sight: 4, team: [[22, 12], [23, 13], [24, 14]], pre: 'I am Kade, Warden of the Mine. The MINE EMBER SHARD lies in the chamber behind me. Only a true Warden may take it!', win: 'The Mine accepts you. Take the shard, and these as well.', post: 'Light the Lantern. The Wildcard will come when the vale is whole.', prize: 60, shard: 'mine', reward: ['Mythic Orb', 3] });
+  trainer(m, 'mn_kade', 19, 9, DOWN, 'kade', { name: 'KADE', cls: 'MINE WARDEN', sight: 4, team: [[22, 12], [23, 13], [24, 14]], pre: 'I am Kade, Warden of the Mine. Show me what a true Warden is made of!', win: 'The Mine accepts you. Take these.', post: 'The Mine shard? Ashen Wardens broke in and carried it north, to the Aurora Isles. Only something old and cold guards it now.', prize: 60, reward: ['Mythic Orb', 3] });
   // west tunnel and grotto
   rect(m, 3, 33, 3, 1, 'c'); rect(m, 3, 21, 1, 13, 'c'); rect(m, 2, 13, 8, 8, 'e'); rect(m, 3, 12, 6, 1, 'e'); rect(m, 4, 16, 4, 2, 'c'); rect(m, 3, 17, 1, 4, 'c');
   scatter(m, 'i', [[2, 13], [9, 13], [2, 20], [9, 20], [6, 12], [9, 16], [5, 14]]); scatter(m, 'C', [[2, 14], [9, 19]]);

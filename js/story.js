@@ -2,7 +2,7 @@
 // Every step reads saved state, so a quest is right however you got there: early, out of order, or from an old save.
 (function () {
 const Q = G.quest, F = S => S.flags;
-const SHARDS = [['meadow', 'evergreen', 'Evergreen Forest'], ['marsh', 'tidefall', 'Tidefall'], ['mine', 'ridge', 'the Ridge']];   // where each is found (js/chapter2.js)
+const SHARDS = [['meadow', 'evergreen', 'Evergreen Forest'], ['marsh', 'tidefall', 'Tidefall'], ['mine', 'aurora', 'the Aurora Isles']];   // where each is found (js/chapter2.js)
 const shardCount = S => SHARDS.filter(([k]) => F(S)['shard_' + k]).length;
 // Which reputation region a place belongs to.
 const REGION = { sunmeadow: 'west', sunhaven: 'west', evergreen: 'west', driftwood: 'west', verdant: 'west',

@@ -31,7 +31,7 @@ const SPEC = [
   ['cloudpeak', 'route', 655, 172, 3, { tag: 'b' }],
   ['glacier', 'route', 1030, 205, 5, { tag: 'b' }],
   ['frostmere', 'city', 1078, 130, 5, { tag: 'b', arena: 'rime', port: [1170, 38] }],
-  ['aurora', 'island', 1405, 95, 8, { tag: 'b', lantern: true, port: [1330, 70] }],
+  ['aurora', 'island', 1405, 95, 7, { tag: 'b', port: [1330, 70] }],
   ['sandsreach', 'route', 1010, 520, 2, { tag: 'b', arena: 'dune' }],
   ['badlands', 'route', 1330, 440, 4, { tag: 'b' }],
   ['emberfall', 'route', 1290, 262, 6, { tag: 'b', arena: 'magma' }],
@@ -858,11 +858,13 @@ async function sail(from, to, boat) {
   const pts = ferryPath(from, to), A = BYID[from], B = BYID[to], len = pathAt(pts, 0).len, T = Math.max(230, Math.min(420, Math.round(len / 2.3)));
   const trail = []; let t = 0, k = 0, vcx = A.port ? A.port[0] / RW : A.nx, vcy = A.port ? A.port[1] / RH : A.ny;
   const scene = {
+    wide: true, raw: true,
     update() { t++; },
     draw(ctx) {
+      const W = G.W, H = G.H, pw = Math.min(W - 8, 232), x0 = (W - pw) / 2;
       const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, pp = pathAt(pts, Math.max(0, Math.min(1, k)));
       vcx += (pp.x / RW - vcx) * .12; vcy += (pp.y / RH - vcy) * .12;
-      G.drawWorldMap(ctx, 0, 0, 240, 160, { t, view: { cx: vcx, cy: vcy, z: 2.1 }, here: null, names: 'none', icons: 'none', fog: false, locks: false, clouds: false,
+      G.drawWorldMap(ctx, 0, 0, W, H, { t, view: { cx: vcx, cy: vcy, z: 2.1 }, here: null, names: 'none', icons: 'none', fog: false, locks: false, clouds: false,
         draw(c, P, kx) {
           // wake
           for (let i = 0; i < trail.length; i++) { const [tx, ty, ta] = trail[i], [sx, sy] = P(tx, ty), a = i / trail.length; c.fillStyle = `rgba(255,255,255,${a * .5})`; c.beginPath(); c.ellipse(sx - Math.cos(pp.ang) * 2, sy - Math.sin(pp.ang) * 2, 1.2 + (1 - a) * 3.4, .8 + (1 - a) * 1.6, pp.ang, 0, TAU); c.fill(); }
@@ -870,9 +872,9 @@ async function sail(from, to, boat) {
           for (const q of [A, B]) { const [qx, qy] = P(q.x, q.y); G.drawSignPlate(c, G.worldShort(q.id), qx, qy - 6, t, q.id === to ? 'shop' : 'home'); }
         } });
       // caption + progress
-      G.frame(ctx, 4, 4, 232, 20, 'dark');
-      G.text(ctx, `${byBoatNow() ? 'BOAT' : 'FERRY'}: ${G.worldShort(from)} to ${G.worldShort(to)}`, 12, 8, { font: G.FONT_B || G.FONT, color: '#ffffff', shadow: '#0c2a40' });
-      ctx.fillStyle = 'rgba(0,20,40,.5)'; G.kit.rr(ctx, 12, 18, 216, 3, 1.5); ctx.fill(); ctx.fillStyle = '#7ae8ff'; G.kit.rr(ctx, 12, 18, Math.max(2, 216 * k), 3, 1.5); ctx.fill();
+      G.frame(ctx, x0, 4, pw, 20, 'dark');
+      G.text(ctx, `${byBoatNow() ? 'BOAT' : 'FERRY'}: ${G.worldShort(from)} to ${G.worldShort(to)}`, x0 + 8, 8, { font: G.FONT_B || G.FONT, color: '#ffffff', shadow: '#0c2a40' });
+      ctx.fillStyle = 'rgba(0,20,40,.5)'; G.kit.rr(ctx, x0 + 8, 18, pw - 16, 3, 1.5); ctx.fill(); ctx.fillStyle = '#7ae8ff'; G.kit.rr(ctx, x0 + 8, 18, Math.max(2, (pw - 16) * k), 3, 1.5); ctx.fill();
     },
   };
   G.worldSail = { scene, get k() { return k; }, from, to };
@@ -898,30 +900,32 @@ G.ferry = async function (fromId) {
   await says('FERRY CAPTAIN: Ahoy! Fancy a crossing? Have a look at the ticket board.');
   let sel = 0, t = 0, result = null, tapped = -1, cancel = false;
   const scene = {
+    wide: true, raw: true,
     update() { t++; },
     draw(ctx) {
+      const W = G.W, H = G.H, pw = Math.min(W - 8, 232), x0 = (W - pw) / 2;
       const R = routes[sel], path = ferryPath(here, R.to), A = BYID[here], B = BYID[R.to];
       const cx = (A.x + B.x) / 2 / RW, cy = (A.y + B.y) / 2 / RH;
-      G.drawWorldMap(ctx, 0, 0, 240, 160, { t, here, cursor: R.to, view: { cx, cy: cy + .08, z: 1.25 }, names: 'sel', icons: 'none', fog: false, locks: true, ferries: true,
+      G.drawWorldMap(ctx, 0, 0, W, H, { t, here, cursor: R.to, view: { cx, cy: cy + .08, z: 1.25 }, names: 'sel', icons: 'none', fog: false, locks: true, ferries: true,
         draw(c, P) { c.save(); c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 1.6; c.setLineDash([3, 3]); c.beginPath(); path.forEach((q, i) => { const [x, y] = P(q[0], q[1]); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); c.restore(); } });
       // the ticket desk
-      const h = 24 + routes.length * 16, y0 = 160 - h - 3;
-      G.frame(ctx, 4, y0, 232, h, 'light');
-      G.text(ctx, 'FERRY TICKET DESK', 12, y0 + 5, { font: G.FONT_B || G.FONT });
-      G.text(ctx, `Your money: ${dollars(S.money)}   Badges: ${badges()}`, 230, y0 + 6, { font: G.FONT_S, color: '#5a4a66', shadow: false, align: 'right' });
+      const h = 24 + routes.length * 16, y0 = H - h - 3;
+      G.frame(ctx, x0, y0, pw, h, 'light');
+      G.text(ctx, 'FERRY TICKET DESK', x0 + 8, y0 + 5, { font: G.FONT_B || G.FONT });
+      G.text(ctx, `Your money: ${dollars(S.money)}   Badges: ${badges()}`, x0 + pw - 2, y0 + 6, { font: G.FONT_S, color: '#5a4a66', shadow: false, align: 'right' });
       routes.forEach((r, i) => {
         const yy = y0 + 16 + i * 16, on = i === sel;
-        if (on) { ctx.fillStyle = 'rgba(255,200,90,.35)'; G.kit.rr(ctx, 9, yy - 1.5, 222, 15, 3); ctx.fill(); }
-        G.tapZone(9, yy - 1.5, 222, 15, () => { tapped = i; });
-        iconAnchor(ctx, 15, yy + 3.5, 3);
-        G.text(ctx, G.worldShort(r.to), 22, yy, { font: on ? (G.FONT_B || G.FONT) : G.FONT, color: '#3a2a48' });
-        G.text(ctx, dollars(r.price), 228, yy, { font: G.FONT_B || G.FONT, color: S.money >= r.price ? '#2a7a4a' : '#b03a3a', shadow: false, align: 'right' });
+        if (on) { ctx.fillStyle = 'rgba(255,200,90,.35)'; G.kit.rr(ctx, x0 + 5, yy - 1.5, pw - 10, 15, 3); ctx.fill(); }
+        G.tapZone(x0 + 5, yy - 1.5, pw - 10, 15, () => { tapped = i; });
+        iconAnchor(ctx, x0 + 11, yy + 3.5, 3);
+        G.text(ctx, G.worldShort(r.to), x0 + 18, yy, { font: on ? (G.FONT_B || G.FONT) : G.FONT, color: '#3a2a48' });
+        G.text(ctx, dollars(r.price), x0 + pw - 4, yy, { font: G.FONT_B || G.FONT, color: S.money >= r.price ? '#2a7a4a' : '#b03a3a', shadow: false, align: 'right' });
         const req = []; if (r.badges) req.push(`${r.badges} BADGES`); if (r.lantern) req.push('LANTERN RELIT');
         const txt = req.length ? `Needs ${req.join(' + ')}` : 'Open to all';
-        G.text(ctx, txt, 22, yy + 7.5, { font: G.FONT_S, color: r.why ? '#b03a3a' : '#2a7a4a', shadow: false });
-        if (r.why) iconLock(ctx, 22 + ctx.measureText(txt).width + 6, yy + 10.5, 2);
+        G.text(ctx, txt, x0 + 18, yy + 7.5, { font: G.FONT_S, color: r.why ? '#b03a3a' : '#2a7a4a', shadow: false });
+        if (r.why) iconLock(ctx, x0 + 18 + ctx.measureText(txt).width + 6, yy + 10.5, 2);
       });
-      G.text(ctx, G.touch ? 'TAP: BUY   TAP MAP: BACK' : (G.vehicles && G.vehicles.ownsBoat && G.vehicles.ownsBoat() ? 'A: TICKET OR YOUR BOAT   B: BACK' : 'A: BUY TICKET   B: BACK'), 12, y0 + h - 8.5, { font: G.FONT_S, color: '#8a7a90', shadow: false });
+      G.text(ctx, G.touch ? 'TAP: BUY   TAP MAP: BACK' : (G.vehicles && G.vehicles.ownsBoat && G.vehicles.ownsBoat() ? 'A: TICKET OR YOUR BOAT   B: BACK' : 'A: BUY TICKET   B: BACK'), x0 + 8, y0 + h - 8.5, { font: G.FONT_S, color: '#8a7a90', shadow: false });
       G.tapZone(-999, -999, 2400, 2400, () => { cancel = true; });
     },
   };

@@ -104,7 +104,7 @@ function carveExit(m, edge, at, to, ax, ay, need, along) {
   edgeExit(m, edge, at, to, ax, ay, need, along);
 }
 // Ferry routes (dock to dock; each map in a route sets m.dock to a walkable tile): [from, to, badges].
-const FERRIES = [['driftwood', 'verdant', 3], ['driftwood', 'tidefall', 3], ['shore', 'moonlit', 8], ['cobalt', 'moonlit', 8], ['frostmere', 'aurora', 8]];
+const FERRIES = [['driftwood', 'verdant', 3], ['driftwood', 'tidefall', 3], ['shore', 'moonlit', 8], ['cobalt', 'moonlit', 8], ['frostmere', 'aurora', 7]];
 G.mk_FERRIES = FERRIES;
 G.mk = { FERRIES, maps, newMap, set, rect, border, scatter, building, interior, warp, npc, sign, trainer, ST, DOWN, UP, LEFT, RIGHT, gate, edgeExit, carveExit, wild, stubMap };
 })();

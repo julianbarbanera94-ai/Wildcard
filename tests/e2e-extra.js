@@ -62,10 +62,10 @@ const OUT = process.env.OUT || '/tmp';
   await page.waitForTimeout(400); await key(['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'][await ev(() => window.__kd)], 250);   // step into Kade's line of sight
   await until(() => G.world.busy, 5000, 'trainer spotted'); await page.waitForTimeout(500); await shot('boss-spotted');
   await fight(() => !G.state.flags.mn_kade); await idle();
-  assert.equal(await ev(() => G.state.bag['Mythic Orb']), 33); assert(await ev(() => G.state.flags.shard_mine));
-  step('mine warden spots the player, battles, and gives the Mine Ember Shard + 3 Mythic Orbs');
+  assert.equal(await ev(() => G.state.bag['Mythic Orb']), 33); assert(await ev(() => !G.state.flags.shard_mine), 'Kade no longer holds the shard');
+  step('mine warden spots the player, battles, and gives 3 Mythic Orbs (the Mine shard was taken to the Aurora Isles)');
   // relight: the other two shards are given directly; the Mine shard goes in via the real pedestal interaction
-  await ev(() => { Object.assign(G.state.flags, { shard_meadow: true, shard_marsh: true }); G.loadMap('tower'); });
+  await ev(() => { Object.assign(G.state.flags, { shard_meadow: true, shard_marsh: true, shard_mine: true }); G.loadMap('tower'); });
   for (const [x, y, d] of [[3, 4, 1], [9, 4, 1], [6, 3, 1]]) {
     await ev(([x, y, d]) => { G.placePlayer(x, y, d); }, [x, y, d]); await page.waitForTimeout(250); await key('z');
     await advance(() => !G.world.busy, 30000, 'pedestal ' + x);
@@ -75,6 +75,9 @@ const OUT = process.env.OUT || '/tmp';
   await key('ArrowUp', 300); await until(() => G.world.mapId === 'hollow', 6000, 'hollow gate opens after relight'); step('Hollow Gate opens once the Lantern is lit');
   await ev(() => { window.__mk = G.makeCreature; G.makeCreature = (id, l) => { const c = window.__mk(id, l); if (id === 25) { c.hp = 1; c.status = 'slp'; } return c; }; const j = G.world.map.npcs.find(n => n.creature === 25); G.placePlayer(j.x, j.y + 1, 1); });
   await page.waitForTimeout(300); await shot('joker-room'); await key('z');   // talk to the Joker (facing up)
+  // the finale asks how you meet the Wildcard: choose STRENGTH (a real battle) so the capture checks below still apply
+  for (let i = 0; i < 60 && !(await ev(() => { const l = G.ui.layers[G.ui.layers.length - 1]; return l && l.items && l.items.includes('STRENGTH'); })); i++) await key('z', 120);
+  await key('ArrowDown', 80); await key('z', 200);
   await advance(cmdReady, 40000, 'joker battle'); await page.waitForTimeout(200); await shot('joker-battle');
   for (let tries = 0; tries < 12; tries++) {
     if (!(await ev(() => G.scene !== G.world.scene))) break;

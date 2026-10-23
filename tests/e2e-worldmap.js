@@ -70,7 +70,7 @@ fs.mkdirSync(OUT, { recursive: true });
   await ev(() => { const m = G.worldMap; m.sel = m.nodes.findIndex(n => n.id === 'frostmere'); }); await page.waitForTimeout(200);
   let info = await ev(() => G.worldMap.info); assert.match(info.locked, /needs 5 Arena Badges \(you have 2\), or be TRUSTED in the NORTH.*travel permit/); assert(info.services.arena && info.badge.id === 'rime'); await shot('map-locked');
   await ev(() => { const m = G.worldMap; m.sel = m.nodes.findIndex(n => n.id === 'aurora'); }); await page.waitForTimeout(200);
-  info = await ev(() => G.worldMap.info); assert.match(info.locked, /8 Arena Badges.*Great Lantern must burn again/); assert.deepEqual(info.levels, await ev(() => G.worldLevels('aurora')));
+  info = await ev(() => G.worldMap.info); assert.match(info.locked, /7 Arena Badges.*HERO in the NORTH/); assert.deepEqual(info.levels, await ev(() => G.worldLevels('aurora')));
   await ev(() => { const m = G.worldMap; m.sel = m.nodes.findIndex(n => n.id === 'sunhaven'); }); await page.waitForTimeout(200);
   info = await ev(() => G.worldMap.info); assert.equal(info.locked, null, 'Sunhaven is open'); assert(info.services.heal && info.services.arena === 'bloom' && info.badgeGot === true);
   await key('z'); await page.waitForTimeout(1400); assert(await ev(() => G.worldMap.zoomed && G.worldMap.zoom > 2), 'A zooms in'); await shot('map-zoom');
@@ -110,10 +110,12 @@ fs.mkdirSync(OUT, { recursive: true });
 
   await ev(d => setup('driftwood', d.x, d.y, 0, null, { money: 5000, badges: 3, visited: ['driftwood'] }), d);
   await openFerry('driftwood');
+  assert(await ev(() => G.ferryDesk.scene.wide && G.ferryDesk.scene.raw), 'the ferry desk fills the whole screen (no stretched edge streaks)');
   const price = await ev(() => G.ferryDesk.routes[G.ferryDesk.sel].price), dest = await ev(() => G.ferryDesk.routes[G.ferryDesk.sel].to);
   await key('z');
   await until(() => G.ui.layers.length > 0 && G.ui.text && /Buy a ticket/.test(G.ui.text.lines.join(' ')), 6000, 'confirm'); await shot('ferry-confirm'); await key('z');   // YES
   await pressUntil(() => G.worldSail && G.worldSail.k > .15 && G.ui.fade.a === 0, 20000, 'sailing'); await page.waitForTimeout(600); await shot('sailing');
+  assert(await ev(() => G.worldSail.scene.wide && G.worldSail.scene.raw), 'the sailing scene fills the whole screen (no stretched edge streaks)');
   await until(() => G.worldSail && G.worldSail.k > .6, 20000, 'mid-crossing'); await shot('sailing-mid');
   await pressUntil(() => G.world.mapId !== 'driftwood' && !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0 && !G.ui.text, 40000, 'arrival');
   const arr = await ev(() => { const p = G.world.p, m = G.world.map; return { map: G.world.mapId, x: p.x, y: p.y, dock: m.dock, money: G.state.money, visited: !!G.state.visited[G.world.mapId], walk: G.worldApi.canWalk(p.x, p.y, true) }; });
@@ -124,11 +126,11 @@ fs.mkdirSync(OUT, { recursive: true });
   // the return crossing is free of badge checks; Aurora needs the Lantern
   const back = await ev(() => G.ferryRoutes(G.world.mapId).map(r => [r.to, r.badges, r.lantern]));
   assert(back.some(r => r[0] === 'driftwood' && r[1] === 0), 'you can always sail home: ' + JSON.stringify(back));
-  const au = await ev(() => G.ferryRoutes('frostmere')); assert(au.length === 1 && au[0].to === 'aurora' && au[0].lantern && au[0].badges === 8 && /8 Arena Badges/.test(au[0].why || ''), JSON.stringify(au));
-  const au8 = await ev(() => { G.BADGES.forEach(b => G.state.flags['badge_' + b.id] = true); return G.ferryRoutes('frostmere')[0].why; }); assert.match(au8, /sealed/, 'with 8 badges the Lantern still blocks Aurora');
-  assert.equal(await ev(() => { G.state.flags.lanternLit = true; return G.ferryRoutes('frostmere')[0].why; }), null, 'and with the Lantern relit the ferry sails');
+  const au = await ev(() => G.ferryRoutes('frostmere')); assert(au.length === 1 && au[0].to === 'aurora' && !au[0].lantern && au[0].badges === 7 && /7 Arena Badges/.test(au[0].why || ''), JSON.stringify(au));
+  const au7 = await ev(() => { G.BADGES.slice(0, 7).forEach(b => G.state.flags['badge_' + b.id] = true); return G.ferryRoutes('frostmere')[0].why; }); assert.equal(au7, null, 'with 7 badges the ferry sails to Aurora, no Lantern needed (the last shard is there)');
+  await ev(() => { G.BADGES.forEach(b => G.state.flags['badge_' + b.id] = false); G.BADGES.forEach(b => G.state.flags['badge_' + b.id] = true); });
   const mo = await ev(() => G.ferryRoutes('cobalt').concat(G.ferryRoutes('shore')).map(r => r.to)); assert.deepEqual(mo, ['moonlit', 'moonlit']);
-  step('ferry routes: always a way home; Aurora needs 8 badges and the Lantern; Moonlit from Cobalt and the Shore');
+  step('ferry routes: always a way home; Aurora needs 7 badges; Moonlit from Cobalt and the Shore');
 
   // 4b) a boat owner sails free (same destinations and requirements)
   d = await dockOf('driftwood');

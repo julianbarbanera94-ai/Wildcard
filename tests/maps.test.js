@@ -84,10 +84,10 @@ t('the Aurelian Sea: every harbour town opens onto it, boats can sail from each 
   // no encounter tiles on the sea
   assert(!sea.t.some(r => r.some(c => G.TILES[c].enc)));
 });
-t('story chain exists: starter orbs, the Mine shard holder, tower pedestals, Joker', () => {
+t('story chain exists: starter orbs, no trainer holds a shard, tower pedestals, Joker', () => {
   assert.equal(maps.shrine.objs.filter(o => o.orb).length, 3);
   const shards = Object.values(maps).flatMap(m => m.npcs.filter(e => e.trainer && e.trainer.shard).map(e => e.trainer.shard)).sort();
-  assert.deepEqual(shards, ['mine'], 'the Meadow and Marsh shards come from Evergreen\'s guardian and Tidefall\'s shrine (js/chapter2.js, tests/e2e-story2.js)');
+  assert.deepEqual(shards, [], 'the shards come from guardians and the drowned shrine (js/chapter2.js, js/chapter5.js; tests/e2e-story2.js, e2e-story3.js)');
   assert.deepEqual(maps.tower.objs.filter(o => o.pedestal).map(o => o.pedestal).sort(), ['marsh', 'meadow', 'mine']);
   assert(maps.hollow.npcs.some(e => e.creature === 25));
   for (const m of Object.values(maps)) for (const e of m.npcs) if (e.trainer) for (const [id, l] of e.trainer.team) assert(G.SPECIES[id] && l >= 1, `${e.trainer.id}: bad team entry`);

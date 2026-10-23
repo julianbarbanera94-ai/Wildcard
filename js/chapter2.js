@@ -16,7 +16,7 @@ const npc = (map, x, y, dir, style, o) => G.mk.npc(G.MAPS[map], x, y, dir, style
 const ashen = (map, id, x, y, dir, name, team, pre, win, post, hide) => npc(map, x, y, dir, 'boy', { style: ASHEN, hide,
   trainer: { id, style: ASHEN, name, cls: 'ASHEN WARDEN', sight: 3, team, pre, win, post, prize: 120 } });
 const grant = id => { if (G.vehicles && G.vehicles.grant && !(G.state.vehicles.owned || []).includes(id)) G.vehicles.grant(id); };
-G.SHARD_PLACES = { meadow: 'evergreen', marsh: 'tidefall', mine: 'ridge' };   // where each Ember Shard is found now
+G.SHARD_PLACES = { meadow: 'evergreen', marsh: 'tidefall', mine: 'aurora' };   // where each Ember Shard is found now
 
 // Hazel and Bog still battle you, but they no longer hold shards (js/maps/sunmeadow.js, mirewood.js). Saves that have one keep it.
 const shardGet = async (k, label) => { const S = G.state; S.flags['shard_' + k] = true; G.audio.sfx('levelup'); await says(`${S.name} received the ${label} EMBER SHARD!`); };

@@ -71,7 +71,16 @@ After Elder Wren's advice, your fellow trainee **Tam** stops you outside the Hea
 - **Chapter 3: Tides and Winds.** Relight Grimsby's lighthouse in Driftwood Port and win Zephyra's Gale Badge. Then sail to Verdant Isle and drive off the Ashen sailors with Tam, who starts to doubt Vesper. Reward: a motorboat.
 - **Chapter 4: The Quiet Water.** Win the stolen Tide Stone back at Lakeside and win Marlo's Tide Badge. Then beat Sable at Tidefall and dive into the drowned shrine with a Water creature (Lv 15+) for the **Marsh shard**. Reward: a sailboat.
 
-The Mine shard is still Kade's on the Ridge for now. Hazel and Bog still battle you, but they no longer hold shards. Saves that already have those shards keep them.
+Hazel, Bog and Kade still battle you, but none of them hold a shard any more. Saves that already have shards keep them.
+
+## Chapters 5 to 8, the finale and the post-game
+
+- **Chapter 5: Dust and Thunder.** Ashen machines are draining Sandsreach and Cobalt City. Help them in the order you choose: the town you help first gives you +20 reputation, the second +10, and the story remembers which. A valve in the Crimson Badlands shows Vesper's plan. Reward: a Skyrant that can carry you.
+- **Chapter 6: Cold Resolve.** Tam turns on Vesper on Glacier Pass and joins you. Win Isolde's Rime Badge, then sail to the **Aurora Isles** (open with 7 badges) where the Glacitan gives you the **Mine shard** (Kade's was stolen).
+- **Chapter 7: Fire at the Heart.** Pyrra opens the way under Emberfall. Beat Cindra and shut down the machine full of stolen calm. Vesper flees.
+- **Chapter 8: The Great Lantern.** Vesper fights you in three stages at the Cloudpeak castle, then gives up. Place the three shards in the Great Lantern.
+- **Finale: The Wildcard.** Meet the Wildcard at the Hollow Gate and choose **TRUST** (win its trust, as with the guardians), **STRENGTH** (battle it) or **BALANCE** (needs enough reputation and finished side quests, and it just sits beside you). An epilogue remembers your choices: which town you helped first, your side quests, Tam, Vesper and your homestead.
+- **Post-game.** Every Arena Leader offers a daily rematch at your level.
 
 ## Optional quests
 
@@ -216,6 +225,7 @@ node tests/e2e-field.js                         # CLIMB, LIGHT and DIG with crea
 node tests/e2e-story1.js                        # Prologue and Chapter 1: Tam, Ashen Wardens, Vesper, the Cairnwight, Mason, Wren
 node tests/e2e-threads.js                       # the five optional quests, both sides of the choices, deadlines
 node tests/e2e-story2.js                        # Chapters 2-4: guardian shard, lighthouse, Tam, Tide Stone, drowned shrine, boats
+node tests/e2e-story3.js                        # Chapters 5-8, finale (BALANCE), epilogue, Leader rematches
 node tests/e2e-sea.js                          # the Aurelian Sea: sail between harbours, entrance markers, fly anywhere
 node tests/e2e-worldmap.js                     # the world map, ferries (tickets, boats, gates) and flight
 node tests/e2e-arenas.js                       # entering an Arena, beating a Leader, badges, gates and puzzles

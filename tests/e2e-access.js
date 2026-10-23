@@ -43,8 +43,8 @@ const OUT = process.env.OUT || '/tmp';
     G.state.flags.permit_verdant = true; const fr2 = G.ferryRoutes('driftwood').find(r => r.to === 'verdant');
     return Object.assign(r, { seaAfter: sea.need(), ferryAfter: fr2.why, mapAfter: G.worldLockWhy('verdant') }); });
   assert(s.sea && s.ferry && s.map, 'Verdant locked by boat, ferry and on the map'); assert(!s.seaAfter && !s.ferryAfter && !s.mapAfter, 'a permit opens all of them');
-  assert.match(await ev(() => G.access.why('aurora')), /8 Arena Badges.*HERO/); assert(!(await ev(() => /permit/.test(G.access.why('aurora')))), 'no permits for the far islands');
-  assert.match(await ev(() => { G.state.flags.permit_verdant = false; for (const b of G.BADGES) G.state.flags['badge_' + b.id] = true; const w = G.access.why('aurora'); for (const b of G.BADGES) G.state.flags['badge_' + b.id] = false; return w; }), /sealed until the Great Lantern/);
+  assert.match(await ev(() => G.access.why('aurora')), /7 Arena Badges.*HERO/); assert(!(await ev(() => /permit/.test(G.access.why('aurora')))), 'no permits for the far islands');
+  assert.match(await ev(() => { G.state.flags.permit_verdant = false; for (const b of G.BADGES) G.state.flags['badge_' + b.id] = true; const w = G.access.why('hollow'); for (const b of G.BADGES) G.state.flags['badge_' + b.id] = false; return w; }), /sealed until the Great Lantern/);   // the Hollow Gate: only the Lantern opens it
   step('the rule covers harbour gates on the sea, ferries and the map; the far islands have no permit; the Lantern rule stays');
   // 4) difficulty: the map warns, Leaders scale
   assert.equal(await ev(() => G.access.danger('emberfall')), 'high');

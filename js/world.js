@@ -202,7 +202,7 @@ async function warpTo(id, x, y, dir) {
 
 // ---- Interactions ----------------------------------------------------------
 async function talkTo(n) {
-  if (n.trainer) { const t = n.trainer; n.dir = OPP[p.dir]; if (!flags()[t.id]) { await trainerBattle(n); } else await says(t.post); return; }
+  if (n.trainer) { const t = n.trainer; n.dir = OPP[p.dir]; if (!flags()[t.id]) { await trainerBattle(n); } else if (!(n.rematch && await n.rematch(n))) await says(t.post); return; }
   if (!n.still || n.talk) n.dir = OPP[p.dir];
   if (n.talk) await n.talk(n); else await says(n.lines);
 }
@@ -302,6 +302,7 @@ async function nurse() {
   await says(['Thank you for waiting.', 'Your partners are fully rested! We hope to see you again!']);
 }
 async function joker() {
+  if (G.onJoker && await G.onJoker()) return;   // the finale (js/chapter5.js)
   await says(['...', 'In the glow of the crystals, a creature stirs. Its form seems to shift every time you blink.', 'The WILDCARD! It has been waiting for the Lantern to call it home.']);
   const wild = G.makeCreature(25, 20);
   const r = await runBattle({ wild, bg: 'cave' });
