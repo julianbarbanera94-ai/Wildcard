@@ -11,13 +11,15 @@ const OUT = process.env.OUT || '/tmp';
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/ERR_|Failed to load|GPU stall|swiftshader/i.test(m.text())) errors.push('console: ' + m.text()); });
-  await page.goto('file://' + path.resolve(__dirname, '../index.html')); await page.waitForTimeout(500);
+  await page.goto('file://' + path.resolve(__dirname, '../index.html'));
+  await page.evaluate(() => localStorage.setItem('wildcard-force3d', '1')); await page.reload(); await page.waitForTimeout(500);   // headless WebGL is software-only
   const ev = (fn, arg) => page.evaluate(fn, arg), key = async k => { await page.keyboard.down(k); await page.waitForTimeout(60); await page.keyboard.up(k); await page.waitForTimeout(60); };
   const step = n => console.log('✓', n);
   await key('z'); await key('z'); await page.waitForTimeout(600);
   for (let i = 0; i < 40 && await ev(() => !G.state || G.world.busy); i++) await key('z');
 
   assert(await ev(() => G.c3d.has(1)), 'WebGL and the Embrit model are available');
+  assert(await ev(() => { localStorage.removeItem('wildcard-force3d'); return true; }));
   const still = await ev(() => { const c = G.creatureSprite(1), x = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < x.length; i += 4) if (x[i] > 20) n++; return [c.width, n / (c.width * c.height)]; });
   assert(still[0] === 512 && still[1] > .08, 'the 2D sprite is a render of the 3D model: ' + still);
   step('Embrit is a 3D model; menus use a still render of it');

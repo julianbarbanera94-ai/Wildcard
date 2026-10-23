@@ -23,6 +23,11 @@ function gl() {
   try {
     renderer = new T.WebGLRenderer({ alpha: true, antialias: true, premultipliedAlpha: false, preserveDrawingBuffer: true, powerPreference: 'low-power' });
     renderer.setClearColor(0x000000, 0); renderer.outputEncoding = T.sRGBEncoding; renderer.setPixelRatio(1);
+    // Software-only WebGL (no GPU: SwiftShader, llvmpipe) is far too slow for live creatures; use the 2D art instead,
+    // unless forced (localStorage 'wildcard-force3d' = '1', used by the 3D tests).
+    const g = renderer.getContext(), info = g.getExtension('WEBGL_debug_renderer_info'), name = info ? String(g.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+    let force = false; try { force = localStorage.getItem('wildcard-force3d') === '1'; } catch (e) {}
+    if (/swiftshader|llvmpipe|softpipe|software/i.test(name) && !force) { console.info('3D creatures off: software renderer', name); renderer.dispose(); renderer = null; }
   } catch (e) { console.warn('3D creatures off (no WebGL)', e); renderer = null; }
   return renderer;
 }
