@@ -101,15 +101,15 @@ function sp(id, name, types, base, catchRate, expYield, o) {
 }
 // Starters
 sp(1, 'Embrit', ['Fire'], [42, 50, 40, 58, 48, 62], 45, 62, {
-  evo: [14, 2], look: { stage: 1, form: 'round', feat: ['flame', 'ears'] }, desc: 'A cheerful ember-lizard. The flame on its head shows its mood.',
+  evo: [14, 2], look: { stage: 1, form: 'round', feat: ['flame', 'ears'] }, desc: 'A playful fox kit. Its fluffy tail burns brighter whenever it is excited.',
   learn: [[1, 'Scratch'], [1, 'Growl'], [5, 'Ember'], [9, 'Quick Attack'], [12, 'Bite']]
 });
 sp(2, 'Emberon', ['Fire'], [58, 66, 55, 76, 60, 78], 45, 142, {
-  evo: [32, 3], look: { stage: 2, form: 'round', feat: ['flame', 'ears', 'tail', 'arms'] }, desc: 'Its tail flame roars when it battles.',
+  evo: [32, 3], look: { stage: 2, form: 'round', feat: ['flame', 'ears', 'tail', 'arms'] }, desc: 'A proud fire fox. Its flame mane flares up when it means to fight.',
   learn: [[1, 'Scratch'], [1, 'Growl'], [1, 'Ember'], [14, 'Quick Attack'], [18, 'Bite'], [24, 'Flamethrower'], [30, 'Slam']]
 });
 sp(3, 'Infernox', ['Fire', 'Dark'], [80, 88, 72, 108, 80, 98], 45, 240, {
-  look: { stage: 3, form: 'tall', feat: ['flame', 'horns', 'tail', 'arms', 'legs'] }, desc: 'A blazing beast that hunts in the dead of night.',
+  look: { stage: 3, form: 'tall', feat: ['flame', 'horns', 'tail', 'arms', 'legs'] }, desc: 'Lava runs through its dark hide. It stalks the night with burning eyes.',
   learn: [[1, 'Scratch'], [1, 'Ember'], [1, 'Bite'], [24, 'Flamethrower'], [34, 'Crunch'], [40, 'Slam']]
 });
 sp(4, 'Splashling', ['Water'], [48, 48, 60, 50, 56, 40], 45, 63, {
