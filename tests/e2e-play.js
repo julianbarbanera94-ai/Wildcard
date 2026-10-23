@@ -71,6 +71,7 @@ const OUT = process.env.OUT || '/tmp';
   await until(() => !G.world.busy, 5000); step('caught a wild creature with an orb (party=2, dex marked, orb consumed)');
 
   // --- trainer battle: fight to the end, get EXP / level up ---
+  await ev(() => { G.state.battleMem = {}; });   // battle memory would start on BAG after the orb throw; this bot presses A twice for FIGHT > first move
   await ev(() => { window.__res = undefined; const c = G.makeCreature(10, 2); G.runWorld(async () => { window.__res = await G.startBattle({ trainer: { name: 'TEST', cls: 'YOUNGSTER', style: { hair: '#000', skin: '#fca', shirt: '#0a0', pants: '#00a' }, team: [c], prize: 10, win: 'You win!' } }); await G.fadeTo(0, 5); }); });
   const lvl0 = await ev(() => G.state.party[0].lvl), money0 = await ev(() => G.state.money);
   let shotDone = false;

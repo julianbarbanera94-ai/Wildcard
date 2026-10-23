@@ -59,8 +59,8 @@ const OUT = process.env.OUT || '/tmp';
   await page.waitForTimeout(400);
   await ev(() => { G.ui.layers.length = 0; G.closeText(); G.world.busy = false; G.scene = G.world.scene; G.state.cheats = { on: true, unlocked: true }; });
   const before = await ev(() => G.state.money);
-  await ev(() => G.runWorld(() => G.settingsMenu()));
-  await page.waitForTimeout(300); await key('ArrowDown'); await key('z', 400);   // TEST MODE (already unlocked)
+  await ev(() => G.runWorld(() => G.devMenu()));   // the Developer menu (Test Mode, already unlocked)
+  await page.waitForTimeout(400);
   await key('z', 400);   // UNLOCK EVERYTHING
   for (let i = 0; i < 8; i++) await key('z', 150);
   const u = await ev(() => ({ all: G.quest.all().every(q => G.quest.done(q.id)), rep: G.REP_REGIONS.every(([r]) => G.rep.get(r) === 100), n: G.quest.all().length }));

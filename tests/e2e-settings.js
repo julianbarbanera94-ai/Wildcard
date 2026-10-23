@@ -86,6 +86,15 @@ const OUT = process.env.OUT || '/tmp';
   for (let i = 0; i < 100 && await ev(() => G.scene !== G.world.scene); i++) { if (await menuIs(['FIGHT', 'BAG', 'PARTY', 'RUN'])) { await ev(() => { G.ui.layers[G.ui.layers.length - 1].items; }); await key('ArrowDown', 80); await key('ArrowRight', 80); } await key('z', 120); }
   await idle(); await ev(() => G.saveGame(1)); const re = await ev(() => { const S = G.loadGame(1); return [S.party[0].lastMove, S.battleMem && S.battleMem.action]; });
   assert.equal(re[0], moves[1], 'the remembered move is in the save'); assert.equal(typeof re[1], 'number');
+  // valuable items ask first (YES uses it, NO keeps it); the setting turns the question off
+  await ev(() => { G.state.bag = { 'Mythic Orb': 2, 'Terra Orb': 3 }; G.state.battleMem = {}; }); await startBattle(); await toAction();
+  const askMythic = async () => { await key('ArrowRight', 150); await key('z', 500); await key('z', 400); await until(() => { const L = G.ui.layers[G.ui.layers.length - 1]; return !!(L && L.items && L.items[0] === 'YES'); }, 8000, 'confirmation'); };
+  await askMythic(); await key('ArrowDown', 100); await key('z', 300); await toAction(); assert.equal(await ev(() => G.state.bag['Mythic Orb']), 2, 'NO keeps the orb');
+  await ev(() => { G.setPref('battle.confirmValuable', false); }); await key('ArrowLeft', 100); await key('ArrowRight', 150); await key('z', 500); await key('z', 400);
+  await page.waitForTimeout(900); assert.equal(await ev(() => !!(G.ui.layers[G.ui.layers.length - 1] || {}).items && G.ui.layers[G.ui.layers.length - 1].items[0] === 'YES'), false, 'confirmation off: no question');
+  await ev(() => G.setPref('battle.confirmValuable', true));
+  for (let i = 0; i < 400 && await ev(() => G.scene !== G.world.scene); i++) { if (await menuIs(['FIGHT', 'BAG', 'PARTY', 'RUN'])) { await key('ArrowDown', 80); await key('ArrowRight', 80); } await key('z', 100); }
+  await idle();
   step('battle memory: the same move and last action are preselected (never auto-used); no-PP moves fall back; each creature keeps its own; the setting turns it off; it survives battles and reloads');
 
   // 5) HUD toggles change the real HUD
