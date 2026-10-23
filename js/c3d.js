@@ -154,7 +154,64 @@ function sparks(max, size) {
   pts.userData.step = () => { P.forEach((p, i) => { if (p.life > 0) { p.x += p.vx; p.y += p.vy; p.z += p.vz; p.vx += (Math.random() - .5) * .002; p.life -= 1 / p.max; } pos[i * 3] = p.x; pos[i * 3 + 1] = p.life > 0 ? p.y : -99; pos[i * 3 + 2] = p.z; }); geo.attributes.position.needsUpdate = true; };
   return pts;
 }
-C3.kit = { T, col, grade, mat, sphere, mesh, joint, tuft, lathe, eye, flames, flameMaterial, sparks, irisTexture };
+// ---- Imported models (a modelling tool's mesh, simplified and auto-rigged by tools/import-creature-glb) -----------------
+// asset: { n, lo, hi, pos (u16 x3), nrm (i8 x3), uv (u16 x2), idx (u16), scale, off, bones: [{ name, parent, head, tip }],
+// skinIndex/skinWeight (u8 x4), fire (u8, glow mask), eyes: [[x, y, z] ...], base/normal (texture data URLs) }.
+// Bones get the rig's standard names (body, chest, neck, head, earL, tail0.., hipFL/kneeFL/pawFL..), so a species' clips
+// drive an imported model exactly like a built one. Painted eyes get skin-coloured lids so the model can blink and squint.
+const b64 = s => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u.buffer; };
+const texCache = {}; let pending = 0; const readyFns = [];
+C3.whenReady = fn => { if (!pending) fn(); else readyFns.push(fn); };   // after every embedded texture has decoded
+function dataTexture(url, srgb) { if (texCache[url]) return texCache[url]; const img = new Image(), t = new T.Texture(img); pending++;
+  img.onload = img.onerror = () => { t.needsUpdate = true; if (--pending === 0) readyFns.splice(0).forEach(f => { try { f(); } catch (e) { console.warn(e); } }); }; img.src = url; t.flipY = false; if (srgb) t.encoding = T.sRGBEncoding; return texCache[url] = t; }
+const fireTime = { value: 0 }, fireBoost = { value: 0 };
+function skinned(A, o = {}) {
+  const J = {}, root = new T.Group(); root.userData.rest = { p: root.position.clone(), r: root.rotation.clone(), s: root.scale.clone() }; J.root = root;
+  const q = new Uint16Array(b64(A.pos)), nq = new Int8Array(b64(A.nrm)), uq = new Uint16Array(b64(A.uv)), n = A.n, S = A.scale, off = A.off;
+  const pos = new Float32Array(n * 3), nrm = new Float32Array(n * 3), uv = new Float32Array(n * 2);
+  for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) { pos[i * 3 + k] = (A.lo[k] + q[i * 3 + k] / 65535 * (A.hi[k] - A.lo[k]) + off[k]) * S; nrm[i * 3 + k] = nq[i * 3 + k] / 127; }
+  for (let i = 0; i < n * 2; i++) uv[i] = uq[i] / 65535;
+  const g = new T.BufferGeometry();
+  g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('normal', new T.BufferAttribute(nrm, 3)); g.setAttribute('uv', new T.BufferAttribute(uv, 2));
+  g.setIndex(new T.BufferAttribute(new Uint16Array(b64(A.idx)), 1));
+  g.setAttribute('skinIndex', new T.Uint16BufferAttribute(Array.from(new Uint8Array(b64(A.skinIndex))), 4));
+  g.setAttribute('skinWeight', new T.BufferAttribute(Float32Array.from(new Uint8Array(b64(A.skinWeight)), v => v / 255), 4));
+  if (A.fire) g.setAttribute('aFire', new T.BufferAttribute(Float32Array.from(new Uint8Array(b64(A.fire)), v => v / 255), 1));
+  const m = new T.MeshStandardMaterial({ map: dataTexture(A.base, true), normalMap: A.normal ? dataTexture(A.normal) : null, roughness: o.rough ?? .72, metalness: 0, side: T.DoubleSide });
+  if (A.fire) m.onBeforeCompile = sh => {   // the flame parts of the texture glow and flicker
+    sh.uniforms.uFireT = fireTime; sh.uniforms.uFireB = fireBoost;
+    sh.vertexShader = 'attribute float aFire; varying float vFire; varying vec3 vFP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vFire = aFire; vFP = position;');
+    sh.fragmentShader = 'uniform float uFireT; uniform float uFireB; varying float vFire; varying vec3 vFP;\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>',
+      '#include <emissivemap_fragment>\n float fl = 0.55 + 0.25 * sin(uFireT * 9.0 + vFP.y * 14.0 + vFP.x * 6.0) + 0.2 * sin(uFireT * 15.0 - vFP.z * 11.0);\n float hot = smoothstep(0.35, 0.9, dot(diffuseColor.rgb, vec3(0.5, 0.4, 0.1)));\n totalEmissiveRadiance += diffuseColor.rgb * vFire * (0.35 + 0.45 * hot) * fl * (1.0 + uFireB);');
+  };
+  // bones
+  const bones = [];
+  for (const b of A.bones) {
+    const bone = new T.Bone(); bone.name = b.name; const par = b.parent ? J[b.parent] : null, ph = b.parent ? A.bones.find(x => x.name === b.parent).head : [0, 0, 0];
+    bone.position.set(b.head[0] - ph[0], b.head[1] - ph[1], b.head[2] - ph[2]); (par || root).add(bone);
+    bone.userData.rest = { p: bone.position.clone(), r: bone.rotation.clone(), s: bone.scale.clone() }; J[b.name] = bone; bones.push(bone);
+  }
+  const mesh = new T.SkinnedMesh(g, m); mesh.frustumCulled = false; root.add(mesh);
+  root.updateMatrixWorld(true); mesh.bind(new T.Skeleton(bones), mesh.matrixWorld);
+  // legs for IK (bones are laid out vertically: knee straight below the hip, paw below the knee)
+  const legs = [];
+  for (const id of ['FL', 'FR', 'BL', 'BR']) { const hip = J['hip' + id], knee = J['knee' + id], paw = J['paw' + id]; if (!hip) continue;
+    const r = new T.Vector3(); paw.getWorldPosition(r); root.worldToLocal(r); r.y = Math.max(.02, r.y - .04);
+    legs.push({ id, hip, knee, paw, L1: knee.position.length(), L2: paw.position.length(), bend: id[0] === 'F' ? -1 : 1, rest: r, target: new T.Vector3() }); }
+  // eyelids over painted eyes: a skin-coloured lens that slides down from the top of the eye, with a dark lash line at its edge
+  const lids = (A.eyes || []).map(e => {
+    const head = J.head, p = new T.Vector3(...e); const hw = new T.Vector3(); head.getWorldPosition(hw);
+    let best = 1e9, nrmv = new T.Vector3(0, 0, 1); for (let i = 0; i < n; i += 1) { const dx = pos[i * 3] - p.x, dy = pos[i * 3 + 1] - p.y, dz = pos[i * 3 + 2] - p.z, d = dx * dx + dy * dy + dz * dz; if (d < best) { best = d; nrmv.set(nrm[i * 3], nrm[i * 3 + 1], nrm[i * 3 + 2]); } }
+    const r = o.eyeR || .1, grp = new T.Group(); grp.position.copy(p).sub(hw).addScaledVector(nrmv, .012); grp.quaternion.setFromUnitVectors(new T.Vector3(0, 0, 1), nrmv.normalize()); head.add(grp);
+    const pivot = new T.Group(); pivot.position.y = r * .95; grp.add(pivot);
+    const lens = new T.Mesh(new T.SphereGeometry(r, 24, 12, 0, TAU, 0, Math.PI / 2), mat(o.lid || '#ff8a3a', { rough: .85 })); lens.rotation.x = Math.PI / 2; lens.scale.set(1.08, .32, 1); lens.position.y = -r;
+    const flap = new T.Group(); flap.add(lens); pivot.add(flap);
+    const lash = new T.Mesh(new T.TorusGeometry(r * .95, r * .09, 6, 20, Math.PI), mat(o.lash || '#2a120c', { rough: .5 })); lash.rotation.z = Math.PI; lash.position.z = r * .06; pivot.add(lash);
+    return { set(b) { b = clamp(b, 0, 1); flap.visible = lash.visible = b > .03; flap.scale.y = Math.max(.01, b); lash.position.y = -r * b; lash.scale.set(1.08, Math.max(.01, b), .6); } };
+  });
+  return { root, J, legs, mesh, lids, fireTime, fireBoost };
+}
+C3.kit = { T, col, grade, mat, sphere, mesh, joint, tuft, lathe, eye, flames, flameMaterial, sparks, irisTexture, skinned };
 
 // ---- Two-bone leg IK -------------------------------------------------------------------------------------------------------
 // leg = { hip (joint on the body), knee (child of hip, at -L1 on y), paw (child of knee at -L2), target: Vector3 in root space,
@@ -211,8 +268,11 @@ class Actor {
     this.prev = this.lastPose ? { pose: this.lastPose } : null; this.fade = 0;
     this.cur = { name, clip, t: 0, res, evs, o }; if (name !== 'faint') this.dead = false;
     done.at = ev => { if (!evs[ev]) { let r; const p = new Promise(x => { r = x; }); evs[ev] = { p, r, fired: false }; } return evs[ev].p; };
+    const cur = this.cur; setTimeout(() => { if (this.cur === cur && !cur.ended) { cur.ended = true; res(); Object.values(evs).forEach(e => e.r()); } }, (clip.dur * 3 + 2) * 1000);   // safety net
     return done;
   }
+  // Resolve the current clip and its events now (an error, or the battle moving on).
+  finish() { const c = this.cur; if (c && !c.ended) { c.ended = true; c.res(); Object.values(c.evs).forEach(e => e.r()); } }
   // One game tick (1/60 s).
   step() {
     const dt = 1 / 60; this.t += dt; const S = this.spec;
@@ -239,7 +299,7 @@ class Actor {
     const bl = this.blinkT >= 0 ? Math.sin(clamp(this.blinkT / .16, 0, 1) * Math.PI) : 0;
     P['face.blink'] = Math.max(P['face.blink'] || 0, bl); P['face.gx'] = (P['face.gx'] || 0) + this.gaze[0]; P['face.gy'] = (P['face.gy'] || 0) + this.gaze[1];
     this.lastPose = P; this.apply(P);
-    flameUniforms.uTime.value = G.frameNo / 60;
+    flameUniforms.uTime.value = G.frameNo / 60; fireTime.value = G.frameNo / 60;
     if (this.M.fx) this.M.fx(this.t, P, this);
   }
   apply(P) {
@@ -270,7 +330,7 @@ C3.Actor = Actor;
 // the scene changes underneath; fast battles step twice. The battle adds its actors and clears the set when it ends.
 C3.live = new Set();
 let looping = false;
-C3.watch = a => { C3.live.add(a); if (looping) return; looping = true; (async () => { for (;;) { await G.nextFrame(); const n = G.scene && G.scene.battle && G.battleFast && G.battleFast() ? 2 : 1; for (const x of C3.live) for (let i = 0; i < n; i++) x.step(); } })(); };
+C3.watch = a => { C3.live.add(a); if (looping) return; looping = true; (async () => { for (;;) { await G.nextFrame(); const n = G.scene && G.scene.battle && G.battleFast && G.battleFast() ? 2 : 1; for (const x of C3.live) for (let i = 0; i < n; i++) try { x.step(); } catch (e) { if (!x.failed) console.warn('3D actor step failed', x.id, e); x.failed = true; x.finish(); } } })(); };
 // Shared fallback clips (a species overrides any of them with its own personality).
 C3.shared = {
   enter: { dur: .7, fn(t, P, A, k) { P['root.y'] = -(1 - easeOut(Math.min(1, k * 1.4))) * .15; P['body.sy'] = Math.sin(Math.min(1, k * 1.6) * Math.PI) * .08; } },
