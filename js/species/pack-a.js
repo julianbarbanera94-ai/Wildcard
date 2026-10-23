@@ -15,7 +15,7 @@ D(26, 'Dandrop', ['Grass'], [42, 36, 40, 56, 50, 66], 235, 55, {
   evo: [16, 27],
   learn: [[1, 'Tackle'], [1, 'Growl'], [5, 'Gust'], [8, 'Petal Gust'], [12, 'Sleep Powder'], [15, 'Razor Leaf']],
   look: { stage: 1, form: 'round', feat: ['leaf', 'tail'] },
-  desc: 'A dandelion puff that drifts on every breeze and never lands twice in a row.',
+  desc: 'A round seed with a sprouting top. It rolls on the breeze and never lands twice in a row.',
   habitat: [['sunmeadow', 3, 7, 10]],
 });
 ART[26] = { main: '#fbeeb0', belly: '#fffdf0', acc: '#7ccf5a', body: 'fluff', leaf: 'sprout', tail: 'puff', mouth: 'open', eye: 'round', float: true, tuft3: true, cheek: '#ffb0a0', iris: '#a07a20' };
