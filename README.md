@@ -93,6 +93,10 @@ Five side stories, each with a choice that changes the world afterwards:
 
 The journal records what you chose for each one.
 
+## Roadmap
+
+Phases 1 to 8 are the story and quest work (8 is more optional quests). **Phase 9** is queued: a full Settings, Controls and Player Preferences upgrade. See `docs/PHASE9_SETTINGS.md`.
+
 ## Journal, quests and reputation
 
 START → JOURNAL lists everything you're doing in one place: STORY, QUESTS, FINDS, PEOPLE, CREATURES and HOME, plus REP (how well each region knows you: Stranger, Known, Friend, Trusted, Hero). Quests notice what you've already done, so you can do things in any order. Markers on the map (gold for the story, blue for the rest) can be turned off in the journal. Beating an Arena Leader and winning a shard raise your reputation in that region. Quest rewards are given once only.
