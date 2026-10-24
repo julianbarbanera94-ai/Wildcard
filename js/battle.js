@@ -219,12 +219,25 @@ function stepVisuals() {
     if (f.glow > 0) { f.glow--; if (f.glow % 5 === 0 && !f.hidden) { const [cx, cy] = center(f); burst('Sparkle', cx + (Math.random() - .5) * 40, cy + 14, 1, { up: true, speed: .8, life: 40, spread: 4 }); } }
   }
 }
-const paintedBg = (() => { const o = { img: null }; if (G.battleBg && G.battleBg.grass) { const i = new Image(); i.onload = () => { o.img = i; }; i.src = G.battleBg.grass; } return o; })();
+// Painted arenas (js/battlebg.js): one per kind of ground, chosen by the map the battle starts on; decoded the first time they are needed.
+const BG_BY_BIOME = { forest: 'forest', mystic: 'forest', alpine: 'mountain', snow: 'mountain', desert: 'desert', badlands: 'desert', volcano: 'volcano', coast: 'waterfall', tropical: 'waterfall', aurora: 'waterfall', cave_crystal: 'crystal', cave_grotto: 'crystal', cave_frost: 'crystal', cave_volcanic: 'volcano', cave_ruins: 'ruins' };
+const BG_BY_MAP = { mirewood: 'forest', ridge: 'mountain', shore: 'waterfall', moonlit: 'ruins', whispering: 'forest', cave_hollow_ruins: 'ruins' };
+function bgKey(map) {
+  if (!G.battleBg) return null; map = map || {};
+  const k = BG_BY_MAP[map.id] || BG_BY_BIOME[map.biome] || (map.bg === 'cave' ? 'crystal' : 'grass');
+  return G.battleBg[k] ? k : null;
+}
+const bgImgs = {};
+function loadBg(k) {
+  if (!k) return Promise.resolve();
+  if (!bgImgs[k]) bgImgs[k] = new Promise(res => { const i = new Image(); i.onload = () => { bgImgs[k] = { img: i }; res(); }; i.onerror = () => res(); i.src = G.battleBg[k]; });
+  return bgImgs[k] instanceof Promise ? bgImgs[k] : Promise.resolve();
+}
 function drawBackdrop(ctx, cave) {
   const t = G.frameNo;
-  const painted = !cave && paintedBg.img;
-  if (painted) ctx.drawImage(paintedBg.img, 0, 0, 240, 160); else K.blit(ctx, (cave ? bgArt.cave : bgArt.grass)(), 0, 0);
-  if (cave) {
+  const pb = b.key && bgImgs[b.key] && bgImgs[b.key].img, painted = !!pb;
+  if (painted) ctx.drawImage(pb, 0, 0, 240, 160); else K.blit(ctx, (cave ? bgArt.cave : bgArt.grass)(), 0, 0);
+  if (cave && !painted) {
     ctx.globalCompositeOperation = 'lighter';
     CAVE_GLOW.forEach(([gx, gy, col], i) => K.drawGlow(ctx, col, gx, gy, 22, .22 + .14 * Math.sin(t / 40 + i * 1.7)));
     for (let i = 0; i < 12; i++) { const px = (i * 53 + t * .15 * (1 + i % 3)) % 250 - 5, py = 20 + (i * 37) % 60 + Math.sin(t / 50 + i) * 6; K.drawGlow(ctx, i % 2 ? '#7ef0ff' : '#ff8ee0', px, py, 2.5, .5 + .4 * Math.sin(t / 15 + i)); }
@@ -232,7 +245,7 @@ function drawBackdrop(ctx, cave) {
   } else if (!painted) {
     ctx.globalAlpha = .5; [[0, 3, .05], [1, 12, .035], [2, 6, .07]].forEach(([k, cy, sp], i) => { const e = cloudArt(k), w = 34 + i * 4; const cx = ((i * 83 + t * sp) % (240 + w + 20)) - w - 10; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * .4 + e.pad * 2); }); ctx.globalAlpha = 1;
   }
-  if (cave) { K.blit(ctx, platArt(cave, 44, 9), 182 - 48, 72 - 12); K.blit(ctx, platArt(cave, 50, 10), 62 - 54, 104 - 13); }
+  if (cave && !painted) { K.blit(ctx, platArt(cave, 44, 9), 182 - 48, 72 - 12); K.blit(ctx, platArt(cave, 50, 10), 62 - 54, 104 - 13); }
 }
 function draw(ctx) {
   const cave = b.bg === 'cave';
@@ -639,6 +652,7 @@ G.startBattle = async function (opts) {
   b.me = mkF(lead); b.foe = mkF(opts.wild || opts.trainer.team.find(c => c.hp > 0));
   const mine = G.charSprite(G.state.style)[1][0], big = img => img;   // portraits are already high resolution; drawn into a 48x60 box
   b.tMe = { img: big(mine), x: 20, y: 50, ox: 0 };
+  b.key = bgKey(G.world && G.world.map); await loadBg(b.key);
   G.ui.style = 'dark'; G.scene = scene; G.ui.fade.a = 0;
   if (!b.wild) b.tFoe = { img: big(G.charSprite(opts.trainer.style)[0][0]), x: 160, y: 10, ox: 0 };
   G.ui.wipe = 0; await G.wait(8);
