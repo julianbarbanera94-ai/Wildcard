@@ -16,7 +16,7 @@ const msg = (t, auto) => G.say(t, { auto: auto === undefined ? 36 : auto, style:
 const mark = (id, k) => { G.state.dex[id] = Math.max(G.state.dex[id] || 0, k); }; // 1 seen, 2 caught
 const expRatio = c => (c.exp - G.expFor(c.lvl)) / (G.expFor(c.lvl + 1) - G.expFor(c.lvl));
 const speed = f => f.c.stats.spe * G.stageMult(f.stages.spe) * (f.c.status === 'par' ? .5 : 1);
-const center = f => f === b.me ? [61, 74] : [182, 42];
+const center = f => f === b.me ? [66, 76] : [182, 52];
 
 // ---- Drawing --------------------------------------------------------------
 // Backdrops, platforms, orb and particles are pre-rendered (G.kit.cache); per frame we blit them and
@@ -219,15 +219,17 @@ function stepVisuals() {
     if (f.glow > 0) { f.glow--; if (f.glow % 5 === 0 && !f.hidden) { const [cx, cy] = center(f); burst('Sparkle', cx + (Math.random() - .5) * 40, cy + 14, 1, { up: true, speed: .8, life: 40, spread: 4 }); } }
   }
 }
+const paintedBg = (() => { const o = { img: null }; if (G.battleBg && G.battleBg.grass) { const i = new Image(); i.onload = () => { o.img = i; }; i.src = G.battleBg.grass; } return o; })();
 function drawBackdrop(ctx, cave) {
   const t = G.frameNo;
-  K.blit(ctx, (cave ? bgArt.cave : bgArt.grass)(), 0, 0);
+  const painted = !cave && paintedBg.img;
+  if (painted) ctx.drawImage(paintedBg.img, 0, 0, 240, 160); else K.blit(ctx, (cave ? bgArt.cave : bgArt.grass)(), 0, 0);
   if (cave) {
     ctx.globalCompositeOperation = 'lighter';
     CAVE_GLOW.forEach(([gx, gy, col], i) => K.drawGlow(ctx, col, gx, gy, 22, .22 + .14 * Math.sin(t / 40 + i * 1.7)));
     for (let i = 0; i < 12; i++) { const px = (i * 53 + t * .15 * (1 + i % 3)) % 250 - 5, py = 20 + (i * 37) % 60 + Math.sin(t / 50 + i) * 6; K.drawGlow(ctx, i % 2 ? '#7ef0ff' : '#ff8ee0', px, py, 2.5, .5 + .4 * Math.sin(t / 15 + i)); }
     ctx.globalCompositeOperation = 'source-over';
-  } else {
+  } else if (!painted) {
     ctx.globalAlpha = .5; [[0, 3, .05], [1, 12, .035], [2, 6, .07]].forEach(([k, cy, sp], i) => { const e = cloudArt(k), w = 34 + i * 4; const cx = ((i * 83 + t * sp) % (240 + w + 20)) - w - 10; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * .4 + e.pad * 2); }); ctx.globalAlpha = 1;
   }
   if (cave) { K.blit(ctx, platArt(cave, 44, 9), 182 - 48, 72 - 12); K.blit(ctx, platArt(cave, 50, 10), 62 - 54, 104 - 13); }
@@ -238,9 +240,9 @@ function draw(ctx) {
   ctx.save();
   if (b.shake > 0 && G.shakeOK()) { const s = b.shake * .5; ctx.translate(Math.sin(b.shake * 2.1) * s, Math.cos(b.shake * 1.7) * s * .5); }
   drawBackdrop(ctx, cave);
-  if (b.target && !b.foe.hidden) G.battleUI.targetRing(ctx, 182, 74, G.frameNo);
-  drawFighter(ctx, b.foe, false, 146, 8, 72);
-  if (b.target && !b.foe.hidden) G.battleUI.targetMarker(ctx, 182, 4, G.frameNo);
+  if (b.target && !b.foe.hidden) G.battleUI.targetRing(ctx, 182, 85, G.frameNo);
+  drawFighter(ctx, b.foe, false, 147, 18, 70);
+  if (b.target && !b.foe.hidden) G.battleUI.targetMarker(ctx, 182, 10, G.frameNo);
   drawFighter(ctx, b.me, true, 22, 36, 88);
   for (const t of [b.tFoe, b.tMe]) if (t) {
     ctx.globalAlpha = (t.alpha === undefined ? 1 : t.alpha) * .3; ell(ctx, t.x + t.ox + 24, t.y + 58, 16, 3.5, '#1a2a14');
@@ -257,7 +259,7 @@ function draw(ctx) {
   b.fT = b.showFoe ? (b.fT || 0) + 1 : 0; b.mT = b.showMe ? (b.mT || 0) + 1 : 0;
   const ease = n => n >= 14 ? 0 : Math.pow(1 - n / 14, 3);
   if (b.showFoe) infoBox(ctx, b.foe, 6 - ease(b.fT) * 130, 6, 104, false);
-  if (b.showMe) infoBox(ctx, b.me, 124 + ease(b.mT) * 130, 74, 112, true);
+  if (b.showMe) infoBox(ctx, b.me, 124 + ease(b.mT) * 130, 90, 112, true);
 }
 function drawFx(ctx, fx) {
   const t = fx.t / fx.dur, [x, y] = [fx.x, fx.y];

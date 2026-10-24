@@ -36,14 +36,14 @@ Unchanged keys and controller buttons. The command bar and the cards are one row
 out; every card and every command is also a tap target. The old 2x2 command layout is gone (RUN is now three steps right).
 
 ## Arena
-The grass arena is now a cinematic landscape drawn in code (cached once): sun and light rays, distant mountains and a natural arch,
-sandstone cliff towers with moss, trees and waterfalls on both sides, a lake, rolling tree lines, a winding dirt trail, flowers,
-rocks and soft blurred foreground grass, with a warm light wash and vignette. There are no cartoon platforms any more, only soft
-contact shadows. Your creature is drawn larger (88 px) in the foreground, the foe at 72 px. The cave arena keeps its old look.
+Grass battles use the painted arena background from `wildcard_battle_assets_package` (`backgrounds/wildcard_battle_arena_background.png`),
+cropped to the battle's 3:2 shape and compressed to a 960x640 JPEG embedded in `js/battlebg.js` (`G.battleBg.grass`, about 180 KB).
+`drawBackdrop` in js/battle.js draws it as the bottom layer; until it has loaded (a moment at start-up) the code-drawn landscape is
+the fallback. Creatures, contact shadows, effects and the HUD are separate layers on top. Your creature is drawn larger (88 px) in the
+foreground, the foe at 70 px on the meadow by the lake. The cave arena has no supplied art and keeps its code-drawn look.
 
 ## Not done
-* The arena is drawn by code, not painted art, so it is simpler than the kit's reference picture. Real painted backgrounds would
-  need authored images (one per arena), which the kit does not include.
+* Only the grass arena has painted art. The cave (and any other arena) needs its own supplied background image.
 * The three concept boards were combined: the dark panels and cards come from the tactical board, the clear arena and bottom
   command row from the cinematic board. The adventure board's round ability wheel, combo meter and dodge/focus buttons are new
   mechanics and were not built.
