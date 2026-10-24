@@ -38,7 +38,8 @@ t('wild encounter tables refer to real species and only maps with encounter tile
     else assert(!hasEnc, `${m.id}: encounter tiles but no table`);
   }
 });
-t('everything in the world is reachable on foot from the start (trainers treated as beatable)', () => {
+t('everything in the world is reachable on foot from the start (trainers treated as beatable, cave puzzles as solved)', () => {
+  for (const m of Object.values(maps)) if (m.solve) m.solve();
   const reached = {}; const queue = [['cottage', 4, 4]];
   const key = (id, x, y) => id + ':' + x + ',' + y;
   const blocked = (m, x, y) => solid(m, x, y) || m.npcs.some(e => e.x === x && e.y === y && !e.trainer) || m.objs.some(o => o.ball && o.x === x && o.y === y);
@@ -52,6 +53,7 @@ t('everything in the world is reachable on foot from the start (trainers treated
   }
   for (const m of Object.values(maps)) {
     if (m.sea) continue;   // the open sea is reached by boat (see the sea test)
+    if (m.retired) { assert(!reached[m.id], `retired map ${m.id} is still entered from somewhere`); continue; }   // old cave rooms kept for saves
     assert(reached[m.id], `map ${m.id} is unreachable`);
     const adj = (x, y) => VEC.some(([dx, dy]) => reached[m.id].has((x + dx) + ',' + (y + dy))) || reached[m.id].has(x + ',' + y);
     for (const e of m.npcs) assert(adj(e.x, e.y), `${m.id}: NPC at ${e.x},${e.y} unreachable`);

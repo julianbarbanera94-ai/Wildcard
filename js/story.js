@@ -8,7 +8,8 @@ const shardCount = S => SHARDS.filter(([k]) => F(S)['shard_' + k]).length;
 const REGION = { sunmeadow: 'west', sunhaven: 'west', evergreen: 'west', driftwood: 'west', verdant: 'west',
   stonebridge: 'south', mirewood: 'south', whispering: 'south', shore: 'south', tidefall: 'south', moonlit: 'south', hollow: 'south',
   ridge: 'north', lakeside: 'north', cloudpeak: 'north', glacier: 'north', frostmere: 'north', aurora: 'north',
-  sandsreach: 'east', badlands: 'east', emberfall: 'east', cobalt: 'east', lanternrest: 'vale', homestead: 'vale' };
+  sandsreach: 'east', badlands: 'east', emberfall: 'east', cobalt: 'east',
+  cave_emberfall: 'east', cave_hollow_ruins: 'east', cave_living_grotto: 'east', cave_frostmere: 'north', lanternrest: 'vale', homestead: 'vale' };
 G.regionOf = id => REGION[id] || 'vale';
 const badges = S => (G.BADGES || []).filter(b => F(S)['badge_' + b.id]).length;
 const visited = S => G.WORLD ? G.WORLD.places.filter(p => G.worldVisited(p.id)).length : 0;

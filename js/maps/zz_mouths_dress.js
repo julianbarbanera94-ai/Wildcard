@@ -6,7 +6,8 @@
 const maps = G.MAPS, TILES = G.TILES;
 const hsh = (x, y, s) => { let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul((s | 0) + 7, -2048144777); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
 const THEMES = {
-  mine: ['crystal', .62], hollow: ['ruins', .7], cloud_cave1: ['frost', .55], cloud_cave2: ['crystal', .55],
+  mine: ['crystal', .42], hollow: ['ruins', .7],
+  cave_emberfall: ['volcanic', .48], cave_frostmere: ['frost', .4], cave_hollow_ruins: ['ruins', .52], cave_living_grotto: ['grotto', .5], cloud_cave1: ['frost', .55], cloud_cave2: ['crystal', .55],
 };
 for (const m of Object.values(maps)) {
   if (m.bg !== 'cave' || m.caveTheme) continue;
@@ -19,7 +20,7 @@ for (const m of Object.values(maps)) {
     else theme = 'crystal';
     dark = .58;
   }
-  m.caveTheme = theme; m.dark = dark;
+  m.caveTheme = theme; m.dark = dark; if (!m.biome) m.biome = 'cave_' + theme;
   dress(m);
 }
 function dress(m) {

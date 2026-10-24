@@ -157,8 +157,8 @@ fs.mkdirSync(OUT, { recursive: true });
   await ev(() => { G.gather.rand = () => .3; });
   assert(await faceTile('r', 'ridge')); await key('z'); await idle();
   assert.deepEqual(await ev(() => [G.state.bag['Copper Ore'], G.state.bag['Iron Ore']]), [2, 1], 'roll .3: copper but no iron');
-  // the mine has no boulders yet: put one on the floor next to the entrance for the test
-  await ev(() => { G.loadMap('mine'); const m = G.world.map; m.t[46][16] = 'r'; G.placePlayer(17, 46, 2); m._spawn = false; m.roamers = []; delete G.state.bag.Pickaxe; G.gather.rand = () => .1; });
+  // put a boulder on the entrance tunnel floor beside the player for the test
+  await ev(() => { G.loadMap('mine'); const m = G.world.map; m.t[28][18] = 'r'; G.placePlayer(19, 28, 2); m._spawn = false; m.roamers = []; delete G.state.bag.Pickaxe; G.gather.rand = () => .1; });
   await page.waitForTimeout(150); await key('z'); await idle();
   assert.deepEqual(await ev(() => [G.state.bag['Iron Ore'], G.state.bag.Coal || 0]), [1, 0], 'mine without pickaxe: no ore');
   await ev(() => { G.state.bag.Pickaxe = 1; G.state.steps += 200; }); await key('z'); await idle();

@@ -6,7 +6,7 @@ const G = globalThis.G;
 const inv = G.inv;
 const says = l => G.worldApi.says(l);
 const REGROW = 150, COST = 2;
-const KIND = { '#': 'tree', n: 'tree', u: 'bush', d: 'stump', r: 'rock', i: 'crystal' };
+const KIND = { '#': 'tree', n: 'tree', u: 'bush', d: 'stump', r: 'rock', i: 'crystal', '8': 'fungus' };
 const LABEL = { tree: 'Chop tree', stump: 'Chop stump', bush: 'Forage bush', rock: 'Break rock', crystal: 'Mine crystal' };
 // Seed chances per map (rolled once per bush: the first matching band wins).
 const SEEDS = {
@@ -36,7 +36,7 @@ function decorative(mapId, x, y, ch) {
   if (ch === 'j') return true;
   return mapId === 'lanternrest' && (ch === 'u' || ch === 'd') && x >= 20 && x <= 39 && y >= 15 && y <= 31;
 }
-const gatherable = m => !!m && m.outdoor !== false;
+const gatherable = m => !!m && (m.outdoor !== false || m.bg === 'cave');
 function roll(table, r) { const x = r(); let acc = 0; for (const [item, p] of table || []) { acc += p; if (x < acc) return item; } return null; }
 // The drops for one gather: { item: qty }. tools: { axe, pick }.
 function rollDrops(kind, mapId, tools, r) {
@@ -48,8 +48,9 @@ function rollDrops(kind, mapId, tools, r) {
     const n = 1 + (r() < .5 ? 1 : 0);
     add(CLAY_MAPS[mapId] && r() < .5 ? 'Clay' : 'Stone', n);
     if (tools.pick && mapId === 'ridge') { if (r() < .4) add('Copper Ore'); if (r() < .15) add('Iron Ore'); }
-    if (tools.pick && mapId === 'mine') { if (r() < .5) add('Iron Ore'); if (r() < .4) add('Coal'); }
+    if (tools.pick && (mapId === 'mine' || mapId === 'cave_emberfall')) { if (r() < .5) add('Iron Ore'); if (r() < .4) add('Coal'); }
   } else if (kind === 'crystal') add('Crystal Shard');
+  else if (kind === 'fungus') { add('Glowcap Spores', 1 + (r() < .4 ? 1 : 0)); if (r() < .3) add('Glowcap'); }
   return out;
 }
 const tools = () => ({ axe: inv.count('Axe') > 0, pick: inv.count('Pickaxe') > 0 });
@@ -62,7 +63,7 @@ async function gather(tx, ty) {
   const kind = KIND[ch]; if (!kind) return false;
   if (decorative(m.id, tx, ty, ch)) { await says('The villagers keep these flowerbeds neat and tidy. Better leave them be.'); return true; }
   const left = wait(m.id, tx, ty);
-  if (left) { await says(`${{ tree: 'This tree has', stump: 'This stump has', bush: 'This bush has', rock: 'This rock has', crystal: 'This crystal has' }[kind]} been picked clean. It grows back in about ${left} steps.`); return true; }
+  if (left) { await says(`${{ tree: 'This tree has', stump: 'This stump has', bush: 'This bush has', rock: 'This rock has', crystal: 'This crystal has', fungus: 'This mushroom bed has' }[kind]} been picked clean. It grows back in about ${left} steps.`); return true; }
   if (kind === 'crystal' && !tools().pick) { await says('The crystal is far too hard to break by hand. You need a Pickaxe.'); return true; }
   if (G.farm && !(await G.farm.useEnergy(COST))) return true;
   const drops = rollDrops(kind, m.id, tools());

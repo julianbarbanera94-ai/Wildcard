@@ -168,6 +168,7 @@ G.loadMap = function (id) {
   world.mapId = id; world.map = maps[id]; world.map._spawn = true;
   if (G.applyBuilds) G.applyBuilds(world.map); world.map.npcs.forEach(n => { n.ox0 = n.ox0 === undefined ? n.x : n.ox0; n.oy0 = n.oy0 === undefined ? n.y : n.oy0; n.ox = 0; n.oy = 0; n.frame = 0; n.timer = 60 + G.rand(120); delete n.tx; delete n.ty; });
   if (world.map.outdoor || world.map.banner) world.banner = { text: world.map.name, t: 0 };
+  if (world.map.onLoad) world.map.onLoad(world.map);   // a map's own state that follows the save (opened gates and the like)
   for (const h of hooks.load) h(world.map);
   G.audio.music(world.map.music);
 };

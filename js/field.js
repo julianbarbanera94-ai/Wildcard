@@ -30,6 +30,8 @@ const SPOTS = G.FIELD_SPOTS = [
   { id: 'bl_ledge', map: 'badlands', kind: 'climb', a: [13, 14], b: [13, 13], c: [13, 11], reward: { items: { 'Iron Ingot': 4, 'Revive': 2 }, money: 1200 }, text: 'a mesa top in the Badlands' },
   { id: 'sm_hollow', map: 'sunmeadow', kind: 'light', a: [12, 37], b: [12, 36], c: [12, 34], reward: { items: { 'Pulse Orb': 3, 'Honey': 3 } }, text: 'a dark thicket in the meadow' },
   { id: 'eg_hollow', map: 'evergreen', kind: 'light', a: [34, 9], b: [33, 9], c: [31, 9], reward: { items: { 'Mythic Orb': 1, 'Full Heal': 3 }, money: 800 }, text: 'a black hollow among the old trees' },
+  { id: 'cr_sanctum', map: 'cave_hollow_ruins', kind: 'light', a: [34, 14], b: [35, 14], c: [37, 14], reward: { items: { 'Mythic Orb': 1, 'Revive': 2 }, money: 1500 }, text: 'the hidden sanctum behind the east wall' },
+  { id: 'cl_rootway', map: 'cave_living_grotto', kind: 'light', a: [9, 12], b: [8, 12], c: [6, 12], reward: { items: { 'Glowcap Spores': 3, 'Full Heal': 2 } }, text: 'an old rootway under the grotto' },
   { id: 'sm_dig', map: 'sunmeadow', kind: 'dig', at: [27, 40], reward: { items: { 'Copper Ore': 4 } } },
   { id: 'lr_dig', map: 'lanternrest', kind: 'dig', at: [14, 26], reward: { items: { 'Potion': 3 }, money: 300 } },
   { id: 'sb_dig', map: 'stonebridge', kind: 'dig', at: [31, 31], reward: { items: { 'Iron Ore': 4, 'Coal': 2 } } },

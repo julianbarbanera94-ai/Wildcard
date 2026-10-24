@@ -26,7 +26,7 @@ const hash = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.54
   rect(m, 43, 17, 2, 13, 'p'); rect(m, 9, 17, 36, 2, 'p');          // T2
   rect(m, 9, 7, 2, 10, 'p'); rect(m, 9, 7, 30, 2, 'p'); rect(m, 24, 5, 2, 3, 'p');   // T3
   warp(m, 24, 51, 'lanternrest', 28, 1, DOWN); warp(m, 25, 51, 'lanternrest', 29, 1, DOWN);
-  warp(m, 24, 4, 'mine', 18, 50, UP); warp(m, 25, 4, 'mine', 19, 50, UP);
+  warp(m, 24, 4, 'mine', 19, 30, UP); warp(m, 25, 4, 'mine', 20, 30, UP);
 
   // -- T0: the foot of the ridge. West meadow of tall grass, an open build flat east (36..43, 43..49) --
   rect(m, 3, 45, 11, 5, 'G'); rect(m, 27, 45, 6, 5, 'G'); rect(m, 15, 47, 7, 3, 'G');
@@ -94,44 +94,61 @@ const hash = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.54
 })();
 
 // ---- Glimmer Mine: crystal caves guarded by the Mine Warden ----
-// Entrance hall (south) -> great cavern of encounter floor -> a one-tile corridor north. Kade waits in an alcove at its
-// top, watching straight down it; beyond him the corridor forks round his alcove into the crystal chamber.
-// Side tunnels lead to a west grotto, an east grotto and a hidden south-east nook.
+// Layout from the cave map pack (docs/CAVES.md, Stage B): the entrance tunnel climbs north through the great cavern to
+// a one-tile neck that Kade watches from the foot of the crystal dais. West and east grottoes open off the
+// cavern; two underground pools fed by waterfalls lie below them. The west plank bridge reaches an island, the east one
+// is a shortcut down to the hidden south-east nook. C wall, c tunnel, e cavern floor (encounters), w water, 3 plank
+// bridge, @ waterfall, o guardian dais, i crystal, r ore boulder (Iron Ore and Coal with a Pickaxe), 6 lantern post, 7 light shaft,
+// 9 rune pillar, 4 barrel. Item ids are the ones saves already remember.
 (function () {
-  const m = newMap('mine', 'GLIMMER MINE', 40, 52, 'C', { music: 'cave', bg: 'cave', banner: true, enc: [[14, 9, 12, 25], [21, 9, 12, 20], [22, 10, 13, 20], [23, 10, 13, 15], [24, 11, 13, 10], [20, 9, 11, 10]] });
-  // entrance hall and the way up
-  rect(m, 14, 44, 12, 7, 'c'); rect(m, 18, 51, 2, 1, 'c'); rect(m, 17, 40, 4, 4, 'c');
-  scatter(m, 'C', [[14, 44], [25, 44], [14, 50], [25, 50]]); scatter(m, 'i', [[15, 45], [24, 49]]);
-  warp(m, 18, 51, 'ridge', 24, 5, DOWN); warp(m, 19, 51, 'ridge', 25, 5, DOWN);
-  // great cavern
-  rect(m, 6, 26, 28, 15, 'e'); rect(m, 9, 25, 22, 1, 'e'); rect(m, 9, 41, 22, 1, 'e');
-  for (const [x, y] of [[6, 26], [33, 26], [6, 40], [33, 40], [7, 26], [6, 27], [32, 26], [33, 27]]) set(m, x, y, 'C');
-  rect(m, 18, 25, 2, 17, 'c'); rect(m, 10, 33, 20, 1, 'c');
-  scatter(m, 'C', [[11, 29], [12, 29], [11, 30], [26, 29], [27, 30], [13, 37], [14, 37], [24, 37], [25, 38], [8, 36], [30, 35], [22, 28], [15, 27]]);
-  scatter(m, 'i', [[12, 30], [26, 30], [14, 38], [24, 38], [7, 32], [32, 31], [21, 40], [9, 39]]);
-  // the narrow corridor, Kade's alcove and the crystal chamber
-  rect(m, 19, 10, 1, 15, 'c'); rect(m, 17, 10, 5, 1, 'c'); rect(m, 17, 8, 1, 2, 'c'); rect(m, 21, 8, 1, 2, 'c'); set(m, 19, 9, 'c');
-  rect(m, 7, 2, 26, 6, 'c'); rect(m, 9, 1, 22, 1, 'c');
-  scatter(m, 'i', [[7, 2], [8, 2], [7, 3], [32, 2], [31, 2], [32, 3], [7, 7], [32, 7], [12, 4], [27, 4], [19, 3], [20, 3], [15, 6], [24, 6], [9, 1], [30, 1]]);
-  scatter(m, 'C', [[19, 7], [7, 6], [32, 6]]);
-  m.objs.push({ x: 10, y: 3, id: 'mn_rev', item: 'Revive', ball: true }); m.objs.push({ x: 29, y: 3, id: 'mn_ultra', item: 'Mythic Orb', ball: true });
-  trainer(m, 'mn_kade', 19, 9, DOWN, 'kade', { name: 'KADE', cls: 'MINE WARDEN', sight: 4, team: [[22, 12], [23, 13], [24, 14]], pre: 'I am Kade, Warden of the Mine. Show me what a true Warden is made of!', win: 'The Mine accepts you. Take these.', post: 'The Mine shard? Ashen Wardens broke in and carried it north, to the Aurora Isles. Only something old and cold guards it now.', prize: 60, reward: ['Mythic Orb', 3] });
-  // west tunnel and grotto
-  rect(m, 3, 33, 3, 1, 'c'); rect(m, 3, 21, 1, 13, 'c'); rect(m, 2, 13, 8, 8, 'e'); rect(m, 3, 12, 6, 1, 'e'); rect(m, 4, 16, 4, 2, 'c'); rect(m, 3, 17, 1, 4, 'c');
-  scatter(m, 'i', [[2, 13], [9, 13], [2, 20], [9, 20], [6, 12], [9, 16], [5, 14]]); scatter(m, 'C', [[2, 14], [9, 19]]);
-  m.objs.push({ x: 8, y: 14, id: 'mn_heal', item: 'Full Heal', ball: true });
-  set(m, 4, 26, 'c'); trainer(m, 'mn_rhea', 4, 26, LEFT, 'girl', { name: 'RHEA', cls: 'CRYSTAL SEEKER', sight: 4, team: [[22, 11], [23, 12]], pre: 'Every crystal down here hums a different note. Yours sounds strong!', win: 'What a beautiful sound that battle made.', post: 'The west grotto glows the brightest. Have a look.', prize: 44 });
-  // east tunnel and grotto
-  rect(m, 34, 30, 3, 1, 'c'); rect(m, 36, 21, 1, 10, 'c'); rect(m, 29, 12, 9, 9, 'e'); rect(m, 31, 11, 5, 1, 'e'); rect(m, 31, 15, 5, 2, 'c'); rect(m, 36, 16, 1, 5, 'c');
-  scatter(m, 'i', [[29, 12], [37, 12], [29, 20], [30, 13], [33, 11], [37, 18], [32, 19]]); scatter(m, 'C', [[29, 16], [34, 19]]);
-  m.objs.push({ x: 31, y: 16, id: 'mn_sp', item: 'Super Potion', ball: true });
-  set(m, 35, 25, 'c'); trainer(m, 'mn_flint', 35, 25, RIGHT, 'hiker', { name: 'FLINT', cls: 'MINER', sight: 4, team: [[14, 11], [15, 13], [21, 12]], pre: 'Ho there! Nobody digs in my tunnel without a battle!', win: 'Crushed like gravel!', post: 'I found an old potion in the grotto. Finders keepers, if you get there first.', prize: 48 });
-  // hidden south-east nook behind the entrance hall
-  rect(m, 26, 47, 5, 1, 'c'); rect(m, 30, 43, 6, 6, 'c'); rect(m, 31, 42, 4, 1, 'c');
-  scatter(m, 'i', [[30, 43], [35, 43], [35, 48], [31, 42], [34, 42], [33, 45]]);
-  m.objs.push({ x: 34, y: 44, id: 'mn_orb', item: 'Pulse Orb', qty: 3, ball: true });
-  // ore-bearing boulders along the cave walls (Iron Ore and Coal with a Pickaxe), clear of the routes
-  scatter(m, 'r', [[15, 47], [24, 46], [7, 28], [31, 27], [8, 38], [31, 40], [14, 36], [8, 19], [37, 14], [30, 19], [31, 48]]);
+  const m = newMap('mine', 'GLIMMER MINE', 40, 32, 'C', { music: 'cave', bg: 'cave', banner: true, enc: [[14, 9, 12, 25], [21, 9, 12, 20], [22, 10, 13, 20], [23, 10, 13, 15], [24, 11, 13, 10], [20, 9, 11, 10]] });
+  const GRID = [
+    'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCCeee9ooo9eeeCCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCee7eeoooeeeeeCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCeeeeieoooeieeeeCCCCCCCCCCCC',
+    'CCCCCCCCCCCCeeeeeeeeeeeeeeeeeCCCCCCCCCCC',
+    'CCCCCCCCCCCCCeeereeeeeeereeeCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCeeeeeeeeeeeeeCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCCee6eeeee6eeCCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCCCCCCCcCCCCCCCCCCieCCCCCCC',
+    'CCCCCCCiCCCCCCeeiecccceeieeCCeeeeeeeCCCC',
+    'CCCCCieeeeiCeeeeeecccceeeeeeeeeeeeee4CCC',
+    'CCCCeeeeeeeereeeeecccceeeeeieeeeeeeieCCC',
+    'CCCCeeeeeeeeeieeeecccceeeeeeeeeeeeeeeCCC',
+    'CCCCreeeeeeeeeeeeecccceeeeeeeeeeeeeeeeCC',
+    'CCCeeeecccceeeeeeecccceeeeeeeccceereeCCC',
+    'CCCCeeeccccc6ccceecccceeeee6cccceeeeeCCC',
+    'CCCCeeeccccccccceecccceeeeeccccceeeeeCCC',
+    'CCCCeeeeeccccccceecccceeeercccceeeeeCCCC',
+    'CCCCCiwwweeeeereeecccceeeeeeeeweeCiCCCCC',
+    'CCCCCC@eweeeeeeeeecccceeeieewwwwwCCCCCCC',
+    'CCCCCww33333eeeeeecccceeeee3333333@CCCCC',
+    'CCCCwwwwwwwwwieeerccccereewwwwwww3wCCCCC',
+    'CCCCCwwwwwwweeee6eccccee6eewwwwwweCCCCCC',
+    'CCCCCCCCwCCCCCeeeecccceeeeeCwwweeeeeCCCC',
+    'CCCCCCCCCCCCCCCCCcccccccccccccceeeeeeCCC',
+    'CCCCCCCCCCCCCCCCCccccccccccccccereeeeeCC',
+    'CCCCCCCCCCCCCCCCCccccccCCCCCCCeeeeeeeCCC',
+    'CCCCCCCCCCCCCCCCCccccccCCCCCCCCeeeeeCCCC',
+    'CCCCCCCCCCCCCCCCCccccccCCCCCCCCCCeCCCCCC',
+    'CCCCCCCCCCCCCCCCCCccccCCCCCCCCCCCCCCCCCC',
+  ];
+  GRID.forEach((row, y) => { for (let x = 0; x < row.length; x++) set(m, x, y, row[x]); });
+  for (const [x, rx] of [[18, 24], [19, 24], [20, 25], [21, 25]]) warp(m, x, 31, 'ridge', rx, 5, DOWN);
+  // the guardian chamber: Kade, and the two orbs either side of the dais
+  m.objs.push({ x: 14, y: 6, id: 'mn_rev', item: 'Revive', ball: true }); m.objs.push({ x: 26, y: 6, id: 'mn_ultra', item: 'Mythic Orb', ball: true });
+  trainer(m, 'mn_kade', 20, 6, DOWN, 'kade', { name: 'KADE', cls: 'MINE WARDEN', sight: 4, team: [[22, 12], [23, 13], [24, 14]], pre: 'I am Kade, Warden of the Mine. Show me what a true Warden is made of!', win: 'The Mine accepts you. Take these.', post: 'The Mine shard? Ashen Wardens broke in and carried it north, to the Aurora Isles. Only something old and cold guards it now.', prize: 60, reward: ['Mythic Orb', 3] });
+  // west grotto (Rhea) and the island across the west bridge
+  m.objs.push({ x: 5, y: 14, id: 'mn_heal', item: 'Full Heal', ball: true });
+  m.objs.push({ x: 7, y: 21, id: 'mn_lake', item: 'Aqua Orb', qty: 2, ball: true });
+  trainer(m, 'mn_rhea', 4, 17, RIGHT, 'girl', { name: 'RHEA', cls: 'CRYSTAL SEEKER', sight: 4, team: [[22, 11], [23, 12]], pre: 'Every crystal down here hums a different note. Yours sounds strong!', win: 'What a beautiful sound that battle made.', post: 'The west grotto glows the brightest. And there is something shiny on the island past the bridge.', prize: 44 });
+  // east grotto (Flint) and the hidden nook past the east bridge
+  m.objs.push({ x: 34, y: 12, id: 'mn_sp', item: 'Super Potion', ball: true });
+  trainer(m, 'mn_flint', 36, 17, LEFT, 'hiker', { name: 'FLINT', cls: 'MINER', sight: 4, team: [[14, 11], [15, 13], [21, 12]], pre: 'Ho there! Nobody digs in my tunnel without a battle!', win: 'Crushed like gravel!', post: 'The east bridge is a shortcut. Nobody uses it, so nobody finds what is down there.', prize: 48 });
+  m.objs.push({ x: 35, y: 28, id: 'mn_orb', item: 'Pulse Orb', qty: 3, ball: true });
 })();
 // ---- World expansion exits (docs/WORLD.md) ----
 (function () {

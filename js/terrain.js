@@ -27,6 +27,8 @@ const TT = G.TILES = {
   // caves (js/maps/zz_mouths_dress.js): rails, mine cart, plank bridge, barrel, stalagmite, lantern post, light shaft,
   // glowing mushrooms, rune pillar
   '1': { }, '2': { solid: true }, '3': { }, '4': { solid: true }, '5': { solid: true }, '6': { solid: true }, '7': { }, '8': { solid: true }, '9': { solid: true },
+  // guardian dais (a block of o tiles drawn as one raised platform with steps on its south side)
+  o: { solid: true },
 };
 TT.G.tall = TT.q.tall = true;
 
@@ -96,7 +98,7 @@ function fillShape(c, ms, e, rc, col) { shapePath(c, ms, e, rc); c.fillStyle = c
 // Each ground tile belongs to a layer class; higher classes are drawn on top of lower ones with rounded edges.
 const GR = 0, TG = 1, MA = 2, SA = 3, PA = 4, CV = 5, HY = 6, WA = 7, FL = 8, ST = 9, TI = 10, PZ = 11, RD = 12, LV = 13, NCLS = 14;
 const DIRECT = { g: GR, f: GR, G: TG, q: MA, y: SA, p: PA, c: CV, e: CV, K: HY, w: WA, V: WA, T: FL, a: FL, m: FL, Z: ST, v: TI, '%': PZ, '=': RD, '!': LV, '@': WA,
-  '1': CV, '2': CV, '3': WA, '4': CV, '5': CV, '6': CV, '7': CV, '8': CV, '9': CV };
+  '1': CV, '2': CV, '3': WA, '4': CV, '5': CV, '6': CV, '7': CV, '8': CV, '9': CV, o: CV };
 const INTERIOR = inSet('BkShPtbxOL');
 const ROOF = inSet('RQAU'), WALL = inSet('WND'), BLD = inSet('RQAUWND');
 const MASS = inSet('CEM');
@@ -104,7 +106,7 @@ const MASS = inSet('CEM');
 function resolveCls(m, x, y, ch) {
   if (ch === 'z') { for (let k = 0; k < 4; k++) { const n = at(m, x + DX[k], y + DY[k]); if (n === 'w' || n === 'V') return WA; } }
   if (ch === 'D' || ch === 'M') { const b = DIRECT[at(m, x, y + 1)]; if (b !== undefined && b !== WA) return b; }
-  if (INTERIOR(ch) || m.outdoor === false) return FL;
+  if (INTERIOR(ch) || (m.outdoor === false && m.bg !== 'cave')) return FL;   // caves: rocks and crystals sit on cave floor
   const cnt = new Array(NCLS).fill(0);
   let any = false;
   for (let k = 0; k < 8; k++) { const c = DIRECT[at(m, x + DX[k], y + DY[k])]; if (c !== undefined && c !== WA && c !== HY && c !== TG && c !== MA && c !== LV) { cnt[c] += k < 4 ? 2 : 1; any = true; } }
@@ -326,11 +328,11 @@ const MPAL = {
   E: { rim: '#a6e274', top: '#7fcc4e', f: ['#e3b47e', '#c99460', '#a5734a'], strata: 'rgba(120,70,30,.22)', lip: '#5fae3f', hi: 'rgba(255,245,215,.4)' },
 };
 function paintMass(c, ms, ch, v) {
-  const P = (ch === 'E' && CB.cliff) || MPAL[ch], top = ms | 4 | 32 | 64;
+  const P = (ch === 'E' && CB.cliff) || (ch === 'C' && CB.cwall) || MPAL[ch], top = ms | 4 | 32 | 64;
   fillShape(c, top, .4, 3, shade(P.rim, .85)); fillShape(c, top, .9, 3, P.rim); fillShape(c, top, 1.8, 3, P.top);
   c.save(); shapePath(c, top, 1.8, 3); c.clip();
   const R = rng(v * 17 + (ch === 'C' ? 1 : 2));
-  if (ch === 'C') for (let i = 0; i < 4; i++) { const a = 2 + R() * 12, b = 2 + R() * 12, r = .8 + R() * 1.4; el(c, a, b + .4, r, r * .6, '#71668f'); el(c, a - .2, b, r * .8, r * .5, '#958ab0'); }
+  if (ch === 'C') for (let i = 0; i < 4; i++) { const a = 2 + R() * 12, b = 2 + R() * 12, r = .8 + R() * 1.4; el(c, a, b + .4, r, r * .6, P.sp ? P.sp[0] : '#71668f'); el(c, a - .2, b, r * .8, r * .5, P.sp ? P.sp[1] : '#958ab0'); }
   else tex(c, GR, v, 0, 0);
   c.restore();
   if (ms & 4) return;
@@ -1134,6 +1136,30 @@ biome('aurora', {
   petals: false, tint: 'rgba(10,20,72,.22)', ov: ['aurora', 'snow'],
 });
 
+
+// Cave biomes (docs/CAVES.md, Stage B): zz_mouths_dress.js gives every cave 'cave_<theme>'. Warm earthen floors, rock walls
+// in the theme's colours (cwall, used by paintMass for 'C') and dark glowing pools, after the cave map pack's art direction.
+const CW = (rim, top, f, strata, lip, hi, sp) => ({ rim, top, f, strata, lip, hi, sp });
+const caveBio = (name, floor, cvA, cvB, wall, wa) => biome('cave_' + name, { lc: { 5: floor }, tx: { cvA, cvB }, cwall: wall, wa, petals: false });
+caveBio('crystal', ['#7c6450', '#9c8064'], '#634e3c', '#bca07c',
+  CW('#5c5a90', '#3e3c6a', ['#6c6aa2', '#504e84', '#363460'], 'rgba(20,16,50,.3)', '#7e7cb4', 'rgba(200,220,255,.3)', ['#4c4a7c', '#6a68a0']),
+  ['#5a4a3e', 'rgba(190,240,255,.9)', '#3cc4f0', '#2290dc', '#1660b4']);
+caveBio('volcanic', ['#563a2e', '#6c4a38'], '#40281e', '#8c6448',
+  CW('#4a3634', '#2c201e', ['#5a3c34', '#40281f', '#2a1a14'], 'rgba(255,90,30,.22)', '#6a4a40', 'rgba(255,170,110,.3)', ['#3a2826', '#5a3e36']),
+  ['#3a2a22', 'rgba(255,220,180,.9)', '#4a9ad0', '#2a6aa8', '#1a4880']);
+caveBio('frost', ['#8aa6c0', '#a8c2d8'], '#6e8aa6', '#dceaf6',
+  CW('#a8c8e8', '#7aa0cc', ['#9cc0e4', '#7aa0cc', '#5a80b0'], 'rgba(30,60,110,.25)', '#dcecff', 'rgba(255,255,255,.5)', ['#8ab0d8', '#c4dcf4']),
+  ['#7a96b0', 'rgba(255,255,255,.95)', '#8ae0ff', '#4ab0e8', '#2a80c8']);
+caveBio('ruins', ['#7e7a62', '#9a967c'], '#615e48', '#bcb898',
+  CW('#5e6c5a', '#3e4a3c', ['#6e7c68', '#525e4e', '#3a4438'], 'rgba(10,30,20,.28)', '#7e8c76', 'rgba(200,255,220,.25)', ['#4a5848', '#6a7a64']),
+  ['#5e5a46', 'rgba(210,255,240,.9)', '#4ae0c8', '#2ab0a8', '#1a7a80']);
+caveBio('grotto', ['#4e5a46', '#64745a'], '#3a4636', '#8aa47a',
+  CW('#5c3c7a', '#3c2658', ['#6c4a8a', '#523670', '#38224e'], 'rgba(20,6,40,.3)', '#7e5c9e', 'rgba(230,200,255,.3)', ['#4a3068', '#6a4a8a']),
+  ['#3e4836', 'rgba(220,255,250,.9)', '#5af0e0', '#2ac0d0', '#1a80a8']);
+caveBio('crimson', ['#744838', '#8e5e48'], '#5a3628', '#b88a6a',
+  CW('#7a3c36', '#52241f', ['#8a4a40', '#6a322a', '#4a201a'], 'rgba(40,6,4,.3)', '#9a5a4c', 'rgba(255,200,170,.3)', ['#62302a', '#86463c']),
+  ['#5a3a2e', 'rgba(255,230,210,.9)', '#4aa0d8', '#2a70b0', '#1a4c88']);
+
 // Shared effect sprites
 const glowSprite = (col, a) => make('glow' + col + a, 32, 32, c => { c.fillStyle = rgr(c, 16, 16, 16, rgba(col, a), rgba(col, a * .45), rgba(col, 0)); c.fillRect(0, 0, 32, 32); });
 const starSprite = () => make('star', 8, 8, c => {
@@ -1321,12 +1347,12 @@ function fxFlora(ctx, sx, sy, t, p) {
 const isRoofOrWall = ch => BLD(ch);
 // ---- Cave props (themes: crystal, volcanic, frost, ruins, grotto, crimson) -------------------------------------------------
 const CAVE_T = {
-  crystal: { rock: ['#5a5488', '#3e3a66', '#7a74aa'], wood: '#8a5a32', glow: '#7ad8ff', mush: ['#7af0ff', '#a888ff'], dark: '#05071e', grade: '#9aa8ff' },
-  volcanic: { rock: ['#4a3430', '#2e2020', '#6a4a40'], wood: '#6a4228', glow: '#ff8a30', mush: ['#ffb040', '#ff6a3a'], dark: '#160402', grade: '#ff9070' },
-  frost: { rock: ['#a8c8e8', '#7aa0cc', '#dcecff'], wood: '#8a6a4a', glow: '#bff0ff', mush: ['#bff0ff', '#9ad0ff'], dark: '#041026', grade: '#c4e4ff' },
-  ruins: { rock: ['#5a6a58', '#3a4838', '#7a8a72'], wood: '#7a5a38', glow: '#5af0c8', mush: ['#7affd8', '#c8ff9a'], dark: '#020e08', grade: '#a4e0b8' },
-  grotto: { rock: ['#5a3a78', '#3a2456', '#7a5a9a'], wood: '#7a5032', glow: '#d07aff', mush: ['#c070ff', '#5af0ff'], dark: '#0e021e', grade: '#c8a0ff' },
-  crimson: { rock: ['#7a3a34', '#52221e', '#9a5a4a'], wood: '#7a4a2a', glow: '#ff9a6a', mush: ['#ffb070', '#ff7a8a'], dark: '#140404', grade: '#ffa898' },
+  crystal: { rock: ['#5a5488', '#3e3a66', '#7a74aa'], wood: '#8a5a32', glow: '#7ad8ff', mush: ['#7af0ff', '#a888ff'], dark: '#05071e', grade: '#d4d8ff' },
+  volcanic: { rock: ['#4a3430', '#2e2020', '#6a4a40'], wood: '#6a4228', glow: '#ff8a30', mush: ['#ffb040', '#ff6a3a'], dark: '#160402', grade: '#ffc8b0' },
+  frost: { rock: ['#a8c8e8', '#7aa0cc', '#dcecff'], wood: '#8a6a4a', glow: '#bff0ff', mush: ['#bff0ff', '#9ad0ff'], dark: '#041026', grade: '#e2f0ff' },
+  ruins: { rock: ['#5a6a58', '#3a4838', '#7a8a72'], wood: '#7a5a38', glow: '#5af0c8', mush: ['#7affd8', '#c8ff9a'], dark: '#020e08', grade: '#d2f0dc' },
+  grotto: { rock: ['#5a3a78', '#3a2456', '#7a5a9a'], wood: '#7a5032', glow: '#d07aff', mush: ['#c070ff', '#5af0ff'], dark: '#0e021e', grade: '#e2d0ff' },
+  crimson: { rock: ['#7a3a34', '#52221e', '#9a5a4a'], wood: '#7a4a2a', glow: '#ff9a6a', mush: ['#ffb070', '#ff7a8a'], dark: '#140404', grade: '#ffd2c6' },
 };
 const caveT = m => CAVE_T[m.caveTheme] || CAVE_T.crystal;
 function paintRail(c, vert) {
@@ -1387,6 +1413,37 @@ function paintPillar(c, T) {
   c.strokeStyle = T.glow; c.lineWidth = .9; c.beginPath(); c.moveTo(8, -6); c.lineTo(6, -2); c.lineTo(8, 2); c.lineTo(10, -2); c.closePath(); c.moveTo(8, 4); c.lineTo(8, 8); c.stroke();
   c.fillStyle = 'rgba(90,60,40,.0)'; c.fillStyle = '#3a6a3a'; for (const [x, y] of [[4, 8], [11, -9], [5, -11]]) el(c, x, y, 1.6, .9, '#4a8a4a');
 }
+// The guardian dais: a raised stone platform w x h logical units (whole tiles), a rune circle glowing in the theme colour on
+// top, its front face and a flight of steps down the middle of the south side.
+function paintDais(c, T, w, h) {
+  if (w <= 16 && h <= 16) {   // a single tile: a rune stone (the puzzle stones and switches)
+    el(c, 8, 14.6, 6.4, 1.6, 'rgba(10,8,20,.35)');
+    c.beginPath(); c.moveTo(3, 14.6); c.lineTo(2.4, 6); c.quadraticCurveTo(8, -1, 13.6, 6); c.lineTo(13, 14.6); c.closePath();
+    c.fillStyle = lg(c, 0, 0, 0, 15, T.rock[2], T.rock[1]); c.fill(); c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = .5; c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(3.4, 6, 1.4, 8);
+    c.fillStyle = rgba(T.glow, .3); c.beginPath(); c.arc(8, 8.4, 3.6, 0, TAU); c.fill();
+    c.strokeStyle = T.glow; c.lineWidth = .9; c.beginPath(); c.moveTo(8, 5.6); c.lineTo(6.2, 8.4); c.lineTo(8, 11.2); c.lineTo(9.8, 8.4); c.closePath(); c.stroke();
+    return;
+  }
+  const top = 2, face = h - 13, sx = w / 2 - 9;
+  el(c, w / 2, h - 1.5, w / 2 - 1, 3, 'rgba(10,8,20,.35)');
+  const oct = (x0, y0, x1, y1, k) => { c.beginPath(); c.moveTo(x0 + k, y0); c.lineTo(x1 - k, y0); c.lineTo(x1, y0 + k); c.lineTo(x1, y1 - k); c.lineTo(x1 - k, y1); c.lineTo(x0 + k, y1); c.lineTo(x0, y1 - k); c.lineTo(x0, y0 + k); c.closePath(); };
+  oct(1, top + 3, w - 1, face + 6, 7); c.fillStyle = lg(c, 0, face - 6, 0, face + 6, T.rock[1], shade(T.rock[1], .7)); c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = .5; for (let x = 6; x < w - 4; x += 5) { c.beginPath(); c.moveTo(x, face); c.lineTo(x, face + 5.5); c.stroke(); }
+  oct(1, top, w - 1, face, 7); c.fillStyle = lg(c, 0, top, 0, face, T.rock[2], T.rock[0]); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,.22)'; c.lineWidth = .7; oct(2, top + 1, w - 2, face - 1, 6.4); c.stroke();
+  c.strokeStyle = 'rgba(0,0,0,.14)'; c.lineWidth = .4; for (const k of [.33, .66]) { c.beginPath(); c.moveTo(4, top + (face - top) * k); c.lineTo(w - 4, top + (face - top) * k); c.stroke(); }
+  const cx = w / 2, cy = (top + face) / 2;
+  c.fillStyle = rgba(T.glow, .28); c.beginPath(); c.ellipse(cx, cy, w * .3, (face - top) * .3, 0, 0, TAU); c.fill();
+  c.strokeStyle = T.glow; c.lineWidth = .9; c.beginPath(); c.ellipse(cx, cy, w * .26, (face - top) * .26, 0, 0, TAU); c.stroke();
+  c.lineWidth = .6; c.beginPath(); c.ellipse(cx, cy, w * .16, (face - top) * .16, 0, 0, TAU); c.stroke();
+  for (let i = 0; i < 6; i++) { const an = i / 6 * TAU, rx = w * .21, ry = (face - top) * .21; el(c, cx + Math.cos(an) * rx, cy + Math.sin(an) * ry, .9, .6, T.glow); }
+  for (let i = 0; i < 3; i++) {
+    const y = face + 1 + i * 4, inset = i * 1.2;
+    rf(c, sx - 1 + inset, y, 20 - inset * 2, 4.4, .5, shade(T.rock[2], .95 - i * .08));
+    c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(sx - 1 + inset, y + 3.6, 20 - inset * 2, .8);
+  }
+}
 function fxCaveGlow(ctx, sx, sy, t, p) {
   ctx.globalAlpha = .4 + .2 * Math.sin(t / 23 + p.ph * TAU); ctx.drawImage(glowSprite(p.gc, .55), sx + p.gx - p.gr / 2, sy + p.gy - p.gr / 2, p.gr, p.gr); ctx.globalAlpha = 1;
 }
@@ -1410,6 +1467,11 @@ function propSpec(s, m, x, y) {
     case '5': { const T = caveT(m); return spec('stal' + (m.caveTheme || '') + (v % 2), 0, -9, 16, 25, c => { c.translate(0, 9); paintStalag(c, T, v % 2); }, { yb }); }
     case '6': { const T = caveT(m); return spec('lant' + (m.caveTheme || ''), 0, -11, 16, 27, c => { c.translate(0, 11); paintLantern(c, T); }, { yb, ph, fx: fxCaveGlow, gc: '#ffc060', gx: 12.6, gy: -3.4, gr: 26 }); }
     case '8': { const T = caveT(m); return spec('mush' + (m.caveTheme || '') + (v % 2), 0, -4, 16, 20, c => { c.translate(0, 4); paintMush(c, T, v); }, { yb, ph, fx: fxCaveGlow, gc: T.mush[0], gx: 7, gy: 6, gr: 26 }); }
+    case 'o': {   // the dais is drawn once, by its top-left tile, over the whole block
+      if (at(m, x - 1, y) === 'o' || at(m, x, y - 1) === 'o') return null;
+      let w = 1, h = 1; while (at(m, x + w, y) === 'o') w++; while (at(m, x, y + h) === 'o') h++;
+      const T = caveT(m); return spec('dais' + (m.caveTheme || '') + w + 'x' + h, 0, 0, w * 16, h * 16, c => paintDais(c, T, w * 16, h * 16), { yb: (y + h) * 16 - 2 });
+    }
     case '9': { const T = caveT(m); return spec('pillar' + (m.caveTheme || ''), 0, -15, 16, 31, c => { c.translate(0, 15); paintPillar(c, T); }, { yb, ph, fx: fxCaveGlow, gc: T.glow, gx: 8, gy: -1, gr: 22 }); }
     case 's': return spec('sign', 0, -1.5, 16, 17.5, paintSign, { yb });
     case 'F': { const ms = sm(inSet('FY'), false); return spec('fence' + ms, 0, -6, 16, 22.6, c => paintFence(c, ms), { yb }); }
@@ -1653,11 +1715,11 @@ function specialFx(ctx, s, cx, cy, t, x0, y0, x1, y1) {
 // waterfalls, glowing water, light shafts from the ceiling, and you (a wider circle when you can LIGHT: the Warden's Lamp,
 // a Glow Lamp, or a Fire or Electric partner). The darkness is a half-resolution layer with soft holes cut out of it; coloured
 // glow is then added on top.
-const LIGHT_SRC = { i: [28, null], l: [46, '#ffd27a'], '6': [44, '#ffc060'], '2': [22, '#ffb040'], '8': [30, null], '9': [28, null], '!': [30, '#ff7a30'], '|': [30, '#8ad8ff'], w: [16, '#4ab8ff'], '7': [58, '#eef4ff'] };
+const LIGHT_SRC = { o: [30, null], i: [28, null], l: [46, '#ffd27a'], '6': [44, '#ffc060'], '2': [22, '#ffb040'], '8': [30, null], '9': [28, null], '!': [30, '#ff7a30'], '|': [30, '#8ad8ff'], w: [16, '#4ab8ff'], '7': [58, '#eef4ff'] };
 let litCv = null, litX = null, holeImg = null;
 const hole = () => holeImg || (holeImg = (() => { const [c, x] = G.cv(64, 64); const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(.35, 'rgba(0,0,0,.9)'); g.addColorStop(.7, 'rgba(0,0,0,.35)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return c; })());
 function caveLights(ctx, m, s, cx, cy, t, x0, y0, x1, y1) {
-  const W = G.W, H = G.H, T = caveT(m), dark = Math.min(.92, (m.dark === undefined ? .6 : m.dark) + .18);
+  const W = G.W, H = G.H, T = caveT(m), dark = Math.min(.92, (m.dark === undefined ? .6 : m.dark) + .1);
   if (dark <= 0) return;
   // colour grade the whole cave in its theme (multiply), so walls, floor and props share one mood
   ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = T.grade; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over';
