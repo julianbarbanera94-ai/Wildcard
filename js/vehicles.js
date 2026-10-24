@@ -16,37 +16,37 @@ const inv = () => G.inv;
 const LAND = 'gfpyzVDZY', ROAD = 'pyVzZDY';
 const KNOWN = 'gGpfDMceTmayqzVZYvwX';
 G.VEHICLES = {
-  bicycle: { name: 'Bicycle', speed: 2.5, turn: 4, tiles: LAND, land: true, enc: 0, price: 4000, color: '#e04848',
+  bicycle: { name: 'Bicycle', speed: 1.75, turn: 4, tiles: LAND, land: true, enc: 0, price: 4000, color: '#e04848',
     where: 'land, but not tall grass, marsh reeds or caves',
     how: 'Craft one at a Forge (tier 2), or buy one for $4,000 at Tidewheel Motors.',
     desc: 'A trusty bicycle. Fast on paths and fields, but it can\'t go through tall grass, marsh reeds or caves.' },
-  scooter: { name: 'Scooter', speed: 3, turn: 4, tiles: ROAD + 'M', road: true, enc: 0, price: 0, color: '#3cb8e0',
+  scooter: { name: 'Scooter', speed: 2, turn: 4, tiles: ROAD + 'M', road: true, enc: 0, price: 0, color: '#3cb8e0',
     where: 'roads, paths, bridges, boardwalks and plaza sand only',
     how: 'The courier kid in Lanternrest trades it for 3 Carrots and 2 Turnips.',
     desc: 'A zippy kick scooter. Very quick, but only on roads and paths.' },
-  quad: { name: 'Quad Bike', speed: 2.5, turn: 6, tiles: LAND + 'GqceM', land: true, enc: .5, price: 0, color: '#e0a020',
+  quad: { name: 'Quad Bike', speed: 1.75, turn: 6, tiles: LAND + 'GqceM', land: true, enc: .5, price: 0, color: '#e0a020',
     where: 'all land, including tall grass, marsh reeds and cave floors',
     how: 'An abandoned quad lies on the Ridge. Repair it with 1 Engine Part and 2 Wheels.',
     desc: 'A rugged quad bike. Goes anywhere on land and halves wild encounters in tall grass.' },
-  motorbike: { name: 'Motorbike', speed: 3.5, turn: 8, tiles: LAND + 'ceM', land: true, enc: 0, price: 15000, color: '#3a4a6a', req: { shards: 1 },
+  motorbike: { name: 'Motorbike', speed: 2.25, turn: 8, tiles: LAND + 'ceM', land: true, enc: 0, price: 15000, color: '#3a4a6a', req: { shards: 1 },
     where: 'land and cave floors, but not tall grass or marsh reeds',
     how: '$15,000 at Tidewheel Motors, once you hold an Ember Shard.',
     desc: 'A roaring motorbike. Very fast on land and in caves; it can\'t push through tall grass.' },
-  car: { name: 'Car', speed: 4, turn: 10, tiles: ROAD, road: true, enc: 0, price: 30000, color: '#4a7ae0', req: { shards: 2, struct: { garage: 2 } },
+  car: { name: 'Car', speed: 2.75, turn: 10, tiles: ROAD, road: true, enc: 0, price: 30000, color: '#4a7ae0', req: { shards: 2, struct: { garage: 2 } },
     where: 'roads and paths only, never caves',
     how: '$30,000 at Tidewheel Motors. Needs a Double Garage and 2 Ember Shards.',
     desc: 'A shiny little car. The fastest thing on wheels, but it sticks to the roads.' },
-  hoverboard: { name: 'Hoverboard', speed: 3, turn: 3, tiles: LAND + 'Gqw', land: true, enc: 0, price: 0, color: '#a070ff',
+  hoverboard: { name: 'Hoverboard', speed: 2, turn: 3, tiles: LAND + 'Gqw', land: true, enc: 0, price: 0, color: '#a070ff',
     where: 'all open land and even water, but not caves',
     how: 'Craft one at a Master Forge (tier 3) after the Great Lantern is lit.',
     desc: 'It floats over grass and water alike. Wild creatures never notice you pass.' },
-  rowboat: { name: 'Rowboat', speed: 2, turn: 4, tiles: 'w', boat: true, enc: 0, price: 1500, color: '#b9783c',
+  rowboat: { name: 'Rowboat', speed: 1.25, turn: 4, tiles: 'w', boat: true, enc: 0, price: 1500, color: '#b9783c',
     where: 'water only', how: 'Craft one at a Forge (tier 1), or buy one for $1,500 at Tidewheel Motors.',
     desc: 'A little wooden rowboat. Slow and steady across any open water.' },
-  motorboat: { name: 'Motorboat', speed: 3.5, turn: 6, tiles: 'w', boat: true, enc: 0, price: 9000, color: '#e04848',
+  motorboat: { name: 'Motorboat', speed: 2, turn: 6, tiles: 'w', boat: true, enc: 0, price: 9000, color: '#e04848',
     where: 'water only', how: 'Craft one at a Forge (tier 2), or buy one for $9,000 at Tidewheel Motors.',
     desc: 'An outboard motorboat. It skips across open water almost twice as fast as rowing.' },
-  sailboat: { name: 'Sailboat', speed: 3, turn: 5, tiles: 'w', boat: true, enc: 0, price: 0, color: '#3a78e0',
+  sailboat: { name: 'Sailboat', speed: 1.5, turn: 5, tiles: 'w', boat: true, enc: 0, price: 0, color: '#3a78e0',
     where: 'water only', how: 'Craft one at a Master Forge (tier 3).',
     desc: 'A graceful sailboat with a bright white sail. Quick, quiet and lovely to look at.' },
   helicopter: { name: 'Helicopter', speed: 0, turn: 0, tiles: '', enc: 0, price: 80000, color: '#e05030', flies: true, req: { lit: true, struct: { garage: 3, helipad: 1 } },
@@ -156,7 +156,7 @@ G.hooks.enter = function (x, y, ch) {
   showToast(refusal(id, ch));
   return false;
 };
-G.hooks.speed = function (held) { const id = riding(); return id ? speedOf(id) : (G.running(held) ? 2 : 1); };   // run: hold B, toggle or always (settings)
+G.hooks.speed = function (held) { const id = riding(); return id ? speedOf(id) : (G.running(held) ? 1.5 : 1); };   // run: hold B, toggle or always (settings)
 G.hooks.turn = function () { const id = riding(); return id ? V$(id).turn : 5; };
 G.hooks.encRate = function (rate) { const id = riding(); return id ? rate * (V$(id).enc || 0) : rate; };
 
@@ -1078,7 +1078,7 @@ async function flight(mode, carrier) {
   nav.snap(); fly.a = nav.xy(here.id); fly.b = nav.xy(target.id); fly.x = fly.a[0]; fly.y = fly.a[1];
   phase = 'fly'; fly.from = here; fly.to = target; fly.faceRight = fly.b[0] >= fly.a[0];
   G.audio.sfx('throw');
-  const dist = Math.hypot(fly.b[0] - fly.a[0], fly.b[1] - fly.a[1]), T = Math.max(80, Math.min(150, Math.round(dist * 1.2))), lift = 18 + dist * .12;
+  const dist = Math.hypot(fly.b[0] - fly.a[0], fly.b[1] - fly.a[1]), T = Math.max(240, Math.min(480, Math.round(dist * 3))), lift = 18 + dist * .12;
   for (let i = 0; i <= T; i++) {
     const k = i / T, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
     fly.k = e; fly.x = fly.a[0] + (fly.b[0] - fly.a[0]) * e; fly.y = fly.a[1] + (fly.b[1] - fly.a[1]) * e - 8 - Math.sin(e * Math.PI) * lift;

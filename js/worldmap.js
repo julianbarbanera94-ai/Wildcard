@@ -855,7 +855,7 @@ let sailBoat = false;
 const byBoatNow = () => sailBoat;
 async function sail(from, to, boat) {
   sailBoat = !!boat;
-  const pts = ferryPath(from, to), A = BYID[from], B = BYID[to], len = pathAt(pts, 0).len, T = Math.max(230, Math.min(420, Math.round(len / 2.3)));
+  const pts = ferryPath(from, to), A = BYID[from], B = BYID[to], len = pathAt(pts, 0).len, T = Math.max(480, Math.min(900, Math.round(len / 1.1)));
   const trail = []; let t = 0, k = 0, vcx = A.port ? A.port[0] / RW : A.nx, vcy = A.port ? A.port[1] / RH : A.ny;
   const scene = {
     wide: true, raw: true,

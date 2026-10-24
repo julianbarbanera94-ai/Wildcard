@@ -62,7 +62,7 @@ fs.mkdirSync(OUT, { recursive: true });
   await page.waitForTimeout(300); await shot('ride-bicycle');
   await ev(() => place(47, 11, 3)); await page.waitForTimeout(100);
   const bike = await measure('ArrowRight', 700);
-  assert(walk >= 16 && bike > 0 && bike <= 8, `frames per tile: walking ${walk}, bicycle ${bike}`);
+  assert(walk >= 16 && bike > 0 && bike <= 12 && bike < walk, `frames per tile: walking ${walk}, bicycle ${bike}`);
   step(`garage TAKE OUT mounts the bicycle; ${walk} frames per tile walking vs ${bike} on the bicycle`);
 
   // 2) Refusals and restrictions
@@ -214,7 +214,7 @@ fs.mkdirSync(OUT, { recursive: true });
   await page.waitForTimeout(300); await shot('boat-launch');
   await ev(() => { G.world.map.roamers = []; });
   const row = await measure('ArrowRight', 800);
-  assert(row >= 8 && row <= 10 && row < walk, `rowboat frames per tile: ${row} (walking ${walk})`);
+  assert(row >= 11 && row <= 16 && row < walk, `rowboat frames per tile: ${row} (walking ${walk})`);
   const bx = await ev(() => G.world.p.x); assert(bx > 8 && await ev(() => G.worldApi.tileAt(G.world.p.x, G.world.p.y)) === 'w', 'sailing on water');
   await shot('boat-sailing');
   assert.equal(await ev(() => G.hooks.encRate(.07)), 0, 'no encounters while sailing');
@@ -243,7 +243,7 @@ fs.mkdirSync(OUT, { recursive: true });
   // the faster motorboat
   await ev(() => { setup('lanternrest', 4, 33, 3); G.vehicles.grant('motorboat'); G.vehicles.mount('motorboat'); G.world.map.roamers = []; });
   const mot = await measure('ArrowRight', 700);
-  assert(mot > 0 && mot <= 6 && mot < row, `motorboat frames per tile: ${mot} (rowboat ${row})`);
+  assert(mot > 0 && mot <= 11 && mot < row, `motorboat frames per tile: ${mot} (rowboat ${row})`);
   await shot('motorboat-sailing');
   // garage: boats are listed under their own heading; MOOR NEARBY finds the water, or explains
   await ev(() => { setup('lanternrest', 4, 33, 3); ['bicycle', 'rowboat', 'sailboat'].forEach(G.vehicles.grant); G.state.builds.push({ id: 'g1', type: 'garage', map: 'lanternrest', x: 48, y: 6, lvl: 2, rot: 0 }); });

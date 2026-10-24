@@ -9,16 +9,23 @@ const ROOT = path.resolve(__dirname, '..');
   const page = await browser.newPage(); await page.goto('file://' + ROOT + '/index.html'); await page.waitForTimeout(400);
   const out = await page.evaluate(() => {
     G.state = G.newState(); G.migrateState(G.state);
-    const geo = G.WORLD.geo, T = 8, OX = 64, OY = 48, C = 192 + 2 * OX, R = 128 + 2 * OY, P = G.WORLD.places, B = G.WORLD.byId;
-    const ci0 = []; const hash = (i, j, s) => { let h = (i * 374761393 + j * 668265263 + (s || 0) * 2246822519) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+    const geo = G.WORLD.geo, T = 8, OX = 0, OY = 0, C = 192 + 2 * OX, R = 128 + 2 * OY, P = G.WORLD.places, B = G.WORLD.byId;
+    const ci0 = []; const SEA_PLACES = G.WORLD.places; const hash = (i, j, s) => { let h = (i * 374761393 + j * 668265263 + (s || 0) * 2246822519) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
     const inP = (x, y, poly) => geo.inPoly(x, y, poly);
-    // the uncharted ocean around the illustrated map: outer islands (reference pixels, which run past the picture's edges)
-    const OUTER = [
-      { n: 'PALM ATOLL', c: [-250, 220], r: 70, k: 'sand' }, { n: 'GULL ROCK', c: [-330, 560], r: 55, k: 'rock' }, { n: 'LONE PINE', c: [-210, 880], r: 85, k: 'wood' },
-      { n: 'SHIPWRECK CAY', c: [330, 1230], r: 75, k: 'sand' }, { n: 'KELP ISLE', c: [760, 1300], r: 95, k: 'wood' }, { n: 'BLACK REEF', c: [1180, 1250], r: 60, k: 'rock' },
-      { n: 'SUNKEN ARCH', c: [1700, 1110], r: 70, k: 'sand' }, { n: 'MIST HOLM', c: [1810, 700], r: 90, k: 'wood' }, { n: 'ICE TOOTH', c: [1760, 250], r: 60, k: 'rock' },
-      { n: 'NORTH STAR CAY', c: [1000, -250], r: 80, k: 'sand' }, { n: 'WHALE BACK', c: [400, -300], r: 65, k: 'rock' }, { n: 'FAR ARBOR', c: [-120, -190], r: 75, k: 'wood' },
-    ].map((o, i) => { const pts = []; for (let a = 0; a < 12; a++) { const t = a / 12 * Math.PI * 2, w = .72 + hash(i, a, 11) * .5; pts.push([o.c[0] + Math.cos(t) * o.r * w * 1.15, o.c[1] + Math.sin(t) * o.r * w]); } return Object.assign(o, { pts }); });
+    // small islands in the empty parts of the existing sea (the sea itself keeps the picture's size): positions are searched, not typed
+    const NAMES = [['PALM ATOLL', 'sand', 34], ['GULL ROCK', 'rock', 30], ['LONE PINE', 'wood', 40], ['SHIPWRECK CAY', 'sand', 36], ['KELP ISLE', 'wood', 44], ['BLACK REEF', 'rock', 30], ['SUNKEN ARCH', 'sand', 34], ['MIST HOLM', 'wood', 40]];
+    const landPolys = [geo.CONT, ...Object.values(geo.ISLANDS)];
+    const clear = (x, y, r) => { for (let a = 0; a < 16; a++) { const t = a / 16 * Math.PI * 2; for (const k of [.5, 1]) if (landPolys.some(p => inP(x + Math.cos(t) * r * k, y + Math.sin(t) * r * k, p))) return false; } return !landPolys.some(p => inP(x, y, p)); };
+    const OUTER = [];
+    for (const [n, k, r] of NAMES) {
+      let best = null, bs = -1;
+      for (let y = 60; y < 960; y += 12) for (let x = 60; x < 1476; x += 12) {
+        if (!clear(x, y, r + 70) || OUTER.some(o => Math.hypot(o.c[0] - x, o.c[1] - y) < 190)) continue;
+        if (SEA_PLACES.some(p => Math.hypot(p.x - x, p.y - y) < 150)) continue;
+        const sc = hash(x, y, 17); if (sc > bs) { bs = sc; best = [x, y]; } }
+      if (best) OUTER.push({ n, k, r, c: best });
+    }
+    OUTER.forEach((o, i) => { const pts = []; for (let a = 0; a < 12; a++) { const t = a / 12 * Math.PI * 2, w = .75 + hash(i, a, 11) * .45; pts.push([o.c[0] + Math.cos(t) * o.r * w * 1.15, o.c[1] + Math.sin(t) * o.r * w]); } o.pts = pts; });
     const isl = [...Object.values(geo.ISLANDS), ...OUTER.map(o => o.pts)];
     const water = [], land = [];
     for (let j = 0; j < R; j++) { water.push([]); for (let i = 0; i < C; i++) {
@@ -83,7 +90,7 @@ const ROOT = path.resolve(__dirname, '..');
     OUTER.forEach((o, n) => {
       const ci = Math.round(o.c[0] / T) + OX, cj = Math.round(o.c[1] / T) + OY, shore = [];
       for (let j = cj - 16; j <= cj + 16; j++) for (let i = ci - 20; i <= ci + 20; i++) {
-        if (i < 2 || j < 2 || i >= C - 2 || j >= R - 2 || water[j][i]) continue;
+        if (i < 2 || j < 2 || i >= C - 2 || j >= R - 2 || water[j][i] || !inP((i - OX + .5) * T, (j - OY + .5) * T, o.pts)) continue;
         const h = hash(i, j, 5), coast = near(i, j, (x, y) => water[y][x], 1);
         grid[j][i] = coast ? 'y' : o.k === 'rock' ? (h < .5 ? 'C' : h < .8 ? 'n' : 'r') : o.k === 'sand' ? (h < .7 ? 'y' : h < .85 ? 'u' : 'f') : (h < .45 ? '#' : h < .6 ? 'n' : h < .66 ? 'f' : 'g');
         if (coast && sea[j][i - 1] && grid[j][i + 1] !== 'w') shore.push([i, j]);
@@ -115,7 +122,7 @@ const ROOT = path.resolve(__dirname, '..');
   });
   const body = fs.readFileSync(path.join(__dirname, 'sea-template.js'), 'utf8')
     .replace('/*ROWS*/', JSON.stringify(out.rows, null, 0).replace(/","/g, '",\n  "'))
-    .replace('/*GATES*/', JSON.stringify(out.gates)).replace('/*TREASURE*/', JSON.stringify(out.treasure)).replace('/*OX*/', '64').replace('/*OY*/', '48');
+    .replace('/*GATES*/', JSON.stringify(out.gates)).replace('/*TREASURE*/', JSON.stringify(out.treasure)).replace('/*OX*/', '0').replace('/*OY*/', '0');
   fs.writeFileSync(path.join(ROOT, 'js/maps/zz_sea.js'), body);
   console.log('sea map written', out.stats, 'gates:', out.gates.map(g => `${g.id}@${g.gx},${g.gy}->launch ${g.lx},${g.ly}`).join(' '));
   await browser.close();

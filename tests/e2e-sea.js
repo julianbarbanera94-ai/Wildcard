@@ -27,12 +27,12 @@ const OUT = process.env.OUT || '/tmp';
     for (const p of W.places) { if (!['cobalt', 'verdant', 'lanternrest', 'moonlit', 'frostmere'].includes(p.id)) continue; const ti = Math.round(p.x / 8) + OX, tj = Math.round(p.y / 8) + OY, ch = sea.t[tj] && sea.t[tj][ti]; out.push([p.id, ch]); }
     const coast = (x, y) => sea.t[y][x] === 'w';
     return { size: [sea.w, sea.h], places: out, seaTiles: sea.t.flat().filter(c => c === 'w').length, moonlitIsland: ['y', 'g', '#', 'n', 'f', 'i', 'u'].includes(sea.t[Math.round(940 / 8) + OY][Math.round(1000 / 8) + OX]), gates: sea.seaGates.length }; });
-  assert.deepEqual(geo.size, [320, 224], 'the sea has a wide margin of open ocean'); assert(geo.seaTiles > 40000 && geo.gates >= 8);
+  assert.deepEqual(geo.size, [192, 128], 'the sea keeps the picture\'s size'); assert(geo.seaTiles > 8000 && geo.gates >= 8);
   assert(geo.places.every(([id, ch]) => ch && ch !== 'w' || ['cobalt'].includes(id) || true));
   const land = await ev(() => { const s = G.MAPS.aurelis_sea, OX = s.seaOrigin.x, OY = s.seaOrigin.y; const at = id => { const p = G.WORLD.byId[id]; return s.t[Math.round(p.y / 8) + OY][Math.round(p.x / 8) + OX]; }; return { lanternrest: at('lanternrest'), lakesideLake: at('lakeside'), moonlit: s.t[Math.round(905 / 8) + OY][Math.round(1000 / 8) + OX], seaWestOfDriftwood: s.t[62 + OY][1 + OX], aroundVerdant: s.t[Math.round(108 / 8) + OY][Math.round(150 / 8) + OX] }; });
   assert.notEqual(land.lanternrest, 'w', 'Lanternrest is on the mainland'); assert.equal(land.lakesideLake, 'w', 'Lakeside sits on the lake'); assert.notEqual(land.moonlit, 'w', 'Moonlit Island is where the map puts it'); assert.equal(land.seaWestOfDriftwood, 'w'); assert.equal(land.aroundVerdant, 'w', 'open water west of Verdant Isle');
   const outer = await ev(() => { const s = G.MAPS.aurelis_sea, caches = s.objs.filter(o => /^sea_cache_/.test(o.id)); return { n: caches.length, ok: caches.every(o => s.t[o.y][o.x] === 'y' && s.t[o.y][o.x - 1] === 'w'), land: s.t.flat().filter(c => 'yCnr#gf'.includes(c)).length }; });
-  assert(outer.n >= 10 && outer.ok, 'every outer island has a treasure spot on a beach facing the sea');
+  assert(outer.n >= 6 && outer.ok, 'every outer island has a treasure spot on a beach facing the sea');
   step('the sea map is the illustrated map: mainland, Lakeside on its lake, islands and open water where the picture has them');
 
   // ---- 2) sail a motorboat out of Driftwood Port's harbour onto the sea ----
