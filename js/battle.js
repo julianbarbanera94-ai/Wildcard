@@ -16,7 +16,7 @@ const msg = (t, auto) => G.say(t, { auto: auto === undefined ? 36 : auto, style:
 const mark = (id, k) => { G.state.dex[id] = Math.max(G.state.dex[id] || 0, k); }; // 1 seen, 2 caught
 const expRatio = c => (c.exp - G.expFor(c.lvl)) / (G.expFor(c.lvl + 1) - G.expFor(c.lvl));
 const speed = f => f.c.stats.spe * G.stageMult(f.stages.spe) * (f.c.status === 'par' ? .5 : 1);
-const center = f => f === b.me ? [62, 78] : [182, 46];
+const center = f => f === b.me ? [61, 74] : [182, 42];
 
 // ---- Drawing --------------------------------------------------------------
 // Backdrops, platforms, orb and particles are pre-rendered (G.kit.cache); per frame we blit them and
@@ -26,36 +26,55 @@ function ell(ctx, x, y, rx, ry, col) { ctx.fillStyle = col; ctx.beginPath(); ctx
 function blob(x, cx, cy, r, col) { x.fillStyle = col; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); }
 const bgArt = {
   grass: () => K.cache('bbg-grass', 240, 160, x => {
-    const R = G.mulberry(7);
-    x.fillStyle = K.lin(x, 0, 0, 0, 70, ['#6cc8ff', '#a8e4ff', '#e6f9ff', '#fff4d6']); x.fillRect(0, 0, 240, 72);
-    const sun = x.createRadialGradient(132, 14, 0, 132, 14, 60); sun.addColorStop(0, 'rgba(255,250,215,.95)'); sun.addColorStop(.25, 'rgba(255,245,200,.45)'); sun.addColorStop(1, 'rgba(255,245,200,0)');
-    x.fillStyle = sun; x.fillRect(0, 0, 240, 80);
-    // far hills
-    x.fillStyle = '#a6dfc3'; x.beginPath(); x.moveTo(0, 62);
-    for (let i = 0; i <= 240; i += 4) x.lineTo(i, 50 - Math.sin(i / 34) * 7 - Math.sin(i / 13 + 1) * 2);
-    x.lineTo(240, 70); x.lineTo(0, 70); x.fill();
-    // far trees on the ridge
-    for (let i = 0; i < 26; i++) { const tx = R() * 240, ty = 52 - Math.sin(tx / 34) * 7 + 3, r = 3 + R() * 3; blob(x, tx, ty, r, '#86c9a2'); blob(x, tx - r * .3, ty - r * .3, r * .55, '#9fd8b3'); }
-    // near hills
-    x.fillStyle = K.lin(x, 0, 52, 0, 72, ['#8fdc74', '#6fc65a']); x.beginPath(); x.moveTo(0, 70);
-    for (let i = 0; i <= 240; i += 4) x.lineTo(i, 60 - Math.sin(i / 22 + 2) * 4 - Math.sin(i / 9) * 1.2);
-    x.lineTo(240, 74); x.lineTo(0, 74); x.fill();
-    for (let i = 0; i < 14; i++) { // round bushy trees
-      const tx = R() * 240, ty = 61 - Math.sin(tx / 22 + 2) * 4, r = 4 + R() * 4;
-      x.fillStyle = 'rgba(40,110,50,.25)'; x.beginPath(); x.ellipse(tx + 2, ty + 1, r, r * .35, 0, 0, 7); x.fill();
-      x.fillStyle = '#8a5a3a'; x.fillRect(tx - .8, ty - r * .5, 1.6, r * .6);
-      blob(x, tx, ty - r, r, '#4fae4c'); blob(x, tx - r * .3, ty - r * 1.25, r * .6, '#6cc95c'); blob(x, tx - r * .45, ty - r * 1.45, r * .25, '#a3e486');
-    }
-    // meadow ground
-    x.fillStyle = K.lin(x, 0, 66, 0, 160, ['#8fdc62', '#6cc650', '#55b444']); x.fillRect(0, 66, 240, 94);
-    for (let i = 0; i < 10; i++) { x.fillStyle = 'rgba(255,255,200,.12)'; x.beginPath(); x.ellipse(R() * 240, 74 + R() * 80, 30 + R() * 30, 3 + R() * 3, 0, 0, 7); x.fill(); }
-    for (let i = 0; i < 140; i++) { // grass tufts
-      const gx = R() * 240, gy = 68 + Math.pow(R(), .8) * 92, s = .6 + (gy - 66) / 60;
-      x.strokeStyle = R() < .5 ? '#4fae3f' : '#a6ec78'; x.lineWidth = .6 * s; x.beginPath();
-      x.moveTo(gx - s, gy); x.quadraticCurveTo(gx - s, gy - s * 1.5, gx - s * 1.8, gy - s * 2.6); x.moveTo(gx, gy); x.quadraticCurveTo(gx, gy - s * 2, gx + s * .6, gy - s * 3); x.moveTo(gx + s, gy); x.quadraticCurveTo(gx + s, gy - s * 1.4, gx + s * 2, gy - s * 2.2); x.stroke();
-    }
-    const FL = ['#ffffff', '#ffe066', '#ff9ec7', '#ffb35c'];
-    for (let i = 0; i < 46; i++) { const fx = R() * 240, fy = 70 + R() * 88, r = .7 + (fy - 66) / 90, c = FL[i % 4]; for (let k = 0; k < 5; k++) blob(x, fx + Math.cos(k * 1.26) * r, fy + Math.sin(k * 1.26) * r * .7, r * .7, c); blob(x, fx, fy, r * .5, '#ffcf3a'); }
+    const R = G.mulberry(21), TAU = Math.PI * 2;
+    const poly = (pts, fill) => { x.beginPath(); pts.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.closePath(); x.fillStyle = fill; x.fill(); };
+    const ridge = (y0, amp, f, ph, fill, bottom) => { x.beginPath(); x.moveTo(0, bottom); for (let i = 0; i <= 240; i += 3) x.lineTo(i, y0 - Math.sin(i / f + ph) * amp - Math.sin(i / (f * .37) + ph * 2) * amp * .3); x.lineTo(240, bottom); x.closePath(); x.fillStyle = fill; x.fill(); };
+    // sky, sun, soft rays
+    x.fillStyle = K.lin(x, 0, 0, 0, 78, ['#3f96ee', '#7cc4ff', '#c4e8ff', '#fff2d2']); x.fillRect(0, 0, 240, 80);
+    const sun = x.createRadialGradient(168, 6, 0, 168, 6, 90); sun.addColorStop(0, 'rgba(255,248,214,.95)'); sun.addColorStop(.18, 'rgba(255,240,190,.5)'); sun.addColorStop(1, 'rgba(255,240,190,0)'); x.fillStyle = sun; x.fillRect(0, 0, 240, 90);
+    for (let i = 0; i < 7; i++) { const a0 = 1.9 + i * .13; x.fillStyle = 'rgba(255,250,220,.07)'; x.beginPath(); x.moveTo(168, 4); x.lineTo(168 + Math.cos(a0) * 200, 4 + Math.sin(a0) * 200); x.lineTo(168 + Math.cos(a0 + .05) * 200, 4 + Math.sin(a0 + .05) * 200); x.fill(); }
+    // far blue mountains with haze
+    ridge(50, 9, 26, 1, '#9db9e0', 80); ridge(56, 7, 19, 4, '#86a8d6', 80);
+    // natural arch in the distance
+    x.fillStyle = '#7f98c4'; x.beginPath(); x.moveTo(92, 66); x.lineTo(92, 40); x.quadraticCurveTo(100, 30, 112, 33); x.quadraticCurveTo(126, 36, 128, 46); x.lineTo(129, 66); x.lineTo(121, 66); x.lineTo(121, 50); x.quadraticCurveTo(116, 43, 108, 46); x.quadraticCurveTo(102, 49, 100, 56); x.lineTo(100, 66); x.closePath(); x.fill();
+    x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(92, 40, 36, 3);
+    // tall cliff towers left and right, with moss tops, trees and a waterfall
+    const tower = (cx, w, top, base, col, lit, dark) => {
+      x.fillStyle = col; x.beginPath(); x.moveTo(cx - w / 2, base); x.lineTo(cx - w / 2 + 1, top + 5); x.quadraticCurveTo(cx - w / 2 + 3, top, cx - w / 5, top - 1); x.lineTo(cx + w / 4, top + 1); x.quadraticCurveTo(cx + w / 2, top + 2, cx + w / 2 - 1, top + 8); x.lineTo(cx + w / 2, base); x.closePath(); x.fill();
+      x.fillStyle = lit; x.beginPath(); x.moveTo(cx - w / 2, base); x.lineTo(cx - w / 2 + 1, top + 5); x.quadraticCurveTo(cx - w / 2 + 3, top, cx - w / 5, top - 1); x.lineTo(cx - w / 10, top); x.lineTo(cx - w / 5, base); x.closePath(); x.fill();
+      for (let k = 0; k < 14; k++) { const vx = cx - w / 2 + 1 + R() * (w - 2); x.strokeStyle = R() < .5 ? 'rgba(40,30,20,.22)' : 'rgba(255,240,210,.2)'; x.lineWidth = .4 + R() * .8; x.beginPath(); x.moveTo(vx, top + 4); x.lineTo(vx + (R() - .5) * 2, base); x.stroke(); }
+      x.strokeStyle = dark; x.lineWidth = .5; for (let k = 0; k < 7; k++) { const yy = top + 8 + k * (base - top - 8) / 7 + R() * 3; x.beginPath(); x.moveTo(cx - w / 2 + 1, yy); x.lineTo(cx + w / 2 - 1, yy + R() * 2 - 1); x.stroke(); }
+      x.fillStyle = '#4f9a3f'; x.beginPath(); x.ellipse(cx - w / 12, top + 1, w / 2.2, 3, 0, 0, TAU); x.fill(); x.fillStyle = '#6cc04e'; x.beginPath(); x.ellipse(cx - w / 8, top, w / 3, 1.8, 0, 0, TAU); x.fill();
+      for (let k = 0; k < 4; k++) { const tx = cx - w / 2.6 + R() * w * .75, r = 2.5 + R() * 2; x.fillStyle = '#3a8a3c'; x.beginPath(); x.arc(tx, top - r * .4, r, 0, TAU); x.fill(); x.fillStyle = '#58b050'; x.beginPath(); x.arc(tx - r * .3, top - r * .7, r * .6, 0, TAU); x.fill(); }
+    };
+    tower(10, 38, 18, 74, '#9a8468', '#c4ad8a', '#5c4a38'); tower(44, 20, 34, 74, '#8c7a62', '#b6a182', '#5c4a38');
+    tower(214, 42, 12, 76, '#a08a6c', '#cbb592', '#5c4a38'); tower(184, 24, 30, 76, '#907c62', '#baa684', '#5c4a38'); tower(236, 22, 26, 76, '#98836a', '#c2ac8a', '#5c4a38');
+    // waterfall with mist
+    for (const [wx, wt, wb] of [[36, 36, 72], [222, 20, 76]]) { x.fillStyle = K.lin(x, 0, wt, 0, wb, ['rgba(255,255,255,.95)', 'rgba(210,235,255,.8)']); x.fillRect(wx - 1.6, wt, 3.2, wb - wt); x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(wx - .5, wt, 1, wb - wt); const m = x.createRadialGradient(wx, wb, 0, wx, wb, 12); m.addColorStop(0, 'rgba(255,255,255,.8)'); m.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = m; x.fillRect(wx - 12, wb - 12, 24, 20); }
+    // lake band with sparkles
+    x.fillStyle = K.lin(x, 0, 66, 0, 78, ['#7fd0f0', '#4fb0e0']); x.fillRect(0, 66, 240, 12);
+    for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(255,255,255,${.25 + R() * .4})`; x.fillRect(R() * 240, 67 + R() * 10, 1 + R() * 3, .5); }
+    // far tree line and rolling hills
+    ridge(72, 3, 17, 0, '#4f9a4c', 84);
+    for (let i = 0; i < 46; i++) { const tx = R() * 240, ty = 70 + R() * 6, r = 2 + R() * 3.2; x.fillStyle = ['#2f7a3c', '#3f9446', '#52a850'][i % 3]; x.beginPath(); x.arc(tx, ty - r * .5, r, 0, TAU); x.fill(); x.fillStyle = 'rgba(190,240,150,.35)'; x.beginPath(); x.arc(tx - r * .3, ty - r * .9, r * .5, 0, TAU); x.fill(); }
+    ridge(80, 3, 23, 2, K.lin(x, 0, 74, 0, 90, ['#79c85a', '#5cb04a']), 96);
+    // bigger mid trees
+    for (let i = 0; i < 12; i++) { const tx = 6 + R() * 228, ty = 82 + R() * 6, r = 5 + R() * 4; x.fillStyle = 'rgba(30,80,30,.25)'; x.beginPath(); x.ellipse(tx + 2, ty + 1, r, r * .3, 0, 0, TAU); x.fill(); x.fillStyle = '#6a4a2c'; x.fillRect(tx - .8, ty - r * .6, 1.6, r * .7); for (const [dx, dy, rr, c] of [[0, -r, r, '#2f8a3c'], [-r * .3, -r * 1.25, r * .75, '#47a84a'], [-r * .5, -r * 1.5, r * .4, '#8bd870']]) { x.fillStyle = c; x.beginPath(); x.arc(tx + dx, ty + dy, rr, 0, TAU); x.fill(); } }
+    // meadow, patches of light, a winding trail
+    x.fillStyle = K.lin(x, 0, 84, 0, 160, ['#7fd052', '#5fba42', '#3f9c34', '#2c7e2c']); x.fillRect(0, 84, 240, 76);
+    for (let i = 0; i < 16; i++) { x.fillStyle = 'rgba(255,250,170,.13)'; x.beginPath(); x.ellipse(R() * 240, 90 + R() * 62, 24 + R() * 34, 2.5 + R() * 4, 0, 0, TAU); x.fill(); }
+    x.beginPath(); x.moveTo(104, 84); x.bezierCurveTo(112, 96, 150, 100, 168, 116); x.bezierCurveTo(184, 130, 168, 146, 190, 160); x.lineTo(226, 160); x.bezierCurveTo(200, 140, 214, 124, 190, 110); x.bezierCurveTo(166, 94, 128, 90, 116, 84); x.closePath(); x.fillStyle = '#d6b982'; x.fill();
+    x.strokeStyle = 'rgba(120,86,50,.35)'; x.lineWidth = .8; x.stroke(); x.fillStyle = 'rgba(255,240,200,.22)'; x.beginPath(); x.moveTo(110, 85); x.bezierCurveTo(130, 94, 160, 98, 176, 118); x.lineTo(172, 118); x.bezierCurveTo(156, 100, 128, 96, 108, 86); x.fill();
+    // grass tufts, flowers, rocks
+    for (let i = 0; i < 260; i++) { const gx = R() * 240, gy = 86 + Math.pow(R(), .75) * 74, s2 = .5 + (gy - 84) / 55; x.strokeStyle = R() < .5 ? '#3f9a36' : '#a4e873'; x.lineWidth = .5 * s2; x.beginPath(); x.moveTo(gx, gy); x.quadraticCurveTo(gx + s2 * .6, gy - s2 * 1.6, gx + s2 * (R() - .5) * 2, gy - s2 * 2.8); x.stroke(); }
+    const FL = ['#ffffff', '#ffe066', '#ff9ec7', '#9fc8ff', '#ffb35c'];
+    for (let i = 0; i < 70; i++) { const fx = R() * 240, fy = 90 + R() * 66, r = .6 + (fy - 84) / 80; x.fillStyle = FL[i % 5]; for (let k = 0; k < 5; k++) { x.beginPath(); x.arc(fx + Math.cos(k * 1.26) * r, fy + Math.sin(k * 1.26) * r * .7, r * .6, 0, TAU); x.fill(); } x.fillStyle = '#ffd23a'; x.beginPath(); x.arc(fx, fy, r * .4, 0, TAU); x.fill(); }
+    for (const [rx, ry, rw, rh] of [[-6, 128, 34, 32], [206, 138, 40, 26], [8, 150, 26, 14]]) { x.fillStyle = '#4d4a48'; x.beginPath(); x.ellipse(rx + rw / 2, ry + rh / 2, rw / 2, rh / 2, 0, 0, TAU); x.fill(); x.fillStyle = '#6e6a66'; x.beginPath(); x.ellipse(rx + rw / 2 - 2, ry + rh / 2 - 3, rw / 2.4, rh / 2.7, 0, 0, TAU); x.fill(); x.fillStyle = '#4f9a3f'; x.beginPath(); x.ellipse(rx + rw / 2, ry + 2, rw / 3, 2.2, 0, 0, TAU); x.fill(); }
+    // soft blurred foreground grass (depth of field)
+    x.save(); x.filter = 'blur(1.1px)'; for (let i = 0; i < 70; i++) { const gx = R() * 240, gy = 150 + R() * 14, h = 7 + R() * 9; x.strokeStyle = R() < .5 ? '#2c8a30' : '#4fb040'; x.lineWidth = 1 + R() * .8; x.beginPath(); x.moveTo(gx, gy + 4); x.quadraticCurveTo(gx + (R() - .5) * 4, gy - h * .5, gx + (R() - .5) * 8, gy - h); x.stroke(); } x.restore();
+    // warm light and vignette
+    x.fillStyle = K.lin(x, 0, 0, 240, 160, ['rgba(255,236,170,.14)', 'rgba(255,236,170,0)']); x.fillRect(0, 0, 240, 160);
+    const vg = x.createRadialGradient(120, 80, 70, 120, 80, 160); vg.addColorStop(0, 'rgba(10,30,50,0)'); vg.addColorStop(1, 'rgba(10,30,50,.34)'); x.fillStyle = vg; x.fillRect(0, 0, 240, 160);
   }, { pad: 0, qmax: 6 }),
   cave: () => K.cache('bbg-cave', 240, 160, x => {
     const R = G.mulberry(11);
@@ -119,19 +138,20 @@ const orbArt = () => K.cache('borb', 14, 14, x => {
   blob(x, 9.6, 3.4, .55, 'rgba(255,255,255,.8)');
 }, { pad: 2 });
 
-function drawFighter(ctx, f, back, bx, by) {
+function drawFighter(ctx, f, back, bx, by, base) {
+  base = base || 64; const u = base / 64;
   if (f.hidden || f.alpha <= 0) return;
   const a = act(f); let img = a ? a.frame() : null;
   if (!img) img = G.creatureSprite(f.c.id, back);
   if (f.tint) img = a ? G.c3d.tint(img, f.tint) : G.tint(img, f.tint);
   const t = G.frameNo + (back ? 40 : 0), idle = f.scale === 1 && !f.tint && !a;   // 3D actors breathe on their own
   const bob = idle ? Math.sin(t / 18) : 0, sq = idle ? Math.sin(t / 9) * .018 : 0;
-  const size = 64 * f.scale, sw = size * (1 + sq), sh = size * (1 - sq);
+  const size = base * f.scale, sw = size * (1 + sq), sh = size * (1 - sq);
   // contact shadow on the platform
-  const fx = bx + 32 + f.ox, fy = by + 61;
-  ctx.globalAlpha = f.alpha * .3 * Math.max(0, 1 - Math.abs(f.oy) / 40); ell(ctx, fx, fy, 18 * f.scale - bob * .6, 4 * f.scale, '#1a2a14'); ctx.globalAlpha = f.alpha;
-  const dx = bx + f.ox + (64 - sw) / 2, dy = by + f.oy + (64 - sh) - Math.max(0, bob) * 1.6;
-  if (f.glow) { ctx.globalCompositeOperation = 'lighter'; K.drawGlow(ctx, '#ffe066', fx, by + 34, 40 + Math.sin(t / 4) * 3, Math.min(1, f.glow / 30) * .8); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = f.alpha; }
+  const fx = bx + base / 2 + f.ox, fy = by + base * .95;
+  ctx.globalAlpha = f.alpha * .3 * Math.max(0, 1 - Math.abs(f.oy) / 40); ell(ctx, fx, fy, (18 * f.scale - bob * .6) * u, 4 * f.scale * u, '#10240e'); ctx.globalAlpha = f.alpha;
+  const dx = bx + f.ox + (base - sw) / 2, dy = by + f.oy + (base - sh) - Math.max(0, bob) * 1.6;
+  if (f.glow) { ctx.globalCompositeOperation = 'lighter'; K.drawGlow(ctx, '#ffe066', fx, by + base * .53, (40 + Math.sin(t / 4) * 3) * u, Math.min(1, f.glow / 30) * .8); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = f.alpha; }
   ctx.drawImage(img, dx, dy, sw, sh);
   if (f.flash > 0 && G.flashOK()) { ctx.globalAlpha = f.alpha * Math.min(1, f.flash / 4); ctx.drawImage(a ? G.c3d.tint(a.canvas, '#ffffff') : G.tint(G.creatureSprite(f.c.id, back), '#ffffff'), dx, dy, sw, sh); }
   ctx.globalAlpha = 1;
@@ -208,10 +228,9 @@ function drawBackdrop(ctx, cave) {
     for (let i = 0; i < 12; i++) { const px = (i * 53 + t * .15 * (1 + i % 3)) % 250 - 5, py = 20 + (i * 37) % 60 + Math.sin(t / 50 + i) * 6; K.drawGlow(ctx, i % 2 ? '#7ef0ff' : '#ff8ee0', px, py, 2.5, .5 + .4 * Math.sin(t / 15 + i)); }
     ctx.globalCompositeOperation = 'source-over';
   } else {
-    [[0, 8, .05], [1, 26, .035], [2, 15, .07], [3, 34, .025]].forEach(([k, cy, sp], i) => { const e = cloudArt(k), w = 40 + i * 4; const cx = ((i * 83 + t * sp) % (240 + w + 20)) - w - 10; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * .4 + e.pad * 2); });
+    ctx.globalAlpha = .5; [[0, 3, .05], [1, 12, .035], [2, 6, .07]].forEach(([k, cy, sp], i) => { const e = cloudArt(k), w = 34 + i * 4; const cx = ((i * 83 + t * sp) % (240 + w + 20)) - w - 10; ctx.drawImage(e.c, cx - e.pad, cy - e.pad, w + e.pad * 2, w * .4 + e.pad * 2); }); ctx.globalAlpha = 1;
   }
-  K.blit(ctx, platArt(cave, 44, 9), 182 - 48, 72 - 12);
-  K.blit(ctx, platArt(cave, 50, 10), 62 - 54, 104 - 13);
+  if (cave) { K.blit(ctx, platArt(cave, 44, 9), 182 - 48, 72 - 12); K.blit(ctx, platArt(cave, 50, 10), 62 - 54, 104 - 13); }
 }
 function draw(ctx) {
   const cave = b.bg === 'cave';
@@ -219,10 +238,10 @@ function draw(ctx) {
   ctx.save();
   if (b.shake > 0 && G.shakeOK()) { const s = b.shake * .5; ctx.translate(Math.sin(b.shake * 2.1) * s, Math.cos(b.shake * 1.7) * s * .5); }
   drawBackdrop(ctx, cave);
-  if (b.target && !b.foe.hidden) G.battleUI.targetRing(ctx, 182, 69, G.frameNo);
-  drawFighter(ctx, b.foe, false, 150, 10);
-  if (b.target && !b.foe.hidden) G.battleUI.targetMarker(ctx, 182, 6, G.frameNo);
-  drawFighter(ctx, b.me, true, 30, 42);
+  if (b.target && !b.foe.hidden) G.battleUI.targetRing(ctx, 182, 74, G.frameNo);
+  drawFighter(ctx, b.foe, false, 146, 8, 72);
+  if (b.target && !b.foe.hidden) G.battleUI.targetMarker(ctx, 182, 4, G.frameNo);
+  drawFighter(ctx, b.me, true, 22, 36, 88);
   for (const t of [b.tFoe, b.tMe]) if (t) {
     ctx.globalAlpha = (t.alpha === undefined ? 1 : t.alpha) * .3; ell(ctx, t.x + t.ox + 24, t.y + 58, 16, 3.5, '#1a2a14');
     ctx.globalAlpha = t.alpha === undefined ? 1 : t.alpha; ctx.drawImage(t.img, t.x + t.ox, t.y, 48, 60); ctx.globalAlpha = 1;
@@ -237,7 +256,7 @@ function draw(ctx) {
   // info boxes slide in when first shown
   b.fT = b.showFoe ? (b.fT || 0) + 1 : 0; b.mT = b.showMe ? (b.mT || 0) + 1 : 0;
   const ease = n => n >= 14 ? 0 : Math.pow(1 - n / 14, 3);
-  if (b.showFoe) infoBox(ctx, b.foe, 6 - ease(b.fT) * 130, 6, 112, false);
+  if (b.showFoe) infoBox(ctx, b.foe, 6 - ease(b.fT) * 130, 6, 104, false);
   if (b.showMe) infoBox(ctx, b.me, 124 + ease(b.mT) * 130, 74, 112, true);
 }
 function drawFx(ctx, fx) {

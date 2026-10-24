@@ -35,12 +35,18 @@ and its APK snapshots were used only as a reference). Creature art, battle rules
 Unchanged keys and controller buttons. The command bar and the cards are one row, so Left and Right move and A confirms, B backs
 out; every card and every command is also a tap target. The old 2x2 command layout is gone (RUN is now three steps right).
 
+## Arena
+The grass arena is now a cinematic landscape drawn in code (cached once): sun and light rays, distant mountains and a natural arch,
+sandstone cliff towers with moss, trees and waterfalls on both sides, a lake, rolling tree lines, a winding dirt trail, flowers,
+rocks and soft blurred foreground grass, with a warm light wash and vignette. There are no cartoon platforms any more, only soft
+contact shadows. Your creature is drawn larger (88 px) in the foreground, the foe at 72 px. The cave arena keeps its old look.
+
 ## Not done
-* The arena itself is still the procedural cartoon backdrop. The kit's reference image shows a painted landscape; that needs
-  authored background art (a separate image per arena), which the kit does not include.
-* The three concept boards (cinematic, tactical, adventure) were combined: the dark panels and cards come from the tactical board,
-  the clear arena and bottom command row from the cinematic board. The adventure board's round ability wheel, combo meter and
-  dodge/focus buttons are new mechanics and were not built.
-* Foe status panel shows percentage-free HP only (no numbers), as before.
+* The arena is drawn by code, not painted art, so it is simpler than the kit's reference picture. Real painted backgrounds would
+  need authored images (one per arena), which the kit does not include.
+* The three concept boards were combined: the dark panels and cards come from the tactical board, the clear arena and bottom
+  command row from the cinematic board. The adventure board's round ability wheel, combo meter and dodge/focus buttons are new
+  mechanics and were not built.
+* The foe's status panel shows no HP numbers, as before.
 
 Screenshots from the running game: `docs/img/battle-command.png`, `battle-abilities.png`, `battle-damage.png`, `battle-lowhp.png`.
