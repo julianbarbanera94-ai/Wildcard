@@ -118,7 +118,9 @@ function draw(ctx) {
   const sc = G.scene;
   if (sc && sc.wide) { zoneShift = sc.raw ? [0, 0] : [G.uiX, G.uiY]; try { sc.draw(ctx); } finally { zoneShift = [0, 0]; } }
   else if (sc) {
+    const full = sc.backdrop && sc.backdrop(ctx, ox, oy);   // a scene may paint the whole screen itself (battles: painted arena); returns true if it did
     centred(ctx, ox, () => sc.draw(ctx));
+    if (!full) {
     // stretch the outermost column/row of the scene out to the screen edges, so backdrops reach edge to edge
     const S = G.S, c = ctx.canvas;
     if (ox > 0) {
@@ -126,6 +128,7 @@ function draw(ctx) {
       ctx.drawImage(c, Math.round((ox + BASE_W) * S) - 2, 0, 1, c.height, ox + BASE_W, 0, ox, G.H);
     }
     if (oy > 0) ctx.drawImage(c, 0, Math.round(oy * S) + 1, c.width, 1, 0, 0, G.W, oy);
+    }
   }
   centred(ctx, ox, () => { if (G.ui.text) G.drawTextbox(ctx, G.ui.text); G.ui.layers.forEach(l => l.draw(ctx)); });
   const f = G.ui.fade; if (f.a > 0) { ctx.globalAlpha = Math.min(1, f.a); ctx.fillStyle = f.color; ctx.fillRect(0, 0, G.W, G.H); ctx.globalAlpha = 1; }

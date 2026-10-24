@@ -236,7 +236,7 @@ function loadBg(k) {
 function drawBackdrop(ctx, cave) {
   const t = G.frameNo;
   const pb = b.key && bgImgs[b.key] && bgImgs[b.key].img, painted = !!pb;
-  if (painted) ctx.drawImage(pb, 0, 0, 240, 160); else K.blit(ctx, (cave ? bgArt.cave : bgArt.grass)(), 0, 0);
+  if (painted) { /* drawn by scene.backdrop across the whole screen */ } else K.blit(ctx, (cave ? bgArt.cave : bgArt.grass)(), 0, 0);
   if (cave && !painted) {
     ctx.globalCompositeOperation = 'lighter';
     CAVE_GLOW.forEach(([gx, gy, col], i) => K.drawGlow(ctx, col, gx, gy, 22, .22 + .14 * Math.sin(t / 40 + i * 1.7)));
@@ -293,7 +293,33 @@ function drawFx(ctx, fx) {
   }
   ctx.restore();
 }
-const scene = { update: stepVisuals, draw, battle: true };   // battle: true lets Fast battle speed run two ticks a frame (engine)
+// The painted arena over the whole screen (taller or wider than 240x160 on phones): a blurred, enlarged copy fills the extra area and the
+// sharp picture sits in the 240x160 space with its outer edges feathered into it, so nothing is stretched.
+const bgFill = { key: null, w: 0, h: 0, c: null };
+function backdrop(ctx, ox, oy) {
+  if (!b) return false; const pb = b.key && bgImgs[b.key] && bgImgs[b.key].img; if (!pb) return false;
+  const W = G.W, H = G.H, S = G.S || 4;
+  if (ox > 0 || oy > 0) {
+    if (bgFill.key !== b.key || bgFill.w !== W || bgFill.h !== H) {
+      const c = bgFill.c || (bgFill.c = document.createElement('canvas')); c.width = Math.max(1, Math.round(W * 2)); c.height = Math.max(1, Math.round(H * 2));
+      const x = c.getContext('2d'), sc = Math.max(c.width / 240, c.height / 160) * 1.05, iw = 240 * sc, ih = 160 * sc;
+      x.filter = 'blur(14px)'; x.drawImage(pb, (c.width - iw) / 2, c.height - ih, iw, ih);
+      if (oy > 0) { const ph = (oy + 16) * 2; x.filter = 'blur(16px)'; x.drawImage(pb, 0, 0, pb.width, pb.height * .07, -30, -30, c.width + 60, ph + 30); }   // above the picture: its sky, smoothed into a soft gradient
+      x.filter = 'none';
+      x.fillStyle = 'rgba(10,25,40,.18)'; x.fillRect(0, 0, c.width, c.height);
+      bgFill.key = b.key; bgFill.w = W; bgFill.h = H;
+    }
+    ctx.drawImage(bgFill.c, 0, 0, W, H);
+  }
+  const iw = pb.width, ih = pb.height, k = iw / 240, F = 14;   // F: feather width in logical pixels
+  const part = (sx, sy, sw, sh, a) => { if (sw <= 0 || sh <= 0) return; ctx.globalAlpha = a; ctx.drawImage(pb, sx * k, sy * k, sw * k, sh * k, ox + sx, oy + sy, sw, sh); };
+  const top = oy > 0 ? F : 0, side = ox > 0 ? F : 0;
+  part(side, top, 240 - side * 2, 160 - top, 1);
+  for (let i = 0; i < F && oy > 0; i++) part(side, i, 240 - side * 2, 1, (i + .5) / F);
+  for (let i = 0; i < F && ox > 0; i++) { const a = (i + .5) / F; part(i, top, 1, 160 - top, a); part(239 - i, top, 1, 160 - top, a); }
+  ctx.globalAlpha = 1; return true;
+}
+const scene = { update: stepVisuals, draw, backdrop, battle: true };   // battle: true lets Fast battle speed run two ticks a frame (engine)
 
 // ---- Animations -----------------------------------------------------------
 async function slide(o, key, from, to, frames) { for (let i = 0; i <= frames; i++) { const k = i / frames, e = 1 - Math.pow(1 - k, 3); o[key] = from + (to - from) * e; await G.nextFrame(); } }

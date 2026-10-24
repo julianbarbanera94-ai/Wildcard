@@ -124,10 +124,10 @@ const OUT = process.env.OUT || '/tmp';
         if (G.ui.text && G.ui.text.arrow) await tap('a');
         else if (cmd) {
           // mostly FIGHT with a random move; sometimes try BAG, PARTY or RUN to exercise those paths
-          if (r < .7) await seq(['up', 'left', 'a', ...[['a'], ['right', 'a'], ['down', 'a'], ['right', 'down', 'a']][Math.floor(Math.random() * 4)]]);
-          else if (r < .8) await seq(['up', 'left', 'right', 'a', 'down', 'a', 'a']);          // BAG -> second item -> target
-          else if (r < .9) await seq(['up', 'left', 'down', 'a', 'right', 'a', 'a']);          // PARTY -> slot 2 -> SHIFT
-          else await seq(['right', 'down', 'a']);                                              // RUN
+          if (r < .7) await seq(['left', 'left', 'left', 'a', 'left', 'left', 'left', ...[['a'], ['right', 'a'], ['right', 'right', 'a'], ['right', 'right', 'right', 'a']][Math.floor(Math.random() * 4)]]);
+          else if (r < .8) await seq(['left', 'left', 'left', 'right', 'a', 'down', 'a', 'a']);          // BAG -> second item -> target
+          else if (r < .9) await seq(['left', 'left', 'left', 'right', 'right', 'a', 'right', 'a', 'a']);          // PARTY -> slot 2 -> SHIFT
+          else await seq(['right', 'right', 'right', 'a']);                                    // RUN
         }
         else if (G.ui.layers.length) { if (!G.ui.text && Math.random() < .6) await seq(['a', 'a']); else await tap(['a', 'down', 'right', 'b'][Math.floor(Math.random() * 4)]); }   // party/bag screens: usually pick the highlighted entry
         else await sleep(60);
