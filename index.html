@@ -33,6 +33,15 @@
   #pad .stick .ring::before { content: ''; position: absolute; inset: 22px; border-radius: 50%; border: 2px dashed rgba(240,160,70,.35); }
   #pad .stick .knob { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6dc, #ffbe5c 75%); border: 3px solid #f0962e; box-shadow: 0 4px 0 rgba(200,110,30,.35), inset 0 2px 0 #fff; transition: transform .08s ease-out; }
   #pad .stick.on .knob { transition: none; }
+  /* Context controls (js/main.js G.padContext sets body[data-pad]): hide what does nothing right now. Hiding waits a moment so a
+     short scripted pause (a door, a fade) does not make the buttons flicker; showing is immediate. */
+  #pad .stick, #pad button { transition: opacity .18s, transform .18s, visibility 0s; }
+  body[data-pad="splash"] #pad .stick, body[data-pad="splash"] #pad button,
+  body[data-pad="title"] #pad .stick, body[data-pad="title"] #pad [data-k="b"], body[data-pad="title"] #pad [data-k="start"], body[data-pad="title"] #pad [data-k="orb"],
+  body[data-pad="text"] #pad .stick, body[data-pad="text"] #pad [data-k="start"], body[data-pad="text"] #pad [data-k="orb"],
+  body[data-pad="busy"] #pad .stick, body[data-pad="busy"] #pad [data-k="start"], body[data-pad="busy"] #pad [data-k="orb"],
+  body[data-pad="menu"] #pad [data-k="start"], body[data-pad="menu"] #pad [data-k="orb"],
+  body[data-pad="world"][data-orbs="0"] #pad [data-k="orb"] { opacity: 0 !important; transform: scale(.8); visibility: hidden; transition: opacity .18s .3s, transform .18s .3s, visibility 0s .48s; }
   /* Touch screens. Portrait: the game fills the width at the top, the controls get the bottom of the screen. */
   @media (pointer: coarse) {
     body { gap: 0; justify-content: flex-start; height: 100dvh; }

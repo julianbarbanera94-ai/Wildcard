@@ -51,7 +51,7 @@ const pill = (key, w, h, fill, line) => K.cache('t-p' + key, w, h, x => {
 });
 
 const title = {
-  t: 0, prompt: true, ids: [1, 4, 7, 12, 10, 25],
+  t: 0, prompt: true, pad: 'title', ids: [1, 4, 7, 12, 10, 25],
   update() { this.t++; },
   tap() { if (this.prompt) G.tapKey('a'); },
   draw(ctx) {
@@ -69,16 +69,7 @@ const title = {
       ctx.fillStyle = 'rgba(30,80,30,.25)'; ctx.beginPath(); ctx.ellipse(x + 14, 129, 9 - hop * .5, 2.2, 0, 0, 7); ctx.fill();
       ctx.drawImage(G.creatureSprite(this.ids[i]), x, 101 - hop, 28, 28);
     }
-    // logo: chunky multi-colour letters that drop in and then bob
-    if (!lw || !lw.ok) { ctx.font = LFONT; lw = [...LOGO].map(c => ctx.measureText(c).width * .92); lw.ok = K.fontsReady(); }
-    const total = lw.reduce((a, b) => a + b, 0); let lx = 120 - total / 2;
-    for (let i = 0; i < LOGO.length; i++) {
-      const d = t - i * 5, drop = d < 0 ? -80 : d < 24 ? -80 * Math.pow(1 - d / 24, 2) + Math.sin(d / 24 * Math.PI) * -4 : 0;
-      const by = Math.sin(t / 16 + i * .7) * 1.6, rot = Math.sin(t / 24 + i) * .04;
-      const e = letter(i); ctx.save(); ctx.translate(lx + lw[i] / 2, 8 + 20 + drop + by); ctx.rotate(rot + (i % 2 ? .05 : -.05));
-      ctx.drawImage(e.c, -15 - e.pad, -20 - e.pad, 30 + e.pad * 2, 40 + e.pad * 2); ctx.restore();
-      lx += lw[i];
-    }
+    if (!this.hideLetters) this.drawLetters(ctx);
     K.blit(ctx, pill('sub', 150, 13, '#ffffff', '#3cc8e0'), 45, 49);
     G.text(ctx, 'A CREATURE-CATCHING ADVENTURE', 120, 52, { align: 'center', color: '#2a8aa8', shadow: false, font: '900 7px ' + G.FONT_FAM });
     if (this.prompt) {
@@ -89,7 +80,104 @@ const title = {
       ctx.restore();
     }
   },
+  drawLetters(ctx) {
+    const t = this.t;
+    // logo: chunky multi-colour letters that drop in and then bob
+    if (!lw || !lw.ok) { ctx.font = LFONT; lw = [...LOGO].map(c => ctx.measureText(c).width * .92); lw.ok = K.fontsReady(); }
+    const total = lw.reduce((a, b) => a + b, 0); let lx = 120 - total / 2;
+    for (let i = 0; i < LOGO.length; i++) {
+      const d = t - i * 5, drop = d < 0 ? -80 : d < 24 ? -80 * Math.pow(1 - d / 24, 2) + Math.sin(d / 24 * Math.PI) * -4 : 0;
+      const by = Math.sin(t / 16 + i * .7) * 1.6, rot = Math.sin(t / 24 + i) * .04;
+      const e = letter(i); ctx.save(); ctx.translate(lx + lw[i] / 2, 8 + 20 + drop + by); ctx.rotate(rot + (i % 2 ? .05 : -.05));
+      ctx.drawImage(e.c, -15 - e.pad, -20 - e.pad, 30 + e.pad * 2, 40 + e.pad * 2); ctx.restore();
+      lx += lw[i];
+    }
+  },
 };
+
+// ---- Launch splash: a night sky, a lantern that lights up, and its glow growing until it fills the screen with the title ----
+// The splash draws the whole screen itself (wide). When the glow starts to grow, an exact copy of the title screen (built the way
+// the engine centres a scene and stretches its edges) is revealed through the expanding circle, so the sky, hills, parade and
+// the dropping letters appear as the light reaches them and the last frame is the title, pixel for pixel.
+// Any tap, A, B or Enter skips it. Takes about 2.5 seconds.
+const SPLASH_LIGHT = 62, SPLASH_END = 160;
+const night = () => K.cache('s-night' + G.W + 'x' + G.H, G.W, G.H, x => {
+  const W = G.W, H = G.H, R = G.mulberry(77);
+  x.fillStyle = K.lin(x, 0, 0, 0, H, ['#070a24', '#141a4a', '#2a2260', '#4a2c6a']); x.fillRect(0, 0, W, H);
+  for (let i = 0; i < Math.round(W * H / 330); i++) { const s = R() < .15 ? 1 : .6; x.fillStyle = `rgba(255,255,255,${.35 + R() * .5})`; x.fillRect(R() * W, R() * H * .8, s, s); }
+  x.fillStyle = '#0a0c26'; x.beginPath(); x.moveTo(0, H); for (let i = 0; i <= W; i += 4) x.lineTo(i, H - 28 + Math.sin(i / 30) * 4 + Math.sin(i / 11) * 2); x.lineTo(W, H); x.fill();
+}, { pad: 0, qmax: 5 });
+function lantern(ctx, x, y, lit, t) {
+  const fl = .9 + .1 * Math.sin(t / 3) + .05 * Math.sin(t / 1.7);
+  ctx.save(); ctx.translate(x, y);
+  ctx.strokeStyle = '#5a4a6a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, -300); ctx.lineTo(0, -16); ctx.stroke();
+  ctx.fillStyle = '#3a2c4a'; ctx.beginPath(); ctx.moveTo(-7, -9); ctx.lineTo(0, -17); ctx.lineTo(7, -9); ctx.closePath(); ctx.fill();   // cap
+  ctx.fillStyle = '#4a3a5a'; ctx.fillRect(-8, -9, 16, 2);
+  K.rr(ctx, -6.5, -7, 13, 16, 2.5); ctx.fillStyle = lit ? `rgba(255,${190 + 40 * lit | 0},110,${.25 + .5 * lit})` : 'rgba(120,130,190,.25)'; ctx.fill();   // glass
+  ctx.strokeStyle = '#6a5a7a'; ctx.lineWidth = .8; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(0, 9); ctx.moveTo(-6.5, 1); ctx.lineTo(6.5, 1); ctx.stroke();
+  ctx.fillStyle = '#4a3a5a'; ctx.fillRect(-8, 9, 16, 2.4);
+  if (lit > 0) {   // the flame
+    const h = (7 + 2 * fl) * lit, g = ctx.createRadialGradient(0, 4, 0, 0, 4, 10 * lit); g.addColorStop(0, `rgba(255,236,170,${.95 * lit})`); g.addColorStop(1, 'rgba(255,150,60,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 4, 10 * lit, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ff9a3a'; ctx.beginPath(); ctx.moveTo(0, 8); ctx.quadraticCurveTo(-4.4, 5, -.6 + Math.sin(t / 4) * .6, 8 - h); ctx.quadraticCurveTo(4.6, 5, 0, 8); ctx.fill();
+    ctx.fillStyle = '#ffe58a'; ctx.beginPath(); ctx.moveTo(0, 8); ctx.quadraticCurveTo(-2.2, 6, 0, 8 - h * .62); ctx.quadraticCurveTo(2.2, 6, 0, 8); ctx.fill();
+  }
+  ctx.restore();
+}
+// The title screen as the engine shows it (centred 240x160, edges stretched out to the screen) on an offscreen canvas.
+let titleCv = null;
+function titleFull(ctx) {
+  const c = ctx.canvas; if (!titleCv || titleCv.width !== c.width || titleCv.height !== c.height) { titleCv = G.cv(c.width, c.height); }
+  const [tc, tx] = titleCv, S = G.S, W = G.W, H = G.H, ox = (W - 240) / 2, oy = H - 160;
+  tx.setTransform(S, 0, 0, S, 0, 0); tx.imageSmoothingEnabled = true; tx.imageSmoothingQuality = 'high'; tx.clearRect(0, 0, c.width, c.height);
+  tx.fillStyle = '#000'; tx.fillRect(0, 0, W, H);
+  tx.save(); tx.translate(ox, oy); G.W = 240; G.H = 160; title.hideLetters = true; try { title.draw(tx); } finally { title.hideLetters = false; G.W = W; G.H = H; tx.restore(); }
+  if (ox > 0) { tx.drawImage(tc, Math.round(ox * S) + 1, 0, 1, tc.height, 0, 0, ox, H); tx.drawImage(tc, Math.round((ox + 240) * S) - 2, 0, 1, tc.height, ox + 240, 0, ox, H); }
+  if (oy > 0) tx.drawImage(tc, 0, Math.round(oy * S) + 1, tc.width, 1, 0, 0, W, oy);
+  tx.save(); tx.translate(ox, oy); G.W = 240; G.H = 160; try { title.drawLetters(tx); } finally { G.W = W; G.H = H; tx.restore(); }   // the letters last: they fall in from above the scene
+  return tc;
+}
+const splash = {
+  t: 0, pad: 'splash', wide: true,
+  skip() { if (this.t < SPLASH_END) { this.t = SPLASH_END; title.t = Math.max(title.t, 60); } },   // the letters have landed by t = 60
+  tap() { this.skip(); },
+  update() { this.t++; if (this.t > SPLASH_LIGHT) title.update(); },
+  draw(ctx) {
+    const t = this.t, W = G.W, H = G.H, cx = W / 2, cy = H - 160 + 34;
+    ctx.drawImage(night().c, 0, 0, W, H);
+    // before the reveal: a lantern fades in, catches (a puff of embers), and its glow swells
+    const fadeIn = Math.min(1, t / 26), lit = t < 34 ? 0 : Math.min(1, (t - 34) / 14);
+    const r = t < 56 ? 0 : Math.min(Math.hypot(W, H), Math.pow((t - 56) / 76, 1.7) * Math.hypot(W, H));
+    ctx.save(); ctx.globalAlpha = fadeIn * Math.max(0, 1 - (r - 6) / 40);
+    ctx.save(); ctx.translate(cx, cy + 4); ctx.scale(1.6, 1.6); ctx.translate(-cx, -(cy + 4));   // the lantern is drawn 1.6x so it reads on a phone
+    lantern(ctx, cx, cy, lit, t);
+    if (lit) { const g = ctx.createRadialGradient(cx, cy + 4, 0, cx, cy + 4, 26 + 8 * Math.min(1, (t - 34) / 24)); g.addColorStop(0, 'rgba(255,200,110,.45)'); g.addColorStop(1, 'rgba(255,150,60,0)'); ctx.fillStyle = g; ctx.fillRect(cx - 50, cy - 40, 100, 100); }
+    if (t >= 34 && t < 90) {   // embers rising from the flame
+      for (let i = 0; i < 14; i++) { const a = (t - 34 - i * 2.5) / 40; if (a < 0 || a > 1) continue; const ex = cx + Math.sin(i * 7.3 + a * 5) * (4 + a * 16), ey = cy + 2 - a * 46; K.star(ctx, ex, ey, (1 - a) * (1 + (i % 3) * .7), i % 2 ? '#ffd27a' : '#ffffff'); }
+    }
+    ctx.restore(); ctx.restore();
+    if (t >= 56 && r > 0) {
+      const tc = titleFull(ctx);
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy + 4, r, 0, 7); ctx.clip(); ctx.drawImage(tc, 0, 0, W, H); ctx.restore();
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';   // a bright rim where the light meets the night
+      ctx.strokeStyle = `rgba(255,214,140,${Math.max(0, .85 - r / 300)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy + 4, r, 0, 7); ctx.stroke();
+      ctx.strokeStyle = `rgba(255,255,255,${Math.max(0, .5 - r / 400)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy + 4, Math.max(0, r - 1.5), 0, 7); ctx.stroke(); ctx.restore();
+    }
+  },
+};
+// Automated browsers (tests) go straight to the title, unless localStorage wildcard-splash = 1 asks for the splash.
+const wantSplash = () => { try { if (localStorage.getItem('wildcard-splash') === '1') return true; } catch (e) { /* no storage */ } return !navigator.webdriver; };
+async function playSplash() {
+  if (!wantSplash()) return;
+  G.scene = splash; splash.t = 0; title.t = 0;
+  while (splash.t < SPLASH_END) {
+    await G.nextFrame();
+    if (G.input.pressed.a || G.input.pressed.b || G.input.pressed.start) splash.skip();
+  }
+  G.scene = title; title.t = Math.max(title.t, 0);
+  for (let i = 0; i < 12; i++) await G.nextFrame();   // let go of the key that skipped it before the title looks for A
+}
 
 async function intro() {
   G.ui.style = 'light';
@@ -116,6 +204,7 @@ G.androidBack = function () {
 
 async function main() {
   G.scene = title; G.audio.music('town');
+  await playSplash();
   for (;;) {
     await G.nextFrame();
     if (!(G.input.pressed.a || G.input.pressed.start)) continue;
@@ -144,6 +233,24 @@ addEventListener('DOMContentLoaded', () => {
   addEventListener('pointerdown', e => { if (e.pointerType === 'touch') G.touch = true; }, { capture: true });
   // The orb button shows the real Terra Orb art.
   if (G.orbImage) { const ob = document.querySelector('#pad .orb'); if (ob) try { ob.style.background = `url(${G.orbImage('terra').toDataURL()}) center / contain no-repeat`; } catch (e) { /* keep the CSS fallback */ } }
+
+  // The on-screen controls follow what is happening (docs/CONTROLS.md): the stick only where something can be moved,
+  // MENU and the orb button only while walking about, A alone on the title. body[data-pad] picks the CSS rules in index.html.
+  G.padContext = function () {
+    const sc = G.scene, ui = G.ui;
+    if (sc && sc.pad && !ui.layers.length && !ui.text) return sc.pad;
+    if (ui.layers.length) return 'menu';
+    if (ui.text) return 'text';
+    if (sc && sc.battle) return 'busy';
+    if (G.world && sc === G.world.scene) return G.world.busy ? 'busy' : 'world';
+    return 'menu';
+  };
+  const hasOrb = () => { const S = G.state; return !!(S && G.ITEMS && Object.keys(S.bag || {}).some(k => S.bag[k] > 0 && G.ITEMS[k] && G.ITEMS[k].kind === 'orb')); };
+  let lastPad = '', lastOrb = '';
+  (function padLoop() {
+    try { const c = G.padContext(), o = c === 'world' ? (hasOrb() ? '1' : '0') : '1'; if (c !== lastPad) { lastPad = c; document.body.dataset.pad = c; } if (o !== lastOrb) { lastOrb = o; document.body.dataset.orbs = o; } } catch (e) { /* controls stay as they were */ }
+    requestAnimationFrame(padLoop);
+  })();
   // Thumbstick: the knob follows the finger; the strongest axis past a dead zone is held as a direction.
   // Settings (js/settings.js): sensitivity (dead zone), fixed or floating (the ring jumps to where you touch), size,
   // position, button size and opacity, left-handed layout and haptics. G.applyControls() re-applies them live.
