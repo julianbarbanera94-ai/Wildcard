@@ -81,7 +81,8 @@ const OUT = process.env.OUT || '/tmp';
   await advance(cmdReady, 40000, 'joker battle'); await page.waitForTimeout(200); await shot('joker-battle');
   for (let tries = 0; tries < 12; tries++) {
     if (!(await ev(() => G.scene !== G.world.scene))) break;
-    await advance(cmdReady, 40000, 'cmd'); await key('ArrowRight'); await key('z'); await page.waitForTimeout(300); await key('z');   // BAG -> Mythic Orb
+    await advance(cmdReady, 40000, 'cmd'); for (let k = 0; k < 3; k++) await key('ArrowLeft', 40); await key('ArrowRight'); await key('z');   // (the cursor remembers the last action, so go to the far left first)
+    await page.waitForTimeout(300); await key('z');   // BAG -> Mythic Orb
     await page.waitForTimeout(700); if (await ev(() => { const L = G.ui.layers[G.ui.layers.length - 1]; return !!(L && L.items && L.items[0] === 'YES'); })) await key('z', 200);   // YES: Mythic Orbs are valuable, so the game asks first
     await advance(() => (G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0) || G.state.flags.jokerCaught, 40000, 'catch result');
   }
