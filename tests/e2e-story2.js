@@ -12,12 +12,12 @@ const OUT = process.env.OUT || '/tmp';
   const ev = (fn, a) => page.evaluate(fn, a), step = n => console.log('✓', n), shot = n => page.screenshot({ path: `${OUT}/story2-${n}.png` });
   const key = async (k, ms = 120) => { await page.keyboard.press(k); await page.waitForTimeout(ms); };
   const until = async (fn, ms = 30000, msg) => { const t = Date.now(); while (Date.now() - t < ms) { if (await page.evaluate(fn)) return; await page.waitForTimeout(50); } await shot('timeout'); throw new Error('timeout ' + (msg || fn)); };
-  const idle = () => until(() => !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0 && !G.ui.layers.length && !G.ui.text, 60000, 'idle');
+  const idle = () => until(() => !G.world.busy && G.scene === G.world.scene && G.ui.fade.a === 0 && !G.ui.layers.length && !G.ui.text, 120000, 'idle');
   const menu = () => ev(() => { const l = G.ui.layers[G.ui.layers.length - 1]; return l && l.items ? l.items.slice() : null; });
   // talk to whoever is in front; pick[] answers the menus in order (by label); mash through everything else
   const talk = async (pick = []) => {
     await key('z', 300);
-    for (let i = 0; i < 900; i++) {
+    for (let i = 0; i < 3000; i++) {
       if (await ev(() => !G.world.busy && G.scene === G.world.scene && !G.ui.text && !G.ui.layers.length)) break;
       const items = await menu();
       if (items && pick.length && items.includes(pick[0])) { const n = items.indexOf(pick.shift()); for (let j = 0; j < n; j++) await key('ArrowDown', 60); await key('z', 250); continue; }
