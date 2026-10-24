@@ -60,7 +60,7 @@ G.access = {
 function wire() {
   for (const m of Object.values(G.MAPS)) for (const w of m.warps || []) {
     const to = G.WORLD.byId[w.to] ? w.to : null; if (!to || !G.access.rule(to)) continue;
-    const from = G.WORLD.byId[m.id] ? m.id : m.sea ? null : G.worldPlaceOf ? G.worldPlaceOf(m.id) : m.id; if (from === to) continue;   // the sea belongs to no place
+    const from = w.gateFrom || (G.WORLD.byId[m.id] ? m.id : m.sea ? null : G.worldPlaceOf ? G.worldPlaceOf(m.id) : m.id); if (from === to) continue;   // the sea belongs to no place
     const R = G.access.rule(to);
     const need = () => { if (!G.state.flags.starter) return 'It is not safe beyond the lamplight without a Bondling.'; return G.access.why(to, from); };
     need.badges = R.badges; need.place = R.name; need.rule = to;

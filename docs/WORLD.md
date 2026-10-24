@@ -248,6 +248,28 @@ All of them blend with their neighbours like the existing tiles. Owners may use 
 - `js/gates.js` marks every way into a new area: chevrons and a name plate on map edges, a ring and arrow for gates inside a map, a padlock and "N BADGES" when locked. On the sea it also shows a minimap, harbour dots, your boat and the nearest harbour with a compass direction. `G.gatesOf(map)` lists the gates.
 - Test Mode: **UNLOCK EVERYTHING** also turns on **FLY ANYWHERE** (any creature can carry you, every place counts as visited, no helicopter needed).
 
+## 7c. Wild roads between neighbouring cities
+
+Where two towns or cities used to open straight into each other, a wild road now lies between them (`js/maps/zz_roads.js`, `tests/e2e-roads.js`):
+
+| Road | Joins | Size | Wild levels | Ground |
+|---|---|---|---|---|
+| Stonebridge Road | Lanternrest and Stonebridge | 40x56 | 7-11 (Mirewood's species) | grass and woods |
+| Coast Road | Sunhaven and Driftwood Port | 40x56 | 16-21 (Driftwood's species) | shore grass and sand |
+| Cobalt Flats | Cobalt City and Sandsreach (a bend: out of Cobalt's north gate, west into the desert) | 52x52 | 21-26 (Sandsreach's species) | desert |
+| Frostmere Approach | Frostmere City and Glacier Pass | 56x40 | 30-35 (Glacier's species) | snow |
+
+Each road has a winding two-wide path, tall-grass patches beside it (the encounters), three trainers, three or four items, two signposts and one
+traveller with a line of lore. They are generated from a spec (size, seed, palette, trainers, items); the old edge exits of the two places are
+re-pointed at the road (and the arrival tiles kept), so ferries, flight, the map screen and the world graph are unchanged (the road counts as part of the
+place it leads away from for the graph).
+
+Gates: a road is not a place, so walking onto it is free, and the gate rule of the place at each end stops you at that end (each road warp has `gateFrom`, the place at
+the other end, which `js/access.js` uses as the "from" place). A visited place stays open as before.
+
+To add a road: write a `between('a', 'b', { ... })` call in `js/maps/zz_roads.js` for two places that have exactly two edge warps to each other, and add the road to the `REGION` table in
+`js/story.js` and to the lists in `tests/e2e-roads.js` and `tests/maps.test.js`.
+
 ## 8. Tests
 
 - Every owner keeps `node tests/maps.test.js` and `node tests/logic.test.js` passing for their maps.

@@ -95,8 +95,14 @@ t('story chain exists: starter orbs, no trainer holds a shard, tower pedestals, 
   for (const m of Object.values(maps)) for (const e of m.npcs) if (e.trainer) for (const [id, l] of e.trainer.team) assert(G.SPECIES[id] && l >= 1, `${e.trainer.id}: bad team entry`);
 });
 t('regions are connected back to the hub both ways', () => {
-  for (const r of ['sunmeadow', 'ridge', 'stonebridge', 'sandsreach']) {
+  for (const r of ['sunmeadow', 'ridge', 'road_stonebridge', 'sandsreach']) {
     assert(maps.lanternrest.warps.some(w => w.to === r), `hub has no exit to ${r}`); assert(maps[r].warps.some(w => w.to === 'lanternrest'), `${r} has no way back`);
+  }
+  // the wild roads (js/maps/zz_roads.js) sit between neighbouring places and join them both ways, and the places no longer open straight into each other
+  for (const [a, r, b] of [['lanternrest', 'road_stonebridge', 'stonebridge'], ['sunhaven', 'road_coast', 'driftwood'], ['cobalt', 'road_cobalt', 'sandsreach'], ['frostmere', 'road_frostmere', 'glacier']]) {
+    assert(maps[a].warps.every(w => w.to !== b) && maps[b].warps.every(w => w.to !== a), `${a} and ${b} still open straight into each other`);
+    assert(maps[a].warps.some(w => w.to === r) && maps[r].warps.some(w => w.to === a) && maps[b].warps.some(w => w.to === r) && maps[r].warps.some(w => w.to === b), `${r} does not join ${a} and ${b} both ways`);
+    assert(maps[r].enc && maps[r].enc.length >= 6 && maps[r].npcs.filter(n => n.trainer).length >= 2, `${r} needs wild encounters and trainers`);
   }
   assert(maps.ridge.warps.some(w => w.to === 'mine') && maps.mine.warps.some(w => w.to === 'ridge'));
   // every warp between two outdoor maps has a way back

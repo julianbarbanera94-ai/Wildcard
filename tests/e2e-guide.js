@@ -43,7 +43,8 @@ const idOf = n => { const k = ALIAS[n.trim().toLowerCase()]; assert(k, `guide: u
   const gates = table('### 3.1 Every locked place'), info = await ev(() => {
     const out = {}; for (const p of G.WORLD.places) { const R = G.access.rule(p.id); out[p.name.toLowerCase()] = { id: p.id, rule: R, from: [] }; }
     for (const p of G.WORLD.places) { const m = G.MAPS[p.id]; if (!m) continue;
-      for (const w of m.warps) { const t = G.MAPS[w.to]; if (!t || !t.outdoor || w.to === p.id || w.sea || w.to === 'aurelis_sea') continue;
+      for (const w0 of m.warps) { const road = G.MAPS[w0.to] && G.MAPS[w0.to].road ? G.MAPS[w0.to] : null, w = road ? Object.assign({}, w0, { to: road.warps.find(x => x.to !== p.id).to }) : w0;   // a wild road counts as the exit to the place at its far end
+        const t = G.MAPS[w.to]; if (!t || !t.outdoor || w.to === p.id || w.sea || w.to === 'aurelis_sea') continue;
         const side = w.y === 0 ? 'N' : w.y === m.h - 1 ? 'S' : w.x === 0 ? 'W' : w.x === m.w - 1 ? 'E' : null; if (!side) continue;
         const d = out[(G.WORLD.byId[w.to] || {}).name && G.WORLD.byId[w.to].name.toLowerCase()]; if (d) d.from.push(p.id + '(' + side + ')'); } }
     for (const k of Object.keys(out)) out[k].from = [...new Set(out[k].from)].sort(); return out; });

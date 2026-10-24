@@ -1,6 +1,6 @@
 # WILDCARD: Story, Quests and Progression Guide
 
-Build 3.31.x. This guide is checked against the game by `tests/e2e-guide.js` (see the appendix). Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
+Build 3.32.x. This guide is checked against the game by `tests/e2e-guide.js` (see the appendix). Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
 arena and map data), not from the old design drafts. Where the game differs from `docs/STORY_DESIGN.md`, this document is right.
 
 Contents
@@ -235,9 +235,7 @@ gate rule as the road to it.)
 
 ### 3.3 The size of the world
 
-24 places, each 40 to 76 tiles wide (a tile is 16 pixels), 36 land routes, 5 ferry lines, and an open sea of 192 by 128 tiles with seven small outer islands (each with a treasure cache). Travel is paced to that size: walking is 1 pixel a frame (16 frames a tile), running 1.5, light land vehicles 1.75 to 2.75, boats 1.25 to 2, ferries 8 to 15 seconds and flights 4 to 8. Four of the
-nine story hops run city to city with nothing between them, and the sea is now large. See section 9 for the proposal to add wild areas
-between cities.
+24 places, each 40 to 76 tiles wide (a tile is 16 pixels), 36 land routes, 5 ferry lines, and an open sea of 192 by 128 tiles with seven small outer islands (each with a treasure cache). Travel is paced to that size: walking is 1 pixel a frame (16 frames a tile), running 1.5, light land vehicles 1.75 to 2.75, boats 1.25 to 2, ferries 8 to 15 seconds and flights 4 to 8. Four wild roads (36 to 56 tiles long, a 15 to 26 second walk each) now lie where towns used to open straight into each other: Stonebridge Road (Lanternrest to Stonebridge), Coast Road (Sunhaven to Driftwood), Cobalt Flats (Cobalt to Sandsreach) and Frostmere Approach (Frostmere to Glacier Pass); see docs/WORLD.md section 7c. A road is free to walk onto; the gate of the place at its far end stops you there.
 
 ---
 
@@ -689,10 +687,9 @@ Fixed while writing this guide (build 3.23.1):
 
 Things to know, or to decide:
 
-1. **Map size and the spaces between cities.** Four of nine story hops go city to city with no wild area between, the sea was small
-   (192 by 128 tiles with seven small islands; 5 ferries) and the path from Driftwood to Lakeside crosses three maps. The proposal is to add a wild area on each
-   direct link (a forest, desert or marsh stretch, with its own small story beat) and to give the new outer islands story beats
-   (today they hold only a treasure cache each). The gate rule already supports this.
+1. **Map size and the spaces between cities.** Done for the four direct town-to-town links (the wild roads in 3.3). Still open: roads
+   on the links that already reach a wild region, story beats on the new roads and on the seven outer islands (today they hold a treasure cache each), and
+   a longer path from Driftwood to Lakeside, which still crosses only three maps.
 2. **Chapter length.** The step count is 5, 5, 5, 6, 4, 5, 4, 3, so chapters do not get longer. Difficulty does rise steadily. Adding two
    or three objectives to chapters 5 to 8 would make "harder and longer" true.
 3. **Badge order versus story order.** The arena list is Keystone, Bloom, Tide, Gale ... but the story earns Gale (Chapter 3) before

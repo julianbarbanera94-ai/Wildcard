@@ -9,7 +9,7 @@ const REGION = { sunmeadow: 'west', sunhaven: 'west', evergreen: 'west', driftwo
   stonebridge: 'south', mirewood: 'south', whispering: 'south', shore: 'south', tidefall: 'south', moonlit: 'south', hollow: 'south',
   ridge: 'north', lakeside: 'north', cloudpeak: 'north', glacier: 'north', frostmere: 'north', aurora: 'north',
   sandsreach: 'east', badlands: 'east', emberfall: 'east', cobalt: 'east',
-  cave_emberfall: 'east', cave_hollow_ruins: 'east', cave_living_grotto: 'east', cave_frostmere: 'north', lanternrest: 'vale', homestead: 'vale' };
+  road_stonebridge: 'south', road_coast: 'west', road_cobalt: 'east', road_frostmere: 'north', cave_emberfall: 'east', cave_hollow_ruins: 'east', cave_living_grotto: 'east', cave_frostmere: 'north', lanternrest: 'vale', homestead: 'vale' };
 G.regionOf = id => REGION[id] || 'vale';
 const badges = S => (G.BADGES || []).filter(b => F(S)['badge_' + b.id]).length;
 const visited = S => G.WORLD ? G.WORLD.places.filter(p => G.worldVisited(p.id)).length : 0;
