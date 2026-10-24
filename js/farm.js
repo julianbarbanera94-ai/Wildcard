@@ -481,7 +481,7 @@ G.hooks.overlay.push((ctx, cx, cy, t) => {
   }
 });
 
-G.farm = { DAY_FRAMES, TIRED, CROPS, SEED_CROP, rand: Math.random, ensure: st, energyMax, useEnergy, gain, eat, newDay, sleep, morningLines, canCap, refill, pop, flash,
+G.farm = { hudVisible: () => !!(G.world && G.world.map && (homeMap(G.world.mapId) || G.frameNo <= showUntil)), DAY_FRAMES, TIRED, CROPS, SEED_CROP, rand: Math.random, ensure: st, energyMax, useEnergy, gain, eat, newDay, sleep, morningLines, canCap, refill, pop, flash,
   usedToday, markToday, restOnce, plant, waterAt, harvest: b => harvest(b), water: b => water(b), stage, daysLeft, needsWater: b => needsWater(b, b.crop), sprinkled, greenBoost, harvestYield,
   barnProduce, produceOne, PRODUCE, plural };
 })();

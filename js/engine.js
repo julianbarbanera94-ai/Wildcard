@@ -7,7 +7,7 @@ const G = globalThis.G;
 const input = G.input = { held: {}, pressed: {}, next: {} };
 const KEYS = {
   ArrowUp: 'up', w: 'up', W: 'up', ArrowDown: 'down', s: 'down', S: 'down', ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right',
-  z: 'a', Z: 'a', ' ': 'a', x: 'b', X: 'b', Backspace: 'b', Escape: 'b', Enter: 'start', m: 'mute', M: 'mute', c: 'orb', C: 'orb',
+  z: 'a', Z: 'a', ' ': 'a', x: 'b', X: 'b', Backspace: 'b', Escape: 'b', Enter: 'start', m: 'mute', M: 'mute', c: 'orb', C: 'orb', v: 'ride', V: 'ride',
 };
 G.tapKey = k => { G.press(k); G.release(k); };
 // Tap zones: screens register rectangles (in the 240x160 UI space) each frame they draw; a tap on the canvas runs the topmost one.

@@ -13,7 +13,7 @@ const SCHEMA = {
   'hud.minimap': [true, 'bool'], 'hud.questMarkers': [true, 'bool'], 'hud.healthBars': [true, 'bool'], 'hud.namesLevels': [true, 'bool'],
   'hud.notifications': [true, 'bool'], 'hud.prompts': [true, 'bool'], 'hud.wildIndicators': [true, 'bool'], 'hud.navHints': [true, 'bool'],
   'hud.tutorialHints': [true, 'bool'], 'hud.scale': ['medium', 'enum', ['small', 'medium', 'large']], 'hud.opacity': [100, 'num', [40, 100, 10]],
-  'hud.reduceClutter': [false, 'bool'],
+  'hud.reduceClutter': [false, 'bool'], 'hud.partyBar': [true, 'bool'], 'hud.miniMapLand': [true, 'bool'], 'hud.questTracker': [true, 'bool'], 'hud.moneyTime': [true, 'bool'], 'hud.rideChip': [true, 'bool'],
   'controls.sensitivity': ['medium', 'enum', ['low', 'medium', 'high']], 'controls.joystick': ['fixed', 'enum', ['fixed', 'floating']],
   'controls.stickSize': [100, 'num', [70, 130, 10]], 'controls.stickX': ['edge', 'enum', ['edge', 'inward']], 'controls.stickY': ['middle', 'enum', ['low', 'middle', 'high']],
   'controls.buttonSize': [100, 'num', [70, 130, 10]], 'controls.buttonOpacity': [100, 'num', [40, 100, 10]], 'controls.layout': ['right', 'enum', ['right', 'left']],
@@ -49,7 +49,7 @@ G.reloadPrefs = () => { values = load(); G.applySettings(); };
 
 // ---- What the settings mean to the rest of the game --------------------------------------------------------------------------
 // HUD pieces: reduced clutter hides the optional ones (minimap, navigation hints, notifications, wild indicators, tutorial hints).
-const CLUTTER = { minimap: 1, navHints: 1, notifications: 1, wildIndicators: 1, tutorialHints: 1 };
+const CLUTTER = { minimap: 1, navHints: 1, notifications: 1, wildIndicators: 1, tutorialHints: 1, miniMapLand: 1, questTracker: 1, moneyTime: 1 };
 G.hudOn = k => !!values['hud.' + k] && !(values['hud.reduceClutter'] && CLUTTER[k]);
 G.hudScale = () => ({ small: .8, medium: 1, large: 1.25 }[values['hud.scale']]);
 G.hudAlpha = () => values['hud.opacity'] / 100;

@@ -74,7 +74,7 @@ const LANDING = {
 function st() {
   const S = G.state;
   const V = S.vehicles = S.vehicles || {};   // fill defaults in place: callers keep references to this object
-  for (const [k, d] of [['owned', null], ['riding', null], ['parked', null], ['paint', null], ['tune', null], ['heli', null], ['moored', null]]) if (V[k] === undefined) V[k] = d;
+  for (const [k, d] of [['owned', null], ['riding', null], ['parked', null], ['paint', null], ['tune', null], ['heli', null], ['moored', null], ['equipped', null]]) if (V[k] === undefined) V[k] = d;
   if (!Array.isArray(V.owned)) V.owned = [];
   V.paint = V.paint || {}; V.tune = V.tune || {};
   if (V.riding && !G.VEHICLES[V.riding]) V.riding = null;
@@ -684,6 +684,9 @@ function rideWhy(id, o) {
 const api = G.vehicles = {
   list: () => ORDER.slice(),
   owned: () => st().owned.slice(),
+  // The transport the ride button (HUD or V key) uses: the one you equipped, else the hoverboard, else the first land vehicle you own.
+  equipped() { const V = st(), land = ORDER.filter(id => owns(id) && !V$(id).flies); return land.includes(V.equipped) ? V.equipped : land.includes('hoverboard') ? 'hoverboard' : land[0] || null; },
+  equip(id) { const V = st(); if (!owns(id) || V$(id).flies) return false; V.equipped = id; return true; },
   riding,
   where: whereIs,
   speed: speedOf,
@@ -1127,6 +1130,23 @@ async function rideFromMenu(id) {
   await G.fadeTo(.6, 6, '#ffffff'); G.audio.sfx('levelup'); await G.fadeTo(0, 8);
   await says(`Your ${nameOf(id)} was brought out of the Garage. Hop on!`);
 }
+// One button for transport (HUD ride chip, V key): get off if you are riding; otherwise get on your equipped vehicle, bringing it
+// to you first if it is parked somewhere. Problems (no Garage, wrong place) are explained, not ignored.
+G.quickRide = async function () {
+  const V = st();
+  if (V.riding) {
+    const id = V.riding; if (V$(id).flies) { await says('Land the helicopter at a Helipad first.'); return; }
+    if (!api.dismount()) { await says(api.lastWhy); return; }
+    G.audio.sfx('select'); showToast(isBoat(id) ? `You stepped ashore. The ${nameOf(id)} is moored.` : `You got off. The ${nameOf(id)} is parked here.`); return;
+  }
+  const id = api.equipped();
+  if (!id) { await says("You don't have any transport yet. Craft a Bicycle or Rowboat at a Forge, or visit Tidewheel Motors on the shore."); return; }
+  if (whereIs(id) === 'parked') api.returnHome(id);   // call it to you: back to the Garage (or the lot), then out again
+  const why = rideWhy(id);
+  if (why) { await says(why); return; }
+  if (isBoat(id)) { api.mount(id); G.audio.sfx('levelup'); showToast(`You launched the ${nameOf(id)}.`); return; }
+  V.riding = id; G.audio.sfx('levelup'); showToast(`You hopped on your ${nameOf(id)}.`);
+};
 G.travelMenu = async function () {
   st();
   const V = st(), land = ORDER.filter(id => owns(id) && !V$(id).flies);
@@ -1136,6 +1156,10 @@ G.travelMenu = async function () {
   if (!land.length) opts.push(['RIDE', () => says("You don't own a vehicle yet. Craft a Bicycle or Rowboat at a Forge, or visit Tidewheel Motors on the shore.")]);
   else if (land.length === 1) opts.push([`RIDE ${NAME(land[0])}`, () => rideFromMenu(land[0])]);
   else opts.push(['RIDE...', async () => { const id = await pickVehicle(land, id => { const w = whereIs(id); return w === 'lot' ? ' (LOT)' : w === 'riding' ? ' (ON)' : w === 'parked' ? ' (PARKED)' : w === 'moored' ? ' (MOORED)' : ''; }); if (id) await rideFromMenu(id); }]);
+  if (land.length > 1) opts.push([`EQUIP...  (${NAME(api.equipped())})`, async () => {   // which vehicle the ride button uses
+    const id = await pickVehicle(land, id => id === api.equipped() ? ' (EQUIPPED)' : ''); if (!id) return;
+    api.equip(id); G.audio.sfx('select'); await says(`${nameOf(id)} equipped. The ride button (V, or the button on screen) now uses it.`);
+  }]);
   opts.push(['GET OFF', async () => {
     if (!V.riding) { await says("You're not riding anything."); return; }
     const id = V.riding;

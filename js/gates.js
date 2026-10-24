@@ -99,6 +99,7 @@ G.hooks.overlay.push((ctx, cx, cy, t) => {
 
 // ---- The sea minimap -----------------------------------------------------------------------------------------------
 const MINI_COL = { w: '#34c8dc', r: '#1f9ab0', y: '#f6eccb', g: '#68c850', '#': '#2f8a3c', n: '#2a7a46', u: '#58b848', f: '#7ad060', C: '#8a7aa8', E: '#b88858', p: '#d8b878', d: '#8a6a40', i: '#b8a0e8', '!': '#ff7a1a', R: '#d8584a', Q: '#4a7ad8', W: '#fff0d8', '+': '#8090b8', '|': '#ffffff', z: '#c89050' };
+G.MINI_COL = MINI_COL;
 let mini = null;
 function miniMap(m) {
   if (mini && mini.id === m.id) return mini.c;

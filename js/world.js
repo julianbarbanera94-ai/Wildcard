@@ -401,6 +401,7 @@ function update() {
     if (inp.pressed.start) { run(async () => { G.audio.sfx('select'); await G.startMenu(); }); return; }
     if (inp.pressed.a) { run(interact); return; }
     if (inp.pressed.orb) { run(throwOrbAt); return; }
+    if (inp.pressed.ride && G.quickRide) { run(G.quickRide); return; }
     if (inp.pressed.b && G.pref('controls.run') === 'toggle') { G.runToggle(); G.audio.sfx('select'); }   // tap B to switch running on and off (settings)
     const d = heldDir();
     if (d >= 0) {
