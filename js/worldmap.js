@@ -824,7 +824,7 @@ G.ferryRoutes = function (fromId) {
   }
   return out;
 };
-// The ferry follows the same access rules as the roads (badges, reputation or a permit), with the Lantern for the northern waters.
+// The ferry follows the same access rules as the roads (the story, then badges or reputation), with the Lantern for the northern waters.
 function ferryAccess(to, here) { return G.access.why(to, here); }
 function ferryWhy(need, lantern) {
   if (need > badges()) return `The ferry only takes Wardens with ${need} Arena Badges. You have ${badges()}.`;

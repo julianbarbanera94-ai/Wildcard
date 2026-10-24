@@ -264,12 +264,12 @@ All of them blend with their neighbours like the existing tiles. Owners may use 
 
 ## 10. Region access and difficulty (js/access.js)
 
-- `G.access.rule(placeId)`: badges (the place's `need`), reputation (15 for 1-2 badges, 40 for 3-4, 70 for 5-6, 100 for 8), a permit price (none for 8-badge places), and the Lantern.
-- A place is open with the badges, or the reputation (its region, or the region you come from), or `flags.permit_<id>`, and the Lantern if it needs it.
-- `wire()` replaces `need` on every warp into a ruled place (roads, sea harbour gates) and adds `w.offer` (the ranger's permit sale). Ferries use `ferryAccess`; the map and flight use `G.worldLockWhy`, which uses `G.access.why`.
+- `G.access.rule(placeId)`: the badges (the place's `need`), the story chapter that must be finished first (`STORY` in js/access.js: ch1 opens Evergreen and Whispering Woods, ch2 Driftwood and Verdant, ch3 Lakeside and Tidefall, ch4 Sandsreach, Cobalt and the Badlands, ch5 Glacier Pass, Frostmere and Aurora, ch6 Emberfall, ch7 Cloudpeak, ch8 Moonlit), and the Lantern.
+- A place is open only with BOTH the badges and the finished chapter (and the Lantern if it needs it). Where no gym on the way gives a badge (the start of the game, a town or island without an Arena) the finished chapter is what lets you on. Nothing else opens a gate: no permit (the ranger sells none any more, and an old `permit_<id>` flag does nothing), no reputation, no boat, ferry or helicopter. A place you have already visited stays open (older saves, going back). Test Mode's FLY ANYWHERE still opens everything.
+- `wire()` replaces `need` on every warp into a ruled place (roads, sea harbour gates). Ferries use `ferryAccess`; the map and flight use `G.worldLockWhy`, which uses `G.access.why`. The refusal names the chapter to finish, then the badges.
 - `G.access.danger(id)`: 'some' or 'high' when wild levels are above your team.
 - `G.arenaShift(map)` / `G.scaledTeam(team, map)`: an Arena's trainers and Leader shift so the k-th Leader you face fights at the k-th Arena's strength.
-- Reputation also comes from trainer wins (+2 each, once) and new species caught (+1 in the region you're in). `G.progressPoints()` = badges + total reputation / 80 drives homestead land.
+- Reputation also comes from trainer wins (+2 each, once) and new species caught (+1 in the region you're in). It no longer opens gates; `G.progressPoints()` = badges + total reputation / 80 still drives homestead land.
 
 ## 11. Field abilities (js/field.js)
 

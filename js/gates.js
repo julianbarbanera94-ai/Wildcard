@@ -1,7 +1,7 @@
 // Entrance markers: every way into another outdoor area is marked on the map, so you can see where you can go.
 //   - exits on a map edge get pulsing chevrons pointing out, a glowing strip, and a name plate inside the edge;
 //   - gates that aren't on an edge (an archway, a harbour gate out at sea) get a pulsing ring, a bobbing arrow and a plate;
-//   - a locked way shows a padlock and what it needs (badges, or a permit; reputation is in the ranger's message).
+//   - a locked way shows a padlock and what it needs (the story chapter and the badges).
 // The Aurelian Sea (js/maps/zz_sea.js) also gets a minimap of the whole map with your boat on it.
 (function () {
 const G = globalThis.G;
@@ -34,7 +34,7 @@ function lockOf(g) {
   if (!g.need) return null;
   let why = null; try { why = g.need(); } catch (e) { why = null; }
   if (!why) return null;
-  if (g.need.rule && G.access) { const R = G.access.rule(g.need.rule), st = G.access.status(g.need.rule); if (!st.lantern && (!R.badges || st.badges || st.rep || st.permit)) return 'LANTERN'; return `${R.badges} BADGE${R.badges > 1 ? 'S' : ''}${R.permit ? ' OR PERMIT' : ''}`; }
+  if (g.need.rule && G.access) { const R = G.access.rule(g.need.rule), st = G.access.status(g.need.rule); if (!st.lantern && st.story && st.badges) return 'LANTERN'; if (!st.story) return 'STORY'; return `${R.badges} BADGE${R.badges > 1 ? 'S' : ''}`; }
   return g.need.badges ? `${g.need.badges} BADGE${g.need.badges > 1 ? 'S' : ''}` : 'LOCKED';
 }
 
