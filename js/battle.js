@@ -272,7 +272,7 @@ function draw(ctx) {
   b.fT = b.showFoe ? (b.fT || 0) + 1 : 0; b.mT = b.showMe ? (b.mT || 0) + 1 : 0;
   const ease = n => n >= 14 ? 0 : Math.pow(1 - n / 14, 3);
   if (b.showFoe) infoBox(ctx, b.foe, 6 - ease(b.fT) * 130, 6, 104, false);
-  if (b.showMe) infoBox(ctx, b.me, 124 + ease(b.mT) * 130, 90, 112, true);
+  if (b.showMe) infoBox(ctx, b.me, 124 + ease(b.mT) * 130, 88, 112, true);
 }
 function drawFx(ctx, fx) {
   const t = fx.t / fx.dur, [x, y] = [fx.x, fx.y];
@@ -304,8 +304,13 @@ function backdrop(ctx, ox, oy) {
       const c = bgFill.c || (bgFill.c = document.createElement('canvas')); c.width = Math.max(1, Math.round(W * 2)); c.height = Math.max(1, Math.round(H * 2));
       const x = c.getContext('2d'), sc = Math.max(c.width / 240, c.height / 160) * 1.05, iw = 240 * sc, ih = 160 * sc;
       x.filter = 'blur(14px)'; x.drawImage(pb, (c.width - iw) / 2, c.height - ih, iw, ih);
-      if (oy > 0) { const ph = (oy + 16) * 2; x.filter = 'blur(16px)'; x.drawImage(pb, 0, 0, pb.width, pb.height * .07, -30, -30, c.width + 60, ph + 30); }   // above the picture: its sky, smoothed into a soft gradient
       x.filter = 'none';
+      if (oy > 0) {   // above the picture: the average colours of its top edge (6 samples across), smoothed into a soft gradient, never stretched detail
+        const t = document.createElement('canvas'); t.width = 6; t.height = 1; const tx = t.getContext('2d'); tx.imageSmoothingQuality = 'high'; tx.drawImage(pb, 0, 0, pb.width, pb.height * .1, 0, 0, 6, 1);
+        const ph = (oy + 20) * 2; x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.filter = 'blur(10px)'; x.drawImage(t, -40, -40, c.width + 80, ph + 40); x.filter = 'none';
+        const m1 = document.createElement('canvas'); m1.width = m1.height = 1; const mx = m1.getContext('2d'); mx.drawImage(pb, 0, 0, pb.width, pb.height * .1, 0, 0, 1, 1); const [mr, mg, mb] = mx.getImageData(0, 0, 1, 1).data;
+        x.fillStyle = `rgba(${mr},${mg},${mb},.6)`; x.fillRect(0, 0, c.width, ph);   // pull stray colours (a red roof) towards the edge's overall tone
+      }
       x.fillStyle = 'rgba(10,25,40,.18)'; x.fillRect(0, 0, c.width, c.height);
       bgFill.key = b.key; bgFill.w = W; bgFill.h = H;
     }

@@ -99,25 +99,21 @@ function commandBar(label) {
 }
 function abilityCards(moves) {
   return (ctx, st) => {
-    const n = moves.length, cw = 54, gap = 4, x0 = Math.round((240 - (n * cw + (n - 1) * gap)) / 2), y0 = 114, ch = 41;
+    const n = moves.length, cw = 54, gap = 4, x0 = Math.round((240 - (n * cw + (n - 1) * gap)) / 2), y = 122, ch = 32;   // below the status panels (they end at y 122)
     moves.forEach((m, i) => {
-      const mv = G.MOVES[m.id], sel = i === st.idx, x = x0 + i * (cw + gap), y = y0 - (sel ? 2 : 0), col = G.TYPE_COL[mv.type] || '#9aa';
-      G.tapZone(x, y0 - 3, cw, ch + 3, () => st.tap(i));
-      const dead = m.pp <= 0;
-      plate(ctx, x, y, cw, ch, 7, sel ? { edge: '#7FEBFA', lw: 1.4 } : null);
-      if (sel) { ctx.fillStyle = 'rgba(83,214,233,.10)'; K.rr(ctx, x + 1, y + 1, cw - 2, ch - 2, 6); ctx.fill(); }
-      // type-coloured icon plate
-      K.rr(ctx, x + 3, y + 3, 13, 13, 4); ctx.fillStyle = G.shade(col, .5); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = .8; ctx.stroke();
-      ctx.save(); ctx.globalAlpha *= dead ? .4 : 1; ctx.translate(x + 9.5, y + 9.5); ctx.scale(.2, .2); ctx.translate(-32, -32); ctx.fillStyle = G.shade(col, 1.35); ctx.fill(new Path2D(mv.pow ? ICON.abilities.d : ICON.tactics.d.split(' M')[0])); if (!mv.pow) { ctx.strokeStyle = G.shade(col, 1.35); ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.stroke(new Path2D(ICON.tactics.d)); } ctx.restore();
-      // name on up to two lines
-      ctx.font = F(800, 6); const words = m.id.split(' '), lines = []; let cur = '';
-      for (const wd of words) { const t = cur ? cur + ' ' + wd : wd; if (cur && ctx.measureText(t).width > cw - 24) { lines.push(cur); cur = wd; } else cur = t; } lines.push(cur);
-      lines.slice(0, 2).forEach((l, k) => G.text(ctx, l, x + 19, y + 4 + k * 6.6 - (lines.length === 1 ? -3 : 0), { font: F(800, lines.length > 1 && ctx.measureText(l).width > cw - 22 ? 5.2 : 6), color: dead ? '#8a99a5' : INK, shadow: SH }));
-      G.typeBadge(ctx, mv.type, x + 3, y + 19);
-      G.text(ctx, mv.pow ? 'PWR ' + mv.pow : 'STATUS', x + 4, y + 31.5, { font: F(700, 5.4), color: DIM, shadow: SH });
-      G.text(ctx, `PP ${m.pp}/${mv.pp}`, x + cw - 4, y + 31.5, { font: F(800, 5.4), color: dead ? '#ff8a7a' : m.pp <= Math.max(1, mv.pp * .25) ? '#ffd27a' : '#CFE6F2', shadow: SH, align: 'right' });
+      const mv = G.MOVES[m.id], sel = i === st.idx, x = x0 + i * (cw + gap), col = G.TYPE_COL[mv.type] || '#9aa', dead = m.pp <= 0;
+      G.tapZone(x, y - 2, cw, ch + 4, () => st.tap(i));
+      plate(ctx, x, y, cw, ch, 6, sel ? { edge: '#7FEBFA', lw: 1.5 } : null);
+      if (sel) { ctx.fillStyle = 'rgba(83,214,233,.12)'; K.rr(ctx, x + 1, y + 1, cw - 2, ch - 2, 5); ctx.fill(); }
+      // type-coloured icon plate and the name on one line (shrunk to fit)
+      K.rr(ctx, x + 2.5, y + 2.5, 10, 10, 3); ctx.fillStyle = G.shade(col, .5); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = .7; ctx.stroke();
+      ctx.save(); ctx.globalAlpha *= dead ? .4 : 1; ctx.translate(x + 7.5, y + 7.5); ctx.scale(.15, .15); ctx.translate(-32, -32); ctx.fillStyle = G.shade(col, 1.35); ctx.fill(new Path2D(mv.pow ? ICON.abilities.d : ICON.tactics.d.split(' M')[0])); if (!mv.pow) { ctx.strokeStyle = G.shade(col, 1.35); ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.stroke(new Path2D(ICON.tactics.d)); } ctx.restore();
+      let px = 6; ctx.font = F(800, px); while (px > 3.8 && ctx.measureText(m.id).width > cw - 17) { px -= .2; ctx.font = F(800, px); }
+      G.text(ctx, m.id, x + 15, y + 3.8, { font: F(800, px), color: dead ? '#8a99a5' : INK, shadow: SH });
+      G.typeBadge(ctx, mv.type, x + 2.5, y + 14);
+      G.text(ctx, mv.pow ? 'PWR ' + mv.pow : 'STATUS', x + 3.5, y + 25, { font: F(700, 5), color: DIM, shadow: SH });
+      G.text(ctx, `PP ${m.pp}/${mv.pp}`, x + cw - 3, y + 25, { font: F(800, 5), color: dead ? '#ff8a7a' : m.pp <= Math.max(1, mv.pp * .25) ? '#ffd27a' : '#CFE6F2', shadow: SH, align: 'right' });
     });
-    st.hint && st.hint(ctx);
   };
 }
 // the dark dialogue bar; lines are the visible text, arrow shows the continue marker
