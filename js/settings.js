@@ -18,6 +18,7 @@ const SCHEMA = {
   'controls.stickSize': [100, 'num', [70, 130, 10]], 'controls.stickX': ['edge', 'enum', ['edge', 'inward']], 'controls.stickY': ['middle', 'enum', ['low', 'middle', 'high']],
   'controls.buttonSize': [100, 'num', [70, 130, 10]], 'controls.buttonOpacity': [100, 'num', [40, 100, 10]], 'controls.layout': ['right', 'enum', ['right', 'left']],
   'controls.run': ['hold', 'enum', ['hold', 'toggle', 'always']], 'controls.haptics': [true, 'bool'],
+  'controls.padLayout': ['xbox', 'enum', ['xbox', 'nintendo']], 'controls.padHide': [true, 'bool'],
   'audio.master': [80, 'num', [0, 100, 10]], 'audio.music': [70, 'num', [0, 100, 10]], 'audio.sfx': [80, 'num', [0, 100, 10]],
   'audio.battle': [80, 'num', [0, 100, 10]], 'audio.ui': [70, 'num', [0, 100, 10]], 'audio.mute': [false, 'bool'],
   'access.shake': [true, 'bool'], 'access.reducedMotion': [false, 'bool'], 'access.reducedFlash': [false, 'bool'],
@@ -54,7 +55,13 @@ G.hudOn = k => !!values['hud.' + k] && !(values['hud.reduceClutter'] && CLUTTER[
 G.hudScale = () => ({ small: .8, medium: 1, large: 1.25 }[values['hud.scale']]);
 G.hudAlpha = () => values['hud.opacity'] / 100;
 // Draw a HUD piece scaled about an anchor point, at the HUD opacity.
-G.hud = function (ctx, ax, ay, fn) { const s = G.hudScale(); ctx.save(); ctx.globalAlpha *= G.hudAlpha(); ctx.translate(ax, ay); ctx.scale(s, s); ctx.translate(-ax, -ay); try { fn(); } finally { ctx.restore(); } };
+// Tap zones registered inside fn are given in the unscaled drawing space; they are mapped through the same scale here, so the
+// area you can tap is the area you see at every HUD size.
+G.hud = function (ctx, ax, ay, fn) {
+  const s = G.hudScale(), tz = G.tapZone; ctx.save(); ctx.globalAlpha *= G.hudAlpha(); ctx.translate(ax, ay); ctx.scale(s, s); ctx.translate(-ax, -ay);
+  G.tapZone = (x, y, w, h, f, d) => tz(ax + (x - ax) * s, ay + (y - ay) * s, w * s, h * s, f, d);
+  try { fn(); } finally { G.tapZone = tz; ctx.restore(); }
+};
 G.motionOK = () => !values['access.reducedMotion'];
 G.shakeOK = () => values['access.shake'] && !values['access.reducedMotion'];
 G.flashOK = () => !values['access.reducedFlash'];
@@ -78,5 +85,5 @@ G.applySettings = function (changed) {
   if (!changed || changed === 'system.graphics') { if (G.refit) G.refit(); }
   if (!changed || changed.startsWith('hud.')) { const h = document.getElementById('help'); if (h) h.style.visibility = G.hudOn('tutorialHints') ? '' : 'hidden'; }
 };
-G.VERSION = '3.21.0';
+G.VERSION = '3.22.1';
 })();

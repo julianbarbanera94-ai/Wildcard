@@ -76,7 +76,7 @@ const title = {
       const s = 1 + Math.sin(t / 10) * .04;
       ctx.save(); ctx.translate(120, 145); ctx.scale(s, s); ctx.globalAlpha = .9 + .1 * Math.sin(t / 10);
       K.blit(ctx, pill('go', 96, 15, '#fff8e8', '#ff9f43'), -48, -7.5);
-      G.text(ctx, G.touch ? 'TAP A TO START' : 'PRESS Z OR ENTER', 0, -4.5, { align: 'center', color: '#f7783f', shadow: 'rgba(255,160,80,.3)', font: G.FONT_B });
+      G.text(ctx, G.pad && G.pad.active() ? 'PRESS A TO START' : G.touch ? 'TAP A TO START' : 'PRESS Z OR ENTER', 0, -4.5, { align: 'center', color: '#f7783f', shadow: 'rgba(255,160,80,.3)', font: G.FONT_B });
       ctx.restore();
     }
   },
@@ -248,7 +248,7 @@ addEventListener('DOMContentLoaded', () => {
   const hasOrb = () => { const S = G.state; return !!(S && G.ITEMS && Object.keys(S.bag || {}).some(k => S.bag[k] > 0 && G.ITEMS[k] && G.ITEMS[k].kind === 'orb')); };
   let lastPad = '', lastOrb = '';
   (function padLoop() {
-    try { const c = G.padContext(), o = c === 'world' ? (hasOrb() ? '1' : '0') : '1'; if (c !== lastPad) { lastPad = c; document.body.dataset.pad = c; } if (o !== lastOrb) { lastOrb = o; document.body.dataset.orbs = o; } } catch (e) { /* controls stay as they were */ }
+    try { document.body.dataset.padhide = G.pref('controls.padHide') ? '1' : '0'; const c = G.padContext(), o = c === 'world' ? (hasOrb() ? '1' : '0') : '1'; if (c !== lastPad) { lastPad = c; document.body.dataset.pad = c; } if (o !== lastOrb) { lastOrb = o; document.body.dataset.orbs = o; } } catch (e) { /* controls stay as they were */ }
     requestAnimationFrame(padLoop);
   })();
   // Thumbstick: the knob follows the finger; the strongest axis past a dead zone is held as a direction.

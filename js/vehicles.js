@@ -98,7 +98,9 @@ const slots = () => perks().slots || 0;
 const landOwned = () => st().owned.filter(id => !V$(id).flies && !V$(id).boat);
 const isBoat = id => !!(V$(id) && V$(id).boat);
 // Vehicles beyond the garage's capacity (in the order you got them) wait at the dealer lot.
-const atLot = id => !V$(id).flies && !V$(id).boat && landOwned().indexOf(id) >= slots();
+// Light vehicles (bicycle, scooter, hoverboard) go wherever you do: no Garage needed, and they never wait at the dealer lot.
+const LIGHT = new Set(['bicycle', 'scooter', 'hoverboard']);
+const atLot = id => !LIGHT.has(id) && !V$(id).flies && !V$(id).boat && landOwned().indexOf(id) >= slots();
 function whereIs(id) {
   const V = st();
   if (!owns(id)) return 'none';
@@ -670,7 +672,7 @@ function rideWhy(id, o) {
   if (V.riding) return `Get off the ${nameOf(V.riding)} first.`;
   if (!m || !m.outdoor) return `You can't ride ${a_(id)} ${nameOf(id)} indoors. Go outside first.`;
   if (isBoat(id)) { const [fx, fy] = G.worldApi.facing(); return launchWhy(fx, fy, id); }
-  if (!garageB()) return `You need a Garage to keep your ${nameOf(id)} in. Build one on your homestead (BUILD > VEHICLES).`;
+  if (!garageB() && !LIGHT.has(id)) return `You need a Garage to keep your ${nameOf(id)} in. Build one on your homestead (BUILD > VEHICLES).`;
   const w = whereIs(id);
   if (w === 'lot') return `Your ${nameOf(id)} is waiting at the dealer lot: your Garage only has room for ${slots()}. Upgrade the Garage to make space.`;
   if (w === 'parked') {

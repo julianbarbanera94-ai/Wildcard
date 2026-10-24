@@ -83,9 +83,12 @@ function rideChip(ctx, rx, y) {
   const nm = (V.list && G.state.vehicles) ? id.toUpperCase().replace('QUAD', 'QUAD BIKE') : id.toUpperCase();
   const label = (riding ? 'GET OFF ' : 'RIDE ') + nm; ctx.font = F; const w = Math.ceil(ctx.measureText(label).width) + 22;
   pillBg(ctx, rx - w, y, w, 11);
-  ctx.fillStyle = riding ? '#ff8a6a' : '#5ad4a0'; K().rr(ctx, rx - w + 2, y + 2, 11, 7, 3.5); ctx.fill(); G.text(ctx, 'V', rx - w + 7.5, y + 2.6, { font: F, color: '#1a2a2a', shadow: false, align: 'center' });
+  ctx.fillStyle = riding ? '#ff8a6a' : '#5ad4a0'; K().rr(ctx, rx - w + 2, y + 2, 11, 7, 3.5); ctx.fill();
+  if (G.touch) { ctx.fillStyle = '#1a2a2a'; ctx.beginPath(); ctx.moveTo(rx - w + 6, y + 3.4); ctx.lineTo(rx - w + 10.4, y + 5.5); ctx.lineTo(rx - w + 6, y + 7.6); ctx.closePath(); ctx.fill(); }   // a play arrow on touch screens: tap the chip
+  else G.text(ctx, 'V', rx - w + 7.5, y + 2.6, { font: F, color: '#1a2a2a', shadow: false, align: 'center' });   // the key on a keyboard
   G.text(ctx, label, rx - w + 16, y + 2.4, { font: F, color: '#fff', shadow: false });
-  G.tapZone(rx - w, y, w, 11, open(() => G.quickRide()));
+  const go = open(() => G.quickRide()); go.tag = 'ride';   // the tag lets tests find the zone
+  G.tapZone(rx - w - 3, y - 2, w + 6, 15, go);   // a finger-sized area, a little bigger than the chip
 }
 
 G.hooks.overlay.push((ctx, cx, cy, t) => {

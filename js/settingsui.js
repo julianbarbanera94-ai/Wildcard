@@ -59,7 +59,12 @@ const CATS = [
     SEG('controls.layout', 'Buttons on', [['right', 'RIGHT'], ['left', 'LEFT']], 'Left puts A and B on the left, for left-handed play.'),
     SEG('controls.run', 'Running', [['hold', 'HOLD B'], ['toggle', 'TAP B'], ['always', 'ALWAYS']], 'Hold B to run, tap B to switch running on and off, or always run (hold B to walk).'),
     SW('controls.haptics', 'Vibration', 'A short buzz when you press buttons (phones that support it).'),
-    ACT('RESET CONTROLS', 'Put every control setting back to its default.', async () => { if (await yes('Reset the control settings?')) G.resetPrefs('controls.'); }),
+    INFO('Controller', G.pad && G.pad.connected() ? (G.pad.name() || 'CONNECTED').toUpperCase().slice(0, 18) : 'NOT FOUND', 'A Backbone, Xbox or other game controller. Connect it and press a button on it.'),
+    SEG('controls.padLayout', 'Controller style', [['xbox', 'XBOX'], ['nintendo', 'NINTENDO']], 'Which face button is A: Xbox style uses the bottom one, Nintendo style the right one. SET UP CONTROLLER overrides it.'),
+    SW('controls.padHide', 'Hide touch buttons', 'Hide the on-screen buttons while a controller is in use. Touch the screen to bring them back.'),
+    ACT('SET UP CONTROLLER', 'Press a button on the controller for A, B, MENU, the orb and riding. The D-pad and left stick always move.', async () => { if (G.padSetup) await G.padSetup(); }),
+    ACT('RESET CONTROLLER BUTTONS', 'Put the controller buttons back to the style above.', async () => { if (G.pad && await yes('Reset the controller buttons?')) G.pad.resetBindings(); }),
+    ACT('RESET CONTROLS', 'Put every control setting back to its default.', async () => { if (await yes('Reset the control settings?')) { G.resetPrefs('controls.'); if (G.pad) G.pad.resetBindings(); } }),
   ] },
   { id: 'audio', name: 'AUDIO', title: 'AUDIO', rows: () => [
     SL('audio.master', 'Master volume', 'Everything at once.'),

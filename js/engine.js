@@ -12,7 +12,10 @@ const KEYS = {
 G.tapKey = k => { G.press(k); G.release(k); };
 // Tap zones: screens register rectangles (in the 240x160 UI space) each frame they draw; a tap on the canvas runs the topmost one.
 G.zones = [];
-G.tapZone = (x, y, w, h, fn, drag) => { G.zones.push({ x, y, w, h, fn, drag }); };   // drag(dx, dy) in logical units: a press that moves pans instead of tapping
+// Taps are mapped into the centred 240x160 space (minus G.uiX/uiY) unless the scene is raw. A wide scene (the overworld) draws across
+// the whole screen, so zones it registers while drawing are shifted by the same offset, and a tap on what you see hits it.
+let zoneShift = [0, 0];
+G.tapZone = (x, y, w, h, fn, drag) => { G.zones.push({ x: x - zoneShift[0], y: y - zoneShift[1], w, h, fn, drag }); };   // drag(dx, dy) in logical units: a press that moves pans instead of tapping
 G.press = k => { if (!input.held[k]) input.next[k] = true; input.held[k] = true; G.audio.init(); };
 G.release = k => { input.held[k] = false; };
 addEventListener('keydown', e => { if (G.keyHook && G.keyHook(e)) { e.preventDefault(); return; } const k = KEYS[e.key]; if (k) { e.preventDefault(); if (!e.repeat) G.press(k); } });
@@ -113,7 +116,7 @@ function draw(ctx) {
   const ox = G.uiX = (G.W - BASE_W) / 2, oy = G.uiY = G.H - BASE_H;
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, G.W, G.H);
   const sc = G.scene;
-  if (sc && sc.wide) sc.draw(ctx);
+  if (sc && sc.wide) { zoneShift = sc.raw ? [0, 0] : [G.uiX, G.uiY]; try { sc.draw(ctx); } finally { zoneShift = [0, 0]; } }
   else if (sc) {
     centred(ctx, ox, () => sc.draw(ctx));
     // stretch the outermost column/row of the scene out to the screen edges, so backdrops reach edge to edge

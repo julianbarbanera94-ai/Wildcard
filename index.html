@@ -42,6 +42,8 @@
   body[data-pad="busy"] #pad .stick, body[data-pad="busy"] #pad [data-k="start"], body[data-pad="busy"] #pad [data-k="orb"],
   body[data-pad="menu"] #pad [data-k="start"], body[data-pad="menu"] #pad [data-k="orb"],
   body[data-pad="world"][data-orbs="0"] #pad [data-k="orb"] { opacity: 0 !important; transform: scale(.8); visibility: hidden; transition: opacity .18s .3s, transform .18s .3s, visibility 0s .48s; }
+  /* A controller is in use (js/gamepad.js sets body[data-input]): the touch buttons step aside until the screen is touched. */
+  body[data-input="pad"][data-padhide="1"] #pad { opacity: 0; pointer-events: none; transition: opacity .25s; }
   /* Touch screens. Portrait: the game fills the width at the top, the controls get the bottom of the screen. */
   @media (pointer: coarse) {
     body { gap: 0; justify-content: flex-start; height: 100dvh; }
@@ -153,6 +155,7 @@
 <script src="js/threads2.js"></script>
 <script src="js/cheats.js"></script>
 <script src="js/settingsui.js"></script>
+<script src="js/gamepad.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

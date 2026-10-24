@@ -51,7 +51,34 @@ const OUT = process.env.OUT || '/tmp';
   await pad('stick start orb b a');
   step('world: all controls (orb only with orbs); dialogue and scripted scenes: A and B; menus: stick, A and B');
 
-  // 5) a battle: stick + A + B while choosing, A + B while it plays
+  // 5b) the HUD ride chip is a real tap target at every HUD size, and a hoverboard needs no Garage
+  await ev(() => { G.state.builds = []; G.vehicles.grant('hoverboard'); G.world.busy = false; G.ui.layers.length = 0; G.closeText(); G.loadMap('lanternrest'); G.placePlayer(30, 26, 0); G.scene = G.world.scene; G.world.map.roamers = []; });
+  const tapChip = async () => {
+    const at = await ev(() => { const z = G.zones.find(z => z.fn && z.fn.tag === 'ride'); if (!z) return null; const r = document.getElementById('screen').getBoundingClientRect(); return [r.left + (z.x + G.uiX + z.w / 2) * r.width / G.W, r.top + (z.y + G.uiY + z.h / 2) * r.height / G.H]; });   // zones are kept in tap space: the centring offset is added back for the screen
+    assert(at, 'the ride chip registers a tap zone'); await page.touchscreen.tap(at[0], at[1]); await page.waitForTimeout(700);
+  };
+  for (const sc of ['small', 'medium', 'large']) {
+    await ev(sc => { G.setPref('hud.scale', sc); }, sc); await page.waitForTimeout(250);
+    await tapChip(); assert.equal(await ev(() => G.state.vehicles.riding), 'hoverboard', `tap on the chip rides the hoverboard (${sc})`);
+    await page.waitForTimeout(300); await tapChip(); assert.equal(await ev(() => G.state.vehicles.riding || null), null, `tap again gets off (${sc})`);
+  }
+  await ev(() => { G.setPref('hud.scale', 'medium'); });
+  step('the HUD ride chip is tappable at every HUD size (a play arrow on touch, not a keyboard V), and a hoverboard needs no Garage');
+
+  // 5c) the same in landscape, where the offset is sideways
+  {
+    const c2 = await browser.newContext({ viewport: { width: 915, height: 412 }, isMobile: true, hasTouch: true }), p2 = await c2.newPage();
+    await p2.goto('file://' + path.resolve(__dirname, '../index.html')); await p2.waitForTimeout(600);
+    await p2.evaluate(() => { G.state = G.newState(); G.migrateState(G.state); G.state.flags.starter = true; G.state.party.push(G.makeCreature(1, 10)); G.state.builds = []; G.vehicles.grant('hoverboard'); G.loadMap('lanternrest'); G.placePlayer(30, 26, 0); G.scene = G.world.scene; G.world.busy = false; G.world.map.roamers = []; });
+    await p2.waitForTimeout(500);
+    const at = await p2.evaluate(() => { const z = G.zones.find(z => z.fn && z.fn.tag === 'ride'); const r = document.getElementById('screen').getBoundingClientRect(); return [r.left + (z.x + G.uiX + z.w / 2) * r.width / G.W, r.top + (z.y + G.uiY + z.h / 2) * r.height / G.H, G.uiX]; });
+    assert(at[2] > 0, 'landscape has a sideways offset'); await p2.touchscreen.tap(at[0], at[1]); await p2.waitForTimeout(700);
+    assert.equal(await p2.evaluate(() => G.state.vehicles.riding), 'hoverboard', 'tap on the chip rides the hoverboard (landscape)');
+    await c2.close();
+  }
+  step('and in landscape');
+
+  // 6) a battle: stick + A + B while choosing, A + B while it plays
   await ev(() => { const f = G.makeCreature(14, 5); window.__b = G.startBattle({ wild: f }); });
   await until(() => G.ui.layers.length > 0 && !G.ui.text, 20000, 'battle command menu').catch(() => {});
   const bp = await ev(() => document.body.dataset.pad); assert(['menu', 'text', 'busy'].includes(bp), 'battle context ' + bp);
