@@ -150,7 +150,7 @@ async function throwOrbAt() {
   const res = await runBattle({ wild: target.c, bg: world.map.bg, throwFirst: item });
   if (res === 'win' || res === 'caught') list.splice(list.indexOf(target), 1); else { target.cool = 360; target.timer = 60; }
 }
-const roamBattle = (r, charged) => run(() => roamFight(r, charged));
+const roamBattle = (r, charged) => G.cheat('nobattle') ? null : run(() => roamFight(r, charged));
 async function roamFight(r, charged) {
   {
     r.dir = p.x > r.x ? RIGHT : p.x < r.x ? LEFT : p.y > r.y ? DOWN : UP; p.dir = OPP[r.dir]; r.alert = 0;
@@ -346,7 +346,7 @@ async function spotted(n) {
   await trainerBattle(n);
 }
 function sees(n) {
-  const t = n.trainer; if (flags()[t.id] || (n.hide && n.hide())) return false;
+  const t = n.trainer; if (flags()[t.id] || (n.hide && n.hide()) || G.cheat('nobattle')) return false;   // NO BATTLES (Test Mode): trainers do not challenge
   const [dx, dy] = VEC[n.dir]; const px = p.x - n.x, py = p.y - n.y;
   const dist = dx ? px * dx : py * dy, off = dx ? py : px;
   if (off !== 0 || dist < 1 || dist > t.sight) return false;
@@ -377,7 +377,7 @@ function afterStep() {
     return;
   }
   for (const n of npcsOf()) if (n.trainer && sees(n)) { run(() => spotted(n)); return; }
-  if (G.TILES[tileAt(p.x, p.y)].enc && m.enc && Math.random() < (hooks.encRate ? hooks.encRate(.07) : .07)) run(async () => { await runBattle({ wild: pickWild(), bg: m.bg }); });
+  if (G.TILES[tileAt(p.x, p.y)].enc && m.enc && !G.cheat('nobattle') && Math.random() < (hooks.encRate ? hooks.encRate(.07) : .07)) run(async () => { await runBattle({ wild: pickWild(), bg: m.bg }); });
 }
 function heldDir() {
   const h = G.input.held, order = ['down', 'up', 'left', 'right'];

@@ -3,7 +3,7 @@
 (function () {
 const G = globalThis.G;
 const PASSWORD = 'abc610';
-const OPTIONS = [['money', 'INFINITE MONEY'], ['items', 'INFINITE ITEMS'], ['pp', 'INFINITE PP'], ['god', 'GOD MODE'], ['catch', 'SURE CATCH'], ['fly', 'FLY ANYWHERE']];
+const OPTIONS = [['money', 'INFINITE MONEY'], ['items', 'INFINITE ITEMS'], ['pp', 'INFINITE PP'], ['god', 'GOD MODE'], ['catch', 'SURE CATCH'], ['fly', 'FLY ANYWHERE'], ['nobattle', 'NO BATTLES']];   // NO BATTLES: no wild encounters, no trainer challenges, and any battle you start is won at once (a trainer or boss talked to counts as beaten, so the story can still be followed)
 
 G.cheat = k => !!(G.state && G.state.cheats && G.state.cheats.on && G.state.cheats[k]);
 // Called every overworld frame while Test Mode is on.
@@ -114,7 +114,7 @@ async function testMenu() {
   for (;;) {
     const items = ['UNLOCK EVERYTHING', ...OPTIONS.map(([k, n]) => `${n}: ${S.cheats[k] ? 'ON' : 'OFF'}`), 'ADD CREATURE', 'HEAL TEAM', 'TELEPORT', 'WILD BATTLE', 'TEST MODE OFF', 'BACK'];
     const c = await G.choose(items, { x: 4, y: 4, rowH: 12, index: idx, minW: 100 }); if (c < 0 || c === items.length - 1) break; idx = c;
-    if (c === 0) { unlockEverything(); S.options = S.options || {}; for (const [k] of OPTIONS) S.cheats[k] = true; G.audio.sfx('levelup'); await say(['Everything is unlocked!', 'The Dex is complete, all three shards are placed and the Great Lantern is lit (the Hollow Gate is open), every item and material is at 99, and all the infinite options are on.', 'Your homestead owns all its land, and every vehicle is yours.', 'Every quest is complete and every region knows you as a HERO.']); }
+    if (c === 0) { unlockEverything(); S.options = S.options || {}; for (const [k] of OPTIONS) if (k !== 'nobattle') S.cheats[k] = true; G.audio.sfx('levelup'); await say(['Everything is unlocked!', 'The Dex is complete, all three shards are placed and the Great Lantern is lit (the Hollow Gate is open), every item and material is at 99, and all the infinite options are on.', 'Your homestead owns all its land, and every vehicle is yours.', 'Every quest is complete and every region knows you as a HERO.']); }
     else if (c <= OPTIONS.length) { const k = OPTIONS[c - 1][0]; S.cheats[k] = !S.cheats[k]; G.audio.sfx('select'); }
     else if (c === OPTIONS.length + 1) {
       const id = await pickSpecies(); if (id < 0) continue;
@@ -131,7 +131,7 @@ async function testMenu() {
     }
     else if (c === OPTIONS.length + 4) {   // a wild battle against a random creature near your level
       const ids = Object.keys(G.SPECIES).map(Number).filter(n => n !== 25), lv = Math.max(...S.party.map(c => c.lvl), 5);
-      G.closeText(); await G.storyBattle({ wild: G.makeCreature(ids[G.rand(ids.length)], lv) }); break;
+      G.closeText(); await G.storyBattle({ wild: G.makeCreature(ids[G.rand(ids.length)], lv), force: true }); break;
     }
     else if (c === OPTIONS.length + 5) { S.cheats.on = false; await say('Test Mode is off. Turn it back on from SETTINGS > SYSTEM > DEVELOPER (no password needed again).'); break; }
   }
@@ -143,7 +143,7 @@ G.devMenu = async function () {
   const S = G.state;
   if (S.cheats && S.cheats.unlocked) { S.cheats.on = true; await testMenu(); return; }
   const pw = await G.textEntry('Enter password', 20, true); if (pw === null) return;
-  if (pw === PASSWORD) { S.cheats = Object.assign({ money: false, items: false, pp: false, god: false, catch: false, fly: false }, S.cheats, { on: true, unlocked: true }); G.audio.sfx('levelup'); await G.worldApi.says('Test Mode unlocked.'); await testMenu(); }
+  if (pw === PASSWORD) { S.cheats = Object.assign({ money: false, items: false, pp: false, god: false, catch: false, fly: false, nobattle: false }, S.cheats, { on: true, unlocked: true }); G.audio.sfx('levelup'); await G.worldApi.says('Test Mode unlocked.'); await testMenu(); }
   else { G.audio.sfx('bump'); await G.worldApi.says('Wrong password.'); }
 };
 })();

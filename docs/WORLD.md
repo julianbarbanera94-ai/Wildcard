@@ -247,6 +247,7 @@ All of them blend with their neighbours like the existing tiles. Owners may use 
 - Harbour towns (Sunhaven, Driftwood, Verdant, Tidepool Shore, Tidefall, Moonlit, Cobalt, Frostmere, Aurora) have open-water exits (`warp.sea = true`). Sailing off the edge of a harbour puts the boat on the sea at that harbour's mouth, still aboard. Sailing into a harbour's 3x3 gate on the sea map arrives in that town's waters. Sea maps are boat-only.
 - `js/gates.js` marks every way into a new area: chevrons and a name plate on map edges, a ring and arrow for gates inside a map, a padlock and "N BADGES" when locked. On the sea it also shows a minimap, harbour dots, your boat and the nearest harbour with a compass direction. `G.gatesOf(map)` lists the gates.
 - Test Mode: **UNLOCK EVERYTHING** also turns on **FLY ANYWHERE** (any creature can carry you, every place counts as visited, no helicopter needed).
+- Test Mode: **NO BATTLES** (a switch in the Test Mode menu, off by default and not set by UNLOCK EVERYTHING) switches battles off: no wild encounters in grass, roaming creatures do not engage, trainers do not challenge, and any battle that does start (talking to a trainer, Arena Leader or boss) is won at once, so the story can still be followed. The menu's WILD BATTLE still fights. Code: `G.cheat('nobattle')` in js/battle.js (`startBattle`) and js/world.js.
 
 ## 7c. Wild roads between neighbouring cities
 

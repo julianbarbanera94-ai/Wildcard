@@ -674,6 +674,7 @@ async function turn() {
 // ---- Entry point ----------------------------------------------------------
 // opts: { wild: creature, bg } or { trainer: { name, cls, team: [creatures], style, prize, win, lose }, bg }
 G.startBattle = async function (opts) {
+  if (G.cheat('nobattle') && !opts.force) return 'win';   // Test Mode > NO BATTLES (js/cheats.js)
   const prev = G.scene, party = G.state.party;
   G.audio.music('battle');
   for (let i = 0; i < 3; i++) { await G.fadeTo(.9, 3, '#ffffff'); await G.fadeTo(0, 3); }

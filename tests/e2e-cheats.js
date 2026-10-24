@@ -59,12 +59,12 @@ const OUT = process.env.OUT || '/tmp';
   // UNLOCK EVERYTHING
   await key('z'); await advance(() => G.state.flags.lanternLit && !G.ui.text, 10000);
   const st = await ev(() => ({ dex: Object.values(G.state.dex).filter(v => v > 1).length, shards: ['meadow', 'marsh', 'mine'].every(k => G.state.flags['shard_' + k] && G.state.flags['placed_' + k]), money: G.state.money, orbs: G.state.bag['Terra Orb'], lit: G.state.flags.lanternLit, on: G.state.cheats }));
-  assert.equal(st.dex, await ev(() => Object.keys(G.SPECIES).length)); assert(st.shards && st.lit); assert.equal(st.orbs, 99); assert(st.money >= 9999999); assert(st.on.god && st.on.catch && st.on.pp && st.on.items && st.on.money);
+  assert.equal(st.dex, await ev(() => Object.keys(G.SPECIES).length)); assert(st.shards && st.lit); assert(!st.on.nobattle, 'UNLOCK EVERYTHING leaves NO BATTLES off'); assert.equal(st.orbs, 99); assert(st.money >= 9999999); assert(st.on.god && st.on.catch && st.on.pp && st.on.items && st.on.money);
   step('UNLOCK EVERYTHING: full Dex, shards placed, Lantern lit, items x99, money, all infinite options on');
 
   // ADD CREATURE
   await ev(() => { G.state.party.length = 0; G.state.party.push(G.makeCreature(4, 20)); });
-  await key('ArrowDown', 60); for (let i = 0; i < 6; i++) await key('ArrowDown', 40);     // ADD CREATURE is item index 7
+  await key('ArrowDown', 60); for (let i = 0; i < 7; i++) await key('ArrowDown', 40);     // ADD CREATURE is item index 8
   await key('z'); await until(() => G.ui.layers.length > 0, 3000);
   for (let i = 0; i < 24; i++) await key('ArrowDown', 25);                                  // Joker (#25)
   await shot('pick-creature'); await key('z'); await until(() => G.ui.layers.length > 0, 3000); await key('ArrowDown', 40); await key('ArrowDown', 40); await key('ArrowDown', 40); await key('ArrowDown', 40); await key('z');
@@ -84,6 +84,13 @@ const OUT = process.env.OUT || '/tmp';
   await key('ArrowRight'); await key('z'); await page.waitForTimeout(400); await key('z');      // BAG -> first item (an orb, bag refilled to 99 by the tick or kept)
   await until(() => window.__res !== undefined, 60000, 'catch');
   assert.equal(await ev(() => window.__res), 'caught'); assert.equal(await ev(() => G.state.bag['Terra Orb']), 1, 'infinite items: the orb was not used up'); step('SURE CATCH catches a Lv60 legendary with the first orb, and the orb is not used up');
+
+  // NO BATTLES: a battle you start is won at once (no battle scene), tall grass and trainers leave you alone; the menu's own WILD BATTLE still works
+  await idle(); await ev(() => { G.state.cheats.nobattle = true; window.__nb = undefined; G.runWorld(async () => { window.__nb = [await G.startBattle({ wild: G.makeCreature(1, 5) }), await G.startBattle({ trainer: { name: 'T', cls: 'X', style: G.PLAYER_STYLE, team: [G.makeCreature(1, 5)], prize: 1 } }), G.scene === G.world.scene]; }); });
+  await until(() => window.__nb !== undefined, 5000, 'instant result');
+  assert.deepEqual(await ev(() => window.__nb), ['win', 'win', true], 'NO BATTLES: battles are won at once and the scene never changes');
+  assert(await ev(() => G.cheat('nobattle')), 'the option is on');
+  await ev(() => { G.state.cheats.nobattle = false; }); step('NO BATTLES: every battle is an instant win and the option stays off after UNLOCK EVERYTHING (grass, roamers and trainer sight check it in js/world.js)');
 
   await browser.close();
   console.log('errors:', errors.length ? errors : 'none');
