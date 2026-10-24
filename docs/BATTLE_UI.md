@@ -55,6 +55,12 @@ To change which arena a place uses, edit `BG_BY_BIOME` / `BG_BY_MAP` in js/battl
 are separate layers over the picture. Your creature is drawn larger (88 px) in the foreground, the foe at 70 px. The old code-drawn
 landscape and cave remain only as a fallback if an image fails to load.
 
+## Phone screens
+The picture is laid out for 240x160, but a phone is taller (portrait) or wider (landscape). `scene.backdrop` in js/battle.js (called by the
+engine before the centred draw, which then skips its edge stretching) paints the whole screen: the picture sits in the 240x160 space with
+its outer 14 px feathered, a blurred enlarged copy fills the sides, and above it in portrait the picture's own sky is smoothed into a soft
+gradient. Nothing is stretched.
+
 ## Not done
 * The eight backgrounds are 766x254 pictures, so the 3:2 crop is upscaled about 2x; they look soft on a large screen (the grassland one is sharper). Higher-resolution versions would improve them.
 * The three concept boards were combined: the dark panels and cards come from the tactical board, the clear arena and bottom
