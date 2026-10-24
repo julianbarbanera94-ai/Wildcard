@@ -239,7 +239,9 @@ function solveLeg(root, leg) {
 // Clip functions write pose values into P (additive on the rest pose; numbers default to 0). A = the actor (A.r() random etc.).
 C3.def = (id, spec) => { C3.specs[id] = spec; };
 C3.log = [];
-C3.has = id => !!C3.specs[id] && C3.available();
+// The 3D creatures are opt-in (localStorage 'wildcard-force3d' = '1'): by default every species, Embrit included, uses its painted 2D art.
+const opted = () => { try { return localStorage.getItem('wildcard-force3d') === '1'; } catch (e) { return false; } };
+C3.has = id => !!C3.specs[id] && opted() && C3.available();
 const actors = {};
 C3.actor = (id, side) => { if (!C3.has(id)) return null; const k = id + ':' + side; return actors[k] || (actors[k] = new Actor(id, side)); };
 const SIZE = 320;

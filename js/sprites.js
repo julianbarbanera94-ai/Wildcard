@@ -1368,8 +1368,26 @@ const PEOPLE_LOOKS = {
   rayne: { hair: '#f0d030', skin: '#f8d0a8', shirt: '#2a2a40', pants: '#ffd830', hat: '#ffd830' },
   isolde: { hair: '#e8f4ff', skin: '#f4e0d8', shirt: '#7fb8e8', pants: '#e8f4ff', hat: '#cfeeff' },
   pyrra: { hair: '#d03a20', skin: '#e8b890', shirt: '#e8502a', pants: '#3a2a30', hat: '#ffb040' },
+  rook: { hair: '#1a1a24', skin: '#d8a880', shirt: '#c82a3a', pants: '#2a2a3a', hat: '#1a1a24' },
+  oswin: { hair: '#4a3a30', skin: '#e0b088', shirt: '#9a3a5a', pants: '#3a3040', hat: '#c8a050' },
+  pell: { hair: '#c86a3a', skin: '#f8d0a8', shirt: '#3a9a8a', pants: '#3a3040', hat: '#f0e0a0' },
+  bram: { hair: '#8a5a2a', skin: '#e8b890', shirt: '#6a9a3a', pants: '#6a4a2a', hat: '#e8c060' },
+  grizz: { hair: '#2a2018', skin: '#c89868', shirt: '#6a4a3a', pants: '#2a2630', hat: '#3a3440' },
+  sparks: { hair: '#2a2a30', skin: '#e0b088', shirt: '#f8f8f8', pants: '#1a1a24', hat: '#f8d030' },
+  mechanic: { hair: '#2a2a30', skin: '#e8b890', shirt: '#e07830', pants: '#3a4a6a', hat: '#e07830' },
+  courier: { hair: '#2a1a10', skin: '#e8b890', shirt: '#ff8a3a', pants: '#3a5a8a', hat: '#ffd23a' },
+  smith: { hair: '#8a3a20', skin: '#e8b890', shirt: '#7a7a8a', pants: '#4a3a30' },
+  storeclerk: { hair: '#202838', skin: '#f0c8a0', shirt: '#3a8ad8', pants: '#2a3048', hat: '#ff5a3a' },
+  gullwing: { hair: '#c8c8d0', skin: '#e8c098', shirt: '#3a9ac8', pants: '#2a3048', hat: '#f4f4f4' },
 };
-const PEOPLE_ST = { boy: 'boy', girl: 'girl', old: 'oldman', mom: 'mum', clerk: 'clerk', hiker: 'hiker', camper: 'camper', bug: 'bug', kade: 'kade' };   // generic looks (G.mk.ST) -> painted art
+// Other colour variants of the same painted person (the ferry captains of each port share one painting).
+const PEOPLE_ALIAS = { captain: [
+  { hair: '#d8d8d8', skin: '#e8c098', shirt: '#2a4a8a', pants: '#202c4a', hat: '#f4f4f4' },
+  { hair: '#9a6a3a', skin: '#c89868', shirt: '#2aa89a', pants: '#304868', hat: '#f4f0e0' },
+  { hair: '#d8d8d8', skin: '#e8c098', shirt: '#2a6ab0', pants: '#304060', hat: '#f0f0f0' },
+  { hair: '#e8e8e8', skin: '#e0b088', shirt: '#2a5a9a', pants: '#3a3a50', hat: '#f8f8f8' },
+  { hair: '#e8e8f0', skin: '#e8b890', shirt: '#2a4a8a', pants: '#2a3048', hat: '#f8f8f8' }] };
+const PEOPLE_ST = { boy: 'boy', girl: 'girl', old: 'oldman', mom: 'mum', clerk: 'clerk', hiker: 'hiker', camper: 'camper', bug: 'bug', kade: 'kade', lass: 'lass', kid: 'kid', elder: 'elder', nurse: 'nurse', prof: 'prof' };   // generic looks (G.mk.ST) -> painted art
 const lookKey = st => [st.hair, st.skin, st.shirt, st.pants, st.hat || ''].join('|');
 let peopleMap = null; const peopleImg = {};
 function peopleSlug(st) {
@@ -1378,6 +1396,7 @@ function peopleSlug(st) {
     peopleMap = {}; const ST = (G.mk && G.mk.ST) || {};
     for (const k in PEOPLE_ST) if (ST[k]) peopleMap[lookKey(ST[k])] = PEOPLE_ST[k];
     for (const k in PEOPLE_LOOKS) peopleMap[lookKey(PEOPLE_LOOKS[k])] = k;
+    for (const k in PEOPLE_ALIAS) for (const st of PEOPLE_ALIAS[k]) peopleMap[lookKey(st)] = k;
   }
   const P = G.PLAYER_STYLE; if (P && st.hair === P.hair && st.skin === P.skin && st.pants === P.pants) return G.PEOPLE_IMG['player-a'] ? 'player-a' : null;
   const slug = peopleMap[lookKey(st)]; return slug && G.PEOPLE_IMG[slug] ? slug : null;

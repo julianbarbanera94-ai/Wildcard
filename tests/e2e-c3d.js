@@ -1,6 +1,7 @@
 // 3D creatures in battle, end to end in headless Chromium (software WebGL): node tests/e2e-c3d.js
 // Embrit is a real three.js model; its clips must play on real battle events (enter, anticipate, attack, hit, faint,
 // victory, status), the battle must still finish normally, and the 2D sprite of a 3D species is a still of the model.
+// 3D creatures are opt-in (localStorage 'wildcard-force3d' = '1'), so this test sets it and keeps it on.
 // env: OUT=<dir for screenshots> PW=<path to playwright> CHROME=<chromium binary>
 const { chromium } = require(process.env.PW || 'playwright');
 const path = require('path'), assert = require('assert');
@@ -19,7 +20,6 @@ const OUT = process.env.OUT || '/tmp';
   for (let i = 0; i < 40 && await ev(() => !G.state || G.world.busy); i++) await key('z');
 
   assert(await ev(() => G.c3d.has(1)), 'WebGL and the Embrit model are available');
-  assert(await ev(() => { localStorage.removeItem('wildcard-force3d'); return true; }));
   const still = await ev(() => { const c = G.creatureSprite(1), x = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < x.length; i += 4) if (x[i] > 20) n++; return [c.width, n / (c.width * c.height)]; });
   assert(still[0] === 512 && still[1] > .08, 'the 2D sprite is a render of the 3D model: ' + still);
   step('Embrit is a 3D model; menus use a still render of it');
