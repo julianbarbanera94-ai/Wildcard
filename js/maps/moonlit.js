@@ -94,7 +94,7 @@ item(m, 5, 16, 'ml_shard', 'Crystal Shard', 2);
 item(m, 38, 22, 'ml_void', 'Void Orb', 3);
 item(m, 20, 27, 'ml_sp', 'Super Potion', 2);
 
-trainer(m, 'moonlit_vesper', 21, 17, DOWN, 'kade', { name: 'VESPER', cls: 'MOON MYSTIC', sight: 4, team: [[92, 48], [75, 49], [24, 48], [107, 50]], pre: 'The moon told me a Warden would come.', win: 'The moon was right.', post: 'The grove is north. Listen carefully.', prize: 90 });
+trainer(m, 'moonlit_vesper', 21, 17, DOWN, 'kade', { name: 'LUNA', cls: 'MOON MYSTIC', sight: 4, team: [[92, 48], [75, 49], [24, 48], [107, 50]], pre: 'The moon told me a Warden would come.', win: 'The moon was right.', post: 'The grove is north. Listen carefully.', prize: 90 });
 trainer(m, 'moonlit_thorne', 12, 14, RIGHT, 'elder', { name: 'THORNE', cls: 'DRAGON TAMER', sight: 5, team: [[102, 49], [116, 50], [115, 49], [81, 51]], pre: 'Dragons roost on moonlit islands. So do I.', win: 'You have a dragon heart.', post: 'My dragons love the crystals.', prize: 96 });
 trainer(m, 'moonlit_ivy', 31, 20, LEFT, 'girl', { name: 'IVY', cls: 'FAIRY QUEEN', sight: 4, team: [[131, 48], [65, 49], [84, 50], [45, 49]], pre: 'Dance with me, brave Warden!', win: 'What a lovely finish.', post: 'The glow of the grass pleases the fairies.', prize: 90 });
 trainer(m, 'moonlit_grim', 28, 6, DOWN, 'hiker', { name: 'GRIM', cls: 'GHOST HUNTER', sight: 5, team: [[96, 50], [108, 50], [74, 49], [151, 51]], pre: 'Do you feel the chill? Good. Then you will understand.', win: 'The chill breaks.', post: 'The Wildcard is not the only legend here.', prize: 94 });

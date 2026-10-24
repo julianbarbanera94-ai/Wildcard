@@ -227,7 +227,7 @@ function questText() {
   if (!f.starter) return ['LANTERNREST NOTICE BOARD\nThe Great Lantern is failing. Wardens needed! Speak to Elder Wren at the Hearth Shrine.'];
   if (f.lanternLit) return ['LANTERNREST NOTICE BOARD\nThe Great Lantern burns again! The Hollow Gate in the southeast stands open.'];
   const line = SHARDS.map(([k, n]) => `${n}: ${f['placed_' + k] ? 'placed' : f['shard_' + k] ? 'in your bag' : 'missing'}`).join('\n');
-  return ['LANTERNREST NOTICE BOARD\nRelight the Great Lantern with three Ember Shards.', line, 'Meadow lies west, Marsh east, the Mine north up the Ridge.'];
+  return ['LANTERNREST NOTICE BOARD\nRelight the Great Lantern with three Ember Shards.', line, 'The shards went with the Wardens: Hazel in Sunmeadow, Bog in Mirewood Marsh, Kade in the Glimmer Mine on the Ridge. Ask them.'];
 }
 async function partnerTalk(c) {
   const nm = G.name(c), r = c.hp / c.stats.hp;
@@ -246,7 +246,7 @@ async function orrin() {
     await G.say('ORRIN: You look worn out. Sit a spell, and let your partners rest too.'); G.closeText();
     await G.fadeTo(1, 16, '#000'); G.state.party.forEach(G.healFull); G.audio.sfx('heal'); await G.wait(30); await G.fadeTo(0, 16);
     await says('ORRIN: There. Fresh as morning. Mind the roads.');
-  } else await says(f.lanternLit ? 'ORRIN: The Lantern is lit! I have not seen it that bright since I was a boy.' : 'ORRIN: Walk the roads in any order you like. A Warden learns from every one.');
+  } else await says(f.lanternLit ? 'ORRIN: The Lantern is lit! I have not seen it that bright since I was a boy.' : 'ORRIN: The roads open as you earn them: win Badges, and finish what each town asks of you. Elder Wren will point the way.');
 }
 async function wren() {
   const f = flags(), S = G.state;
@@ -254,7 +254,7 @@ async function wren() {
   if (!f.starter) await says(['ELDER WREN: Welcome, little Warden. The Great Lantern has dimmed ever since the Wildcard slipped away.', 'Three Ember Shards once fed its flame. They were hidden with the Wardens of the Meadow, the Marsh and the Mine.', 'But you cannot walk the wild roads alone. Three Bondlings sleep on the hearth stones. Wake one, and it will be your partner.']);
   else if (!f.wrenTips) {
     f.wrenTips = true;
-    await says(['ELDER WREN: It chose you. I knew it would.', 'To catch wild creatures, weaken them in battle and throw an ORB from your BAG. Sleep and poison help too.', 'Win a Warden\'s respect and they will tell you where their Ember Shard went. Bring all three to the Great Lantern in the tower.', 'The roads are open: west to the Meadow, east to the Marsh, north up the Ridge to the Mine. Choose your own path.']);
+    await says(['ELDER WREN: It chose you. I knew it would.', 'To catch wild creatures, weaken them in battle and throw an ORB from your BAG. Sleep and poison help too.', 'Win a Warden\'s respect and they will tell you where their Ember Shard went. Bring all three to the Great Lantern in the tower.', 'The roads beyond the vale open as you earn them: win Badges and finish what each town asks of you, and I will point the way. Hazel in Sunmeadow, Bog in Mirewood and Kade in the Glimmer Mine know where the shards went.']);
     S.bag['Terra Orb'] = (S.bag['Terra Orb'] || 0) + 5; G.audio.sfx('levelup'); await says(`${S.name} received 5 TERRA ORBs!`);
   } else if (f.jokerCaught) await says(['ELDER WREN: You caught the WILDCARD itself?! And the Lantern burns...', 'You are no apprentice any more. There are still creatures out there you have not met. Check your DEX!']);
   else if (f.lanternLit) await says(['ELDER WREN: The Lantern is lit, and the vale is calm. But the Wildcard has not returned...', 'Go through the Hollow Gate in the southeast. I think it is waiting for you.']);
@@ -276,7 +276,7 @@ async function moll() {
   const f = flags(), S = G.state;
   if (f.mollDone) { await says('FISHER MOLL: That old lantern shines on my dock every evening now. Thank you again!'); return; }
   if (S.bag['Old Lantern']) {
-    await says(['FISHER MOLL: My lantern! You found it! I lost it in the dunes years ago.']);
+    await says(['FISHER MOLL: My lantern! You found it! I lost it out on the sandbar years ago.']);
     delete S.bag['Old Lantern']; f.mollDone = true; S.bag['Pulse Orb'] = (S.bag['Pulse Orb'] || 0) + 3; S.bag['Full Heal'] = (S.bag['Full Heal'] || 0) + 1; G.audio.sfx('levelup');
     await says(`${S.name} received 3 PULSE ORBs and a FULL HEAL!`); return;
   }
