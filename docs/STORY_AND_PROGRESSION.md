@@ -235,9 +235,9 @@ gate rule as the road to it.)
 
 ### 3.3 The size of the world
 
-24 places, each 40 to 76 tiles wide (a tile is 16 pixels), 36 land routes, 5 ferry lines, and an open sea of 192 by 128 tiles. Four of the
-nine story hops run city to city with nothing between them, and the sea is small. See section 9 for the proposal to add wild areas
-between cities and to enlarge the sea.
+24 places, each 40 to 76 tiles wide (a tile is 16 pixels), 36 land routes, 5 ferry lines, and an open sea of 320 by 224 tiles (the charted 192 by 128 inside a wide margin of uncharted ocean with 12 outer islands, each with a treasure cache). Four of the
+nine story hops run city to city with nothing between them, and the sea is now large. See section 9 for the proposal to add wild areas
+between cities.
 
 ---
 
@@ -689,10 +689,10 @@ Fixed while writing this guide (build 3.23.1):
 
 Things to know, or to decide:
 
-1. **Map size and the spaces between cities.** Four of nine story hops go city to city with no wild area between, the sea is small
-   (192 by 128 tiles, 5 ferries) and the path from Driftwood to Lakeside crosses three maps. The proposal is to add a wild area on each
-   direct link (a forest, desert or marsh stretch, with its own small story beat) and to enlarge the sea two to three times with
-   islands that hold the Tidefall, Verdant, Aurora and Moonlit stories. The gate rule already supports this.
+1. **Map size and the spaces between cities.** Four of nine story hops go city to city with no wild area between, the sea was small
+   (now 320 by 224 tiles with 12 outer islands; 5 ferries) and the path from Driftwood to Lakeside crosses three maps. The proposal is to add a wild area on each
+   direct link (a forest, desert or marsh stretch, with its own small story beat) and to give the new outer islands story beats
+   (today they hold only a treasure cache each). The gate rule already supports this.
 2. **Chapter length.** The step count is 5, 5, 5, 6, 4, 5, 4, 3, so chapters do not get longer. Difficulty does rise steadily. Adding two
    or three objectives to chapters 5 to 8 would make "harder and longer" true.
 3. **Badge order versus story order.** The arena list is Keystone, Bloom, Tide, Gale ... but the story earns Gale (Chapter 3) before

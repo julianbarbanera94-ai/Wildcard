@@ -100,7 +100,7 @@ G.worldRebuild = buildGraph;
 // The place a map belongs to. On the open sea (a map made from this very picture) it is the nearest place to the boat.
 G.worldPlaceOf = id => {
   if (id === 'aurelis_sea' && G.world && G.world.p) {
-    const px = G.world.p.x * 8 + 4, py = G.world.p.y * 8 + 4; let best = null, bd = 1e9;
+    const o = G.MAPS.aurelis_sea.seaOrigin || { x: 0, y: 0 }, px = (G.world.p.x - o.x) * 8 + 4, py = (G.world.p.y - o.y) * 8 + 4; let best = null, bd = 1e9;
     for (const p of PLACES) { const d = Math.hypot(p.x - px, p.y - py); if (d < bd) { bd = d; best = p.id; } }
     return best;
   }
