@@ -1,6 +1,6 @@
 # WILDCARD: Story, Quests and Progression Guide
 
-Build 3.23.x. Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
+Build 3.23.x. This guide is checked against the game by `tests/e2e-guide.js` (see the appendix). Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
 arena and map data), not from the old design drafts. Where the game differs from `docs/STORY_DESIGN.md`, this document is right.
 
 Contents
@@ -191,15 +191,15 @@ enter by the listed exits (or by boat or ferry where noted).
 | Place | Badges | Chapter finished | Reached from |
 | --- | --- | --- | --- |
 | Evergreen Forest | 1 | 1 | Sunmeadow (N), Sunhaven (N), Cloudpeak (W) |
-| Whispering Woods | 1 | 1 | Stonebridge (E), Sandsreach (S) |
+| Whispering Woods | 1 | 1 | Stonebridge (E), Sandsreach (S), Cobalt (W) |
 | Driftwood Port | 2 | 2 | Sunhaven (S), Mirewood (W) |
 | Verdant Isle | 3 | 2 | by sea: your own boat, or the ferry from Driftwood |
 | Lakeside Town | 0 | 3 | the Ridge (E), Glacier Pass (W) |
 | Tidefall Islands | 3 | 3 | Mirewood (S), or by sea (boat, or the ferry from Driftwood) |
-| Sandsreach Desert | 2 | 4 | Lanternrest (E), Whispering Woods (N), Cobalt (N) |
+| Sandsreach Desert | 2 | 4 | Lanternrest (E), Whispering Woods (N), Cobalt (N), Badlands (W) |
 | Cobalt City | 4 | 4 | Whispering Woods (E), Sandsreach (E) |
-| Crimson Badlands | 4 | 4 | Sandsreach (E) |
-| Glacier Pass | 5 | 5 | Lakeside (E), Cloudpeak (E), Emberfall (W) |
+| Crimson Badlands | 4 | 4 | Sandsreach (E), Emberfall (S) |
+| Glacier Pass | 5 | 5 | Lakeside (E), Cloudpeak (E), Emberfall (W), Frostmere (W) |
 | Frostmere City | 5 | 5 | Glacier Pass (E) |
 | Aurora Isles | 7 | 5 | by sea only: your own boat, or the ferry from Frostmere |
 | Emberfall Volcano | 6 | 6 | Badlands (N), Glacier Pass (S) |
@@ -372,11 +372,12 @@ Everything gets harder as you go, in three independent ways.
 | Place | Wild levels | Place | Wild levels |
 | --- | --- | --- | --- |
 | Sunmeadow | 3-9 | Cloudpeak | 26-32 |
-| Mirewood, Shore, the Ridge | 4-16 | Badlands | 30-36 |
-| Evergreen | 14-20 | Glacier Pass | 32-38 |
-| Whispering Woods | 16-22 | Emberfall | 38-44 |
-| Driftwood | 18-24 | Moonlit | 45-52 |
-| Verdant, Sandsreach | 22-28 | Aurora | 48-55 |
+| Shore | 4-16 | Badlands | 30-36 |
+| Mirewood, the Ridge | 5-16 | Glacier Pass | 32-38 |
+| Evergreen | 14-20 | Emberfall | 38-44 |
+| Whispering Woods | 16-22 | Moonlit | 45-52 |
+| Driftwood | 18-24 | Aurora | 48-55 |
+| Verdant, Sandsreach | 22-28 | | |
 | Tidefall | 24-30 | | |
 
 The world map shows a "tough" warning when a place is well above your team.
@@ -735,7 +736,14 @@ Things to know, or to decide:
 | caves | `js/maps/ridge.js` (Glimmer Mine), `js/maps/zz_mouths_caves.js` |
 | homestead, farm, crafting, shops | `js/homestead.js`, `js/farm.js`, `js/craft.js`, `js/shops.js`, `js/structures.js` |
 
-**Tests that check this** (`node tests/<name>.js`, run all with the project's runner): `e2e-story1`, `e2e-story2`, `e2e-story3`
+**The guide checks itself.** `node tests/e2e-guide.js` reads this file's tables and compares them with the running game: the build number, the
+gate table (badges, chapter and which exits lead in), the arena table (type, leader, base team) and level ranges, the chapter titles, money
+rewards and step counts, the wild levels, the story bosses' teams, the homestead deeds, vehicle and orb prices, and the list of optional
+quests. If you change the story, a gate, a level, a price or a reward and do not update this guide, that test fails and names the stale
+row. Keep the table layouts and the bold anchor phrases (**The spine**, **Wild creatures** by place, **Story trainers**,
+**Length**) as they are, or update the test with them.
+
+**Tests that check the game** (`node tests/<name>.js`, run all with the project's runner): `e2e-story1`, `e2e-story2`, `e2e-story3`
 (the whole story, prologue to finale), `e2e-access` (gate order), `e2e-worldmap` and `e2e-sea` (ferries and harbours), `e2e-threads`,
 `e2e-threads2` (side quests), `e2e-quests`, `e2e-arenas`, `e2e-caves`, `e2e-field`, `e2e-vehicles`.
 
