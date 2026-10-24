@@ -136,36 +136,8 @@ function drawFighter(ctx, f, back, bx, by) {
   if (f.flash > 0 && G.flashOK()) { ctx.globalAlpha = f.alpha * Math.min(1, f.flash / 4); ctx.drawImage(a ? G.c3d.tint(a.canvas, '#ffffff') : G.tint(G.creatureSprite(f.c.id, back), '#ffffff'), dx, dy, sw, sh); }
   ctx.globalAlpha = 1;
 }
-function infoArt(w, h, mine) {
-  const ac = mine ? '#41c7b4' : '#ff8a6a';
-  return K.cache('binfo' + (mine ? 1 : 0) + w + 'x' + h, w, h, x => {
-    x.save(); x.shadowColor = 'rgba(20,30,40,.35)'; x.shadowBlur = 3 * x.getTransform().a; x.shadowOffsetY = 1.5 * x.getTransform().a;
-    K.rr(x, 0, 0, w, h, 8); x.fillStyle = ac; x.fill(); x.restore();
-    K.rr(x, 0, 0, w, h, 8); x.fillStyle = K.lin(x, 0, 0, 0, h, [G.shade(ac, 1.25), ac, G.shade(ac, .85)]); x.fill();
-    K.rr(x, 2, 2, w - 4, h - 4, 6.5); x.fillStyle = K.lin(x, 0, 2, 0, h - 2, ['#ffffff', '#fff7e6']); x.fill();
-    x.fillStyle = G.shade(ac, 1.65); K.rr(x, 4, 12, w - 8, 9, 4.5); x.fill();   // soft band behind the HP row
-    x.fillStyle = 'rgba(255,255,255,.6)'; K.rr(x, 6, .6, 22, 1, .5); x.fill();
-  });
-}
 function infoBox(ctx, f, x, y, w, mine) {
-  const h = mine ? 31 : 26;
-  K.blit(ctx, infoArt(w, h, mine), x, y);
-  if (G.hudOn('namesLevels')) {
-    G.text(ctx, G.name(f.c), x + 6, y + 3, { color: '#3d3352', shadow: 'rgba(160,120,80,.25)' });
-    const lv = 'Lv' + f.c.lvl; ctx.font = G.FONT_S; const lw = ctx.measureText(lv).width + 6;
-    K.pill(ctx, x + w - 5 - lw, y + 3.5, lw, 7, mine ? '#41c7b4' : '#ff8a6a', lv, '900 6px ' + G.FONT_FAM);
-  }
-  if (f.c.status && G.pref('battle.statusIcons')) K.pill(ctx, x + 5, y + 13, 17, 7, K.STATUS_COL[f.c.status], G.STATUS_NAME[f.c.status]);
-  K.pill(ctx, x + 24, y + 13, 12, 7, '#ff9f43', 'HP');
-  if (G.hudOn('healthBars')) G.hpBar(ctx, x + 38, y + 14.8, w - 46, f.dispHp / f.c.stats.hp);
-  else if (!mine) G.text(ctx, Math.ceil(100 * f.dispHp / f.c.stats.hp) + '%', x + w - 6, y + 13.5, { align: 'right', color: '#3d3352', shadow: false, font: '900 6.5px ' + G.FONT_FAM });   // health bars off: still show how much is left
-  if (mine) {
-    G.text(ctx, `${Math.ceil(f.dispHp)}/${f.c.stats.hp}`, x + w - 6, y + 20.5, { align: 'right', color: '#3d3352', shadow: false, font: '900 6.5px ' + G.FONT_FAM });
-    const r = Math.max(0, Math.min(1, f.dispExp === null ? expRatio(f.c) : f.dispExp));
-    K.rr(ctx, x + 6, y + 26.5, w - 50, 2.4, 1.2); ctx.fillStyle = '#d9d2e6'; ctx.fill();
-    if (r > 0) { K.rr(ctx, x + 6, y + 26.5, Math.max(2.4, (w - 50) * r), 2.4, 1.2); ctx.fillStyle = K.lin(ctx, 0, y + 26.5, 0, y + 29, ['#8fd0ff', '#4a8cff']); ctx.fill(); }
-    G.text(ctx, 'EXP', x + w - 42, y + 25, { color: '#4a8cff', shadow: false, font: '900 4.5px ' + G.FONT_FAM });
-  }
+  G.battleUI.statusPanel(ctx, f, x, y, w, mine, f.dispExp === null ? expRatio(f.c) : f.dispExp);
 }
 function drawOrb(ctx, x, y, rot, s, style) {
   if (G.drawOrb) G.drawOrb(ctx, style || 'terra', x, y, 15 * (s || 1), rot);
@@ -247,7 +219,9 @@ function draw(ctx) {
   ctx.save();
   if (b.shake > 0 && G.shakeOK()) { const s = b.shake * .5; ctx.translate(Math.sin(b.shake * 2.1) * s, Math.cos(b.shake * 1.7) * s * .5); }
   drawBackdrop(ctx, cave);
+  if (b.target && !b.foe.hidden) G.battleUI.targetRing(ctx, 182, 69, G.frameNo);
   drawFighter(ctx, b.foe, false, 150, 10);
+  if (b.target && !b.foe.hidden) G.battleUI.targetMarker(ctx, 182, 6, G.frameNo);
   drawFighter(ctx, b.me, true, 30, 42);
   for (const t of [b.tFoe, b.tMe]) if (t) {
     ctx.globalAlpha = (t.alpha === undefined ? 1 : t.alpha) * .3; ell(ctx, t.x + t.ox + 24, t.y + 58, 16, 3.5, '#1a2a14');
@@ -258,14 +232,13 @@ function draw(ctx) {
   if (b.orb) drawOrb(ctx, b.orb.x, b.orb.y, b.orb.rot, b.orb.s, b.orb.style);
   if (b.fx) drawFx(ctx, b.fx);
   for (const p of b.parts) drawPart(ctx, p);
-  if (b.floats && G.pref('battle.damageNumbers')) for (const d of b.floats) { const k = d.t / 50; ctx.globalAlpha = Math.max(0, 1 - k * k); G.text(ctx, d.text, d.x, d.y - (G.motionOK() ? k * 14 : 0), { align: 'center', font: '900 9px ' + G.FONT_FAM, color: d.col, shadow: '#3d2a52' }); ctx.globalAlpha = 1; }
+  if (b.floats && G.pref('battle.damageNumbers')) for (const d of b.floats) { const k = d.t / 50; ctx.globalAlpha = Math.max(0, 1 - k * k); const pop = G.motionOK() ? 1 + Math.max(0, .5 - k * 4) : 1; ctx.save(); ctx.translate(d.x, d.y - (G.motionOK() ? k * 14 : 0)); ctx.scale(pop, pop); ctx.font = '900 12px ' + G.FONT_FAM; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(8,20,32,.85)'; ctx.strokeText(d.text.replace('-', ''), 0, 0); ctx.fillStyle = d.col; ctx.fillText(d.text.replace('-', ''), 0, 0); ctx.restore(); ctx.globalAlpha = 1; }
   ctx.restore();
   // info boxes slide in when first shown
   b.fT = b.showFoe ? (b.fT || 0) + 1 : 0; b.mT = b.showMe ? (b.mT || 0) + 1 : 0;
   const ease = n => n >= 14 ? 0 : Math.pow(1 - n / 14, 3);
-  if (b.showFoe) infoBox(ctx, b.foe, 6 - ease(b.fT) * 130, 8, 112, false);
-  if (b.showMe) infoBox(ctx, b.me, 124 + ease(b.mT) * 130, 78, 112, true);
-  if (!G.ui.text) G.frame(ctx, 2, 110, 236, 48, 'dark');
+  if (b.showFoe) infoBox(ctx, b.foe, 6 - ease(b.fT) * 130, 6, 112, false);
+  if (b.showMe) infoBox(ctx, b.me, 124 + ease(b.mT) * 130, 74, 112, true);
 }
 function drawFx(ctx, fx) {
   const t = fx.t / fx.dur, [x, y] = [fx.x, fx.y];
@@ -463,7 +436,7 @@ async function sendOutFoe(c) {
 }
 
 // ---- Player menus ---------------------------------------------------------
-const prompt = lines => { G.ui.text = { lines, shown: 999, arrow: false, style: 'dark' }; };
+const prompt = lines => { G.ui.text = { lines, shown: 999, arrow: false, style: 'dark', cmd: true }; };
 // Battle memory (settings): the last action (FIGHT/BAG/PARTY/RUN) is kept in the save (S.battleMem), and each creature keeps
 // its own last move (c.lastMove), so both survive between turns, switches, battles and reloads. They only preselect the
 // cursor; nothing is chosen for you. A remembered move that has no PP or was forgotten falls back to the first usable move.
@@ -478,21 +451,14 @@ async function chooseAction() {
   let last = G.battleMemory.action();
   for (;;) {
     prompt(['What will', G.name(b.me.c) + ' do?']);
-    const ch = await G.choose(['FIGHT', 'BAG', 'PARTY', 'RUN'], { cols: 2, right: 238, y: 112, rowH: 15, style: 'dark', cancel: false, index: last, minW: 34 });
+    const ch = await G.choose(['FIGHT', 'BAG', 'PARTY', 'RUN'], { cols: 4, style: 'dark', cancel: false, index: last, draw: G.battleUI.commandBar(`What will ${G.name(b.me.c)} do?`) });
     last = ch; M.action = ch;
     if (ch === 0) {
       const mvs = b.me.c.moves;
-      if (!mvs.some(m => m.pp > 0)) { G.ui.text = null; return { t: 'move', move: STRUGGLE }; }
-      const i = await G.choose(mvs.map(m => m.id), {
-        cols: 2, x: 2, y: 111, rowH: 16, style: 'dark', cancel: true, minW: 56, index: G.battleMemory.move(b.me.c),
-        extra(ctx, i) {
-          const m = mvs[i], mv = G.MOVES[m.id];
-          G.frame(ctx, 160, 110, 78, 48, 'dark');
-          G.text(ctx, `PP ${m.pp}/${mv.pp}`, 168, 117, { color: m.pp === 0 ? '#f08070' : '#fff', shadow: '#102030' });
-          G.text(ctx, mv.pow ? `PWR ${mv.pow}` : 'STATUS', 168, 130, { color: '#fff', shadow: '#102030' });
-          G.typeBadge(ctx, mv.type, 168, 143);
-        },
-      });
+      if (!mvs.some(m => m.pp > 0)) { G.ui.text = null; b.target = false; return { t: 'move', move: STRUGGLE }; }
+      G.ui.text = null; b.target = true;
+      const i = await G.choose(mvs.map(m => m.id), { cols: mvs.length, style: 'dark', cancel: true, index: G.battleMemory.move(b.me.c), draw: G.battleUI.abilityCards(mvs) });
+      b.target = false;
       if (i < 0) continue;
       if (mvs[i].pp <= 0) { await msg('There\'s no PP left for this move!', 0); continue; }
       b.me.c.lastMove = mvs[i].id; M.target = b.foe.c.id;

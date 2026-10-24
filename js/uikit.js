@@ -79,7 +79,7 @@ G.textW = (ctx, s) => { ctx.font = G.FONT; return ctx.measureText(s).width; };
 // ---- Panels ---------------------------------------------------------------
 const PANEL = {
   light: { o0: '#ffc85a', o1: '#f7983f', f0: '#fffdf8', f1: '#fff0d4', rim: 'rgba(255,255,255,.95)', sh: 'rgba(120,70,20,.32)' },
-  dark: { o0: '#8ff5ea', o1: '#3cc3dc', f0: '#2c7394', f1: '#163e62', rim: 'rgba(170,255,250,.35)', sh: 'rgba(0,20,40,.45)' },
+  dark: { o0: '#57D8EA', o1: '#247F9F', f0: '#18384C', f1: '#071B2B', rim: 'rgba(120,220,240,.22)', sh: 'rgba(0,12,22,.5)' },
 };
 function panelArt(w, h, kind) {
   const P = PANEL[kind] || PANEL.light, r = Math.min(8, h / 2, w / 2);
@@ -161,18 +161,19 @@ G.drawBubble = function (ctx, x, y, t) {
 // ---- Dialogue box ---------------------------------------------------------
 G.drawTextbox = function (ctx, t) {
   const dark = t.style === 'dark';
-  G.frame(ctx, 2, 110, 236, 48, t.style);
-  let used = 0;
+  if (t.cmd) return;   // the battle command bar draws its own "What will ... do?" label
+  if (dark && G.battleUI) G.battleUI.messageBar(ctx); else G.frame(ctx, 2, 110, 236, 48, t.style);
+  const ty = dark ? 9 : 0; let used = 0;
   t.lines.forEach((l, i) => {
     const font = G.textPx && G.textPx() !== 8 ? `800 ${G.textPx()}px ${G.FONT_FAM}` : undefined;   // text size (settings)
-    G.text(ctx, l.slice(0, Math.max(0, t.shown - used)), 12, 118 + i * 15, Object.assign(dark ? { color: '#fff', shadow: '#0c2a40' } : {}, font ? { font } : {}));
+    G.text(ctx, l.slice(0, Math.max(0, t.shown - used)), 14, 118 + ty + i * 15, Object.assign(dark ? { color: '#fff', shadow: '#0c2a40' } : {}, font ? { font } : {}));
     used += l.length;
   });
   if (t.arrow) {
     const by = Math.abs(Math.sin(G.frameNo / 9)) * 2.2;
-    ctx.fillStyle = dark ? '#8ff5ea' : '#f7983f';
-    kit.rr(ctx, 222, 142 + by, 10, 7, 3); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(224.6, 144 + by); ctx.lineTo(229.4, 144 + by); ctx.lineTo(227, 147.2 + by); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = dark ? '#53D6E9' : '#f7983f';
+    kit.rr(ctx, 220, 142 + by, 10, 7, 3); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(222.6, 143 + by); ctx.lineTo(227.4, 143 + by); ctx.lineTo(225, 146.2 + by); ctx.closePath(); ctx.fill();
   }
 };
 

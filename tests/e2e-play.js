@@ -92,7 +92,7 @@ const OUT = process.env.OUT || '/tmp';
   await until(() => G.scene !== G.world.scene, 6000, 'grass encounter'); await ev(() => { Math.random = window.__origRandom; });
   await advance(cmdReady, 20000, 'encounter command menu'); await shot('09-grass-encounter');
   for (let i = 0; i < 400 && await ev(() => G.scene !== G.world.scene); i++) {   // escaping is random: keep picking RUN
-    if (await ev(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0)) { await key('ArrowDown'); await key('ArrowRight'); await key('z'); }
+    if (await ev(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0)) { await key('ArrowRight'); await key('ArrowRight'); await key('ArrowRight'); await key('z'); }
     else if (await ev(() => G.ui.text && G.ui.text.arrow)) await key('z', 50); else await page.waitForTimeout(100);
   }
   await until(() => G.scene === G.world.scene && !G.world.busy, 30000, 'back in overworld'); step('walking into tall grass triggers a wild battle; RUN returns to the overworld');

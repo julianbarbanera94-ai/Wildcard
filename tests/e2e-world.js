@@ -39,7 +39,7 @@ const OUT = process.env.OUT || '/tmp';
   await until(() => G.scene !== G.world.scene, 8000, 'roamer battle'); await shot('roam-battle');
   await advance(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0, 30000, 'command');
   for (let i = 0; i < 30 && await ev(() => G.scene !== G.world.scene); i++) {   // escaping is random: keep picking RUN
-    if (await ev(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0)) { await key('ArrowRight'); await key('ArrowDown'); await key('z'); }
+    if (await ev(() => G.ui.text && G.ui.text.lines[0] === 'What will' && G.ui.layers.length > 0)) { await key('ArrowRight'); await key('ArrowRight'); await key('ArrowRight'); await key('z'); }
     else if (await ev(() => G.ui.text && G.ui.text.arrow)) await key('z', 50); else await page.waitForTimeout(150);
   }
   await idle();
