@@ -240,7 +240,7 @@ G.choose = async function (items, o) {
   let idx = Math.min(o.index || 0, items.length - 1);
   let tapped = false;
   const tap = i => { idx = i; tapped = true; };
-  const layer = { items, get idx() { return idx; }, draw(ctx) { G.tapZone(-999, -999, 2400, 2400, () => { if (o.cancel !== false) tapped = -1; }); if (o.draw) o.draw(ctx, { items, idx, cols, tap }); else G.drawMenu(ctx, { x, y, w, h, items, idx, cols, cw, rowH, style, tap }); } };
+  const layer = { items, get idx() { return idx; }, draw(ctx) { G.tapZone(-999, -999, 2400, 2400, () => { if (o.cancel !== false) tapped = -1; }); if (o.draw) o.draw(ctx, { items, idx, cols, tap }); else G.drawMenu(ctx, { x, y, w, h, items, idx, cols, cw, rowH, style, tap, title: o.title }); } };
   G.ui.layers.push(layer);
   if (o.extra) { layer.draw = (d => ctx => { d(ctx); o.extra(ctx, idx); })(layer.draw); }
   if (o.onMove) o.onMove(idx);

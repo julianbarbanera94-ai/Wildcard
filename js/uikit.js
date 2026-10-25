@@ -141,9 +141,12 @@ G.drawBanner = function (ctx, text, t) {
   const ease = k => 1 - Math.pow(1 - k, 3);
   const y = t < 14 ? -24 * (1 - ease(t / 14)) + Math.sin(t / 14 * Math.PI) * 2 : t > 105 ? -(t - 105) * 2 : 0;
   const w = Math.round(G.textW(ctx, text) + 24);
-  G.frame(ctx, 4, 3 + y, w, 17, 'dark');
-  kit.star(ctx, 11, 11.5 + y, 3, '#ffe066');
-  G.text(ctx, text, 16, 7.5 + y, { color: '#fff', shadow: '#0c2a40' });
+  // the place name in the shared orange header style (it was a dark panel)
+  kit.rr(ctx, 4, 3 + y, w, 17, 8.5); ctx.fillStyle = '#fff'; ctx.fill();
+  kit.rr(ctx, 5.4, 4.4 + y, w - 2.8, 14.2, 7.1); ctx.fillStyle = kit.lin(ctx, 0, 4 + y, 0, 19 + y, ['#ffc078', '#f7983f', '#e07a2a']); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.3)'; kit.rr(ctx, 10, 5.4 + y, w - 12, 3, 1.5); ctx.fill();
+  G.headerMark ? G.headerMark(ctx, 11.5, 11.5 + y, '#fff6a8') : kit.star(ctx, 11, 11.5 + y, 3, '#ffe066');
+  G.text(ctx, text, 17, 7.5 + y, { color: '#fff', shadow: '#9a4a10' });
 };
 // '!' bubble above a character whose tile top-left is (x, y).
 G.drawBubble = function (ctx, x, y, t) {
@@ -183,6 +186,7 @@ const glide = new WeakMap();
 // m: { x, y, w, h, items, idx, cols, cw, rowH, style }
 G.drawMenu = function (ctx, m) {
   G.frame(ctx, m.x, m.y, m.w, m.h, m.style);
+  if (m.title) { const tw = Math.min(m.w - 8, G.textW(ctx, m.title) * .8 + 16); kit.rr(ctx, m.x + 4, m.y - 9, tw, 11, 5.5); ctx.fillStyle = kit.lin(ctx, 0, m.y - 9, 0, m.y + 2, ['#ffc078', '#f7983f']); ctx.fill(); if (G.headerMark) G.headerMark(ctx, m.x + 10, m.y - 3.5, '#fff6a8'); G.text(ctx, m.title, m.x + 15, m.y - 7, { color: '#fff', shadow: '#9a4a10', font: G.FONT_S }); }   // a small orange header tab, like the screen headers
   const dark = m.style === 'dark', cols = m.cols || 1;
   const cell = i => [m.x + 6 + (i % cols) * m.cw, m.y + 5 + Math.floor(i / cols) * m.rowH];
   if (m.idx >= 0 && m.idx < m.items.length) {

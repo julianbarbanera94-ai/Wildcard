@@ -68,7 +68,7 @@ G.flashOK = () => !values['access.reducedFlash'];
 // Text: characters per frame (Infinity = instant) and how long battle messages wait.
 G.textRate = () => ({ slow: .5, normal: 1, fast: 2.5, instant: Infinity }[values['battle.textSpeed']]);
 G.msgWait = n => Math.round(n * ({ slow: 1.4, normal: 1, fast: .6, instant: .4 }[values['battle.textSpeed']]));
-G.textPx = () => ({ small: 7, medium: 8, large: 9.5 }[values['access.textSize']]);
+G.textPx = () => { const v = { small: 7, medium: 8, large: 9.5 }[values['access.textSize']]; return G.H > 200 ? v + 1 : v; };   // a tall (portrait) phone shows dialogue one size larger
 G.battleFast = () => values['battle.animSpeed'] === 'fast';
 G.haptic = ms => { if (values['controls.haptics'] && !values['access.noVibration'] && navigator.vibrate) try { navigator.vibrate(ms || 10); } catch (e) {} };
 // Running: 'hold' (hold B), 'toggle' (tap B on the map to switch), 'always'.
@@ -85,5 +85,5 @@ G.applySettings = function (changed) {
   if (!changed || changed === 'system.graphics') { if (G.refit) G.refit(); }
   if (!changed || changed.startsWith('hud.')) { const h = document.getElementById('help'); if (h) h.style.visibility = G.hudOn('tutorialHints') ? '' : 'hidden'; }
 };
-G.VERSION = '3.37.0';
+G.VERSION = '3.38.0';
 })();

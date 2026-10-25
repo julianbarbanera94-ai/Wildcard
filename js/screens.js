@@ -266,7 +266,7 @@ G.dexScreen = async function () {
       const y = 9 + k * 16, d = G.state.dex[id] || 0, i = top + k;
       G.tapZone(4, y - 3, 112, 15, () => { idx = i; G.audio.sfx('select'); });
       if (i === idx) { K.rr(ctx, 5, y - 2.5, 110, 13, 6.5); ctx.fillStyle = `rgba(255,190,90,${.3 + .1 * Math.sin(G.frameNo / 10)})`; ctx.fill(); ctx.strokeStyle = 'rgba(247,152,63,.75)'; ctx.lineWidth = .8; ctx.stroke(); }
-      G.text(ctx, String(id).padStart(3, '0') + ' ' + (d ? G.SPECIES[id].name.toUpperCase() : '-----'), 18, y, d ? {} : { color: '#a898b0' });
+      G.text(ctx, String(id).padStart(3, '0') + ' ' + (d ? G.SPECIES[id].name.toUpperCase() : '???'), 18, y, d ? {} : { color: '#a898b0' });
       if (d > 1) miniOrb(ctx, 11, y + 4, 2.6); else if (d) { ctx.fillStyle = '#c8b8d0'; ctx.beginPath(); ctx.arc(11, y + 4, 2, 0, 7); ctx.fill(); }
     });
     const id = ids[idx], d = G.state.dex[id] || 0, sp = G.SPECIES[id];
@@ -282,7 +282,7 @@ G.dexScreen = async function () {
         G.text(ctx, evo, 130, 132, { font: F6, color: '#7a5a30', shadow: false });
       }
       else G.text(ctx, 'Not yet caught.', 130, 108, { font: F6 });
-    } else { spot(ctx, 180, 42, 32, '#b8a8c8'); G.text(ctx, '?', 180, 28, { align: 'center', color: '#fff', shadow: '#8a7a98', font: '900 24px ' + G.FONT_FAM }); G.text(ctx, 'Unknown', 180, 80, { align: 'center', color: '#8a7a98' }); }
+    } else { spot(ctx, 180, 42, 32, '#b8a8c8'); G.text(ctx, '?', 180, 28, { align: 'center', color: '#fff', shadow: '#8a7a98', font: '900 24px ' + G.FONT_FAM }); G.text(ctx, 'Not seen yet', 180, 80, { align: 'center', color: '#8a7a98' }); G.text(ctx, 'Look in tall grass and caves.', 180, 90, { align: 'center', color: '#a898b0', font: G.FONT_S, shadow: false }); }
     const seen = Object.keys(G.state.dex).length, caught = Object.values(G.state.dex).filter(v => v > 1).length;
     K.pill(ctx, 134, 143, 92, 10, '#ff8a9a'); G.text(ctx, `SEEN ${seen}  CAUGHT ${caught}`, 180, 145, { align: 'center', font: F6, color: '#fff', shadow: '#c04a5a' });
   } });
@@ -407,7 +407,7 @@ G.startMenu = async function () {
   for (;;) {
     // BUILD sits after BAG; the rest of the menu keeps its old indices via `ch` below
     const labels = ['DEX', 'PARTY', 'BAG', 'BUILD', 'TRAVEL', 'MAP', 'JOURNAL', S.name, 'SAVE', 'SETTINGS', 'EXIT'];
-    const pick = await G.choose(labels, { right: 238, y: 4, index: idx, minW: 50, rowH: 12 });
+    const pick = await G.choose(labels, { right: 238, y: 13, index: idx, minW: 50, rowH: 12, title: 'MENU' });
     if (pick < 0 || pick === 10) break; idx = pick;
     if (pick === 3) { await G.buildMenu(); break; }
     if (pick === 4) { if (G.travelMenu) await G.travelMenu(); else await G.worldApi.says('Travel is not available yet.'); break; }

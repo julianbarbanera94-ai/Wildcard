@@ -50,4 +50,6 @@ Summary and crafting screens; evolution; trust mini-game; ferry and flight scree
 - Screen backgrounds: party, summary, Dex and badge case moved from blue, mint, pink and lilac to the shared warm peach; shop tabs orange.
 - Kept as dark accents: the quest tracker and WAY pills, the battle message bar, the badge case's velvet lining.
 
-Still to do: portrait text size, the start menu panel and icons, Dex empty rows, touch-control colours, cave brightness and banner.
+Second pass: the start menu has an orange MENU header tab (G.choose option `title`); empty Dex rows read ??? and an unseen creature says 'Not seen yet. Look in tall grass and caves.'; the touch A button is orange and B dark navy (the dark accent), MENU cream; the place-name banner uses the orange header style; dialogue text is one size larger on a tall portrait screen.
+
+Still to do: cave art brightness (an art change).
