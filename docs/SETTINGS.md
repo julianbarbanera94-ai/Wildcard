@@ -23,3 +23,12 @@
 
 ## Tests
 `node tests/e2e-settings.js` covers persistence (reload, broken data, old format, reset keeps saves), the screen (keyboard), battle memory (repeat turns, last action, no-PP fallback, per-creature moves, setting off, save and reload), HUD effects on the real HUD, controls on the real pad (phone size, floating stick by touch), audio gains, accessibility, text speed, fast battles, valuable items, and the hidden Developer menu. `e2e-cheats` and `e2e-touch` reach Test Mode through the new Developer menu.
+
+## Saving (js/world.js, tests/e2e-save.js)
+- **Checked saves.** Before writing, the slot's previous good save is copied to a backup (`wildcard-save-v2[-n]-bak`). The new save is read
+  back, and only a save that reads back correctly counts: SAVE says "saved" only then, and says "Saving failed" otherwise (storage full or blocked).
+- **Damaged saves.** A save that cannot be read loads its backup instead; CONTINUE then says "This save could not be read, so the backup copy
+  was loaded" and writes the slot back as a good save. If both copies are damaged the slot shows as empty; the game does not crash.
+- **Autosave at safe moments.** The game saves itself when the overworld settles after a map change, and at least every 30 seconds while
+  you walk about, and when the app goes to the background (Android onPause, browser visibilitychange and pagehide). It never saves during a
+  battle, dialogue, menu, door or scene; closing the app then keeps the last safe save.

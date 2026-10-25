@@ -1,6 +1,6 @@
 # WILDCARD: Story, Quests and Progression Guide
 
-Build 3.35.x. This guide is checked against the game by `tests/e2e-guide.js` (see the appendix). Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
+Build 3.36.x. This guide is checked against the game by `tests/e2e-guide.js` (see the appendix). Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
 arena and map data), not from the old design drafts. Where the game differs from `docs/STORY_DESIGN.md`, this document is right.
 
 Contents

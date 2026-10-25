@@ -193,6 +193,7 @@ async function begin(S, fresh) {
   G.scene = G.world.scene; G.world.banner = null; G.world.busy = true;
   await G.fadeTo(0, 20);
   if (fresh) await intro();
+  if (S._recovered) { delete S._recovered; await G.say('This save could not be read, so the backup copy was loaded. You may have lost a few minutes of play.'); G.closeText(); G.saveGame(); }
   G.world.busy = false;
 }
 
