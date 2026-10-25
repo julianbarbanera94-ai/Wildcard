@@ -1,5 +1,5 @@
-// Generates js/maps/zz_sea.js: the playable Aurelian Sea, built from the same geometry as the illustrated map
-// (G.WORLD.geo in js/worldmap.js). One tile = 8 pixels of the 1536x1024 reference map, so a boat on this map
+// Generates js/maps/zz_sea.js: the playable Aurelian Sea, traced from the painted world map
+// (js/worldart.js). One tile = 8 pixels of the 1536x1024 reference map, so a boat on this map
 // sails past exactly what the map shows. Run: PW=<playwright path> node tools/gen-sea.js
 const { chromium } = require(process.env.PW || 'playwright');
 const fs = require('fs'), path = require('path');
@@ -7,33 +7,40 @@ const ROOT = path.resolve(__dirname, '..');
 (async () => {
   const browser = await chromium.launch({ executablePath: process.env.CHROME || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage(); await page.goto('file://' + ROOT + '/index.html'); await page.waitForTimeout(400);
-  const out = await page.evaluate(() => {
+  const out = await page.evaluate(async () => {
     G.state = G.newState(); G.migrateState(G.state);
     const geo = G.WORLD.geo, T = 8, OX = 0, OY = 0, C = 192 + 2 * OX, R = 128 + 2 * OY, P = G.WORLD.places, B = G.WORLD.byId;
     const ci0 = []; const SEA_PLACES = G.WORLD.places; const hash = (i, j, s) => { let h = (i * 374761393 + j * 668265263 + (s || 0) * 2246822519) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
     const inP = (x, y, poly) => geo.inPoly(x, y, poly);
-    // small islands in the empty parts of the existing sea (the sea itself keeps the picture's size): positions are searched, not typed
-    const NAMES = [['PALM ATOLL', 'sand', 34], ['GULL ROCK', 'rock', 30], ['LONE PINE', 'wood', 40], ['SHIPWRECK CAY', 'sand', 36], ['KELP ISLE', 'wood', 44], ['BLACK REEF', 'rock', 30], ['SUNKEN ARCH', 'sand', 34], ['MIST HOLM', 'wood', 40]];
-    const landPolys = [geo.CONT, ...Object.values(geo.ISLANDS)];
-    const clear = (x, y, r) => { for (let a = 0; a < 16; a++) { const t = a / 16 * Math.PI * 2; for (const k of [.5, 1]) if (landPolys.some(p => inP(x + Math.cos(t) * r * k, y + Math.sin(t) * r * k, p))) return false; } return !landPolys.some(p => inP(x, y, p)); };
+    // land and water come from the painted world map itself (js/worldart.js): each tile is the 8x8 block of the picture under it
+    const px = await new Promise(res => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = 1536; c.height = 1024; const x = c.getContext('2d'); x.drawImage(im, 0, 0, 1536, 1024); res(x.getImageData(0, 0, 1536, 1024).data); }; im.src = G.worldArt; });
+    const cloudZone = (x, y) => (x < 90 && y > 90 && y < 210) || (y > 860 && (x < 280 || x > 1290));
+    const isWaterPx = (x, y) => { const k = (y * 1536 + x) * 4, r = px[k], g = px[k + 1], bl = px[k + 2]; if (bl > r + 45 && bl > g - 25 && g > r + 20) return true; return cloudZone(x, y) && r > 200 && g > 200 && bl > 200; };
+    const water = [], land = [], tone = [];
+    for (let j = 0; j < R; j++) { water.push([]); tone.push([]); for (let i = 0; i < C; i++) {
+      let n = 0, sr = 0, sg = 0, sb = 0; for (let b = 0; b < 8; b++) for (let a = 0; a < 8; a++) { const x = i * T + a, y = j * T + b; if (isWaterPx(x, y)) n++; const k = (y * 1536 + x) * 4; sr += px[k]; sg += px[k + 1]; sb += px[k + 2]; }
+      water[j].push(n >= 32); tone[j].push([sr / 64, sg / 64, sb / 64]); } }
+    // what kind of land a tile is: snow and sand by the picture's colour, otherwise the nearest place's own ground
+    const BIO = { cloudpeak: 'mountain', glacier: 'snow', frostmere: 'snow', aurora: 'snow', emberfall: 'volcano', badlands: 'badlands', sandsreach: 'desert', mirewood: 'swamp', whispering: 'hollow', moonlit: 'hollow' };
+    geo.biomeAt = (cx, cy) => { const [r, g, b] = tone[Math.min(R - 1, cy / T | 0)][Math.min(C - 1, cx / T | 0)];
+      let best = null, bd = 1e9; for (const p of P) { const d = Math.hypot(p.x - cx, p.y - cy); if (d < bd) { bd = d; best = p; } }
+      const near = BIO[best.id] || 'grass';
+      if (r > 205 && g > 205 && b > 205 && near !== 'desert') return near === 'mountain' ? 'mountain' : 'snow';
+      if (near === 'grass' && r > 200 && g > 165 && b < 140 && r > g) return 'desert';
+      return near; };
+    // the painting's own small islands (no place on them) become the outer islands, each with a treasure spot
+    const NAMES = [['PALM ATOLL', 'sand'], ['GULL ROCK', 'rock'], ['LONE PINE', 'wood'], ['SHIPWRECK CAY', 'sand'], ['KELP ISLE', 'wood'], ['BLACK REEF', 'rock'], ['SUNKEN ARCH', 'sand'], ['MIST HOLM', 'wood']];
+    const comp = water.map(r => r.map(() => -1)), comps = [];
+    for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) if (!water[j][i] && comp[j][i] < 0) {
+      const cells = [[i, j]], q2 = [[i, j]]; comp[j][i] = comps.length;
+      while (q2.length) { const [x0, y0] = q2.pop(); for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const x = x0 + a, y = y0 + b; if (x >= 0 && y >= 0 && x < C && y < R && !water[y][x] && comp[y][x] < 0) { comp[y][x] = comps.length; cells.push([x, y]); q2.push([x, y]); } } }
+      comps.push(cells); }
     const OUTER = [];
-    for (const [n, k, r] of NAMES) {
-      let best = null, bs = -1;
-      for (let y = 60; y < 960; y += 12) for (let x = 60; x < 1476; x += 12) {
-        if (!clear(x, y, r + 70) || OUTER.some(o => Math.hypot(o.c[0] - x, o.c[1] - y) < 190)) continue;
-        if (SEA_PLACES.some(p => Math.hypot(p.x - x, p.y - y) < 150)) continue;
-        const sc = hash(x, y, 17); if (sc > bs) { bs = sc; best = [x, y]; } }
-      if (best) OUTER.push({ n, k, r, c: best });
-    }
-    OUTER.forEach((o, i) => { const pts = []; for (let a = 0; a < 12; a++) { const t = a / 12 * Math.PI * 2, w = .75 + hash(i, a, 11) * .45; pts.push([o.c[0] + Math.cos(t) * o.r * w * 1.15, o.c[1] + Math.sin(t) * o.r * w]); } o.pts = pts; });
-    const isl = [...Object.values(geo.ISLANDS), ...OUTER.map(o => o.pts)];
-    const water = [], land = [];
-    for (let j = 0; j < R; j++) { water.push([]); for (let i = 0; i < C; i++) {
-      const cx = (i - OX + .5) * T, cy = (j - OY + .5) * T;
-      const inland = inP(cx, cy, geo.CONT) || isl.some(p => inP(cx, cy, p));
-      const lake = inP(cx, cy, geo.LAKE);
-      const river = geo.RIVERS.some(([w, pts]) => pts.some((p, k) => k && geo.distSeg(cx, cy, pts[k - 1][0], pts[k - 1][1], p[0], p[1]) < w * .55));
-      water[j].push(!inland || lake || (river && inland)); } }
+    const cand = comps.map((cells, k) => ({ k, cells, cx: cells.reduce((s, c) => s + c[0], 0) / cells.length, cy: cells.reduce((s, c) => s + c[1], 0) / cells.length }))
+      .filter(o => o.cells.length >= 8 && o.cells.length <= 160 && !P.some(p => Math.hypot(p.x / T - o.cx, p.y / T - o.cy) < 12) && o.cx > 3 && o.cy > 3 && o.cx < C - 4 && o.cy < R - 4)
+      .sort((a, b) => b.cells.length - a.cells.length);
+    for (const o of cand) { if (OUTER.length >= NAMES.length) break; if (OUTER.some(q => Math.hypot(q.cx - o.cx, q.cy - o.cy) < 18)) continue; OUTER.push(Object.assign(o, { n: NAMES[OUTER.length][0], kd: NAMES[OUTER.length][1] })); }
+    const isl = [];
     // the sea: water connected to the map border
     const sea = water.map(r => r.map(() => false)), q = [];
     for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) if ((i === 0 || j === 0 || i === C - 1 || j === R - 1) && water[j][i]) { sea[j][i] = true; q.push([i, j]); }
@@ -88,16 +95,15 @@ const ROOT = path.resolve(__dirname, '..');
     // outer islands: a beach ring, palms or pines, rocks, and one treasure spot on the shore
     const treasure = [];
     OUTER.forEach((o, n) => {
-      const ci = Math.round(o.c[0] / T) + OX, cj = Math.round(o.c[1] / T) + OY, shore = [];
-      for (let j = cj - 16; j <= cj + 16; j++) for (let i = ci - 20; i <= ci + 20; i++) {
-        if (i < 2 || j < 2 || i >= C - 2 || j >= R - 2 || water[j][i] || !inP((i - OX + .5) * T, (j - OY + .5) * T, o.pts)) continue;
+      const shore = [];
+      for (const [i, j] of o.cells) {
         const h = hash(i, j, 5), coast = near(i, j, (x, y) => water[y][x], 1);
-        grid[j][i] = coast ? 'y' : o.k === 'rock' ? (h < .5 ? 'C' : h < .8 ? 'n' : 'r') : o.k === 'sand' ? (h < .7 ? 'y' : h < .85 ? 'u' : 'f') : (h < .45 ? '#' : h < .6 ? 'n' : h < .66 ? 'f' : 'g');
-        if (coast && sea[j][i - 1] && grid[j][i + 1] !== 'w') shore.push([i, j]);
+        grid[j][i] = coast ? 'y' : o.kd === 'rock' ? (h < .5 ? 'C' : h < .8 ? 'n' : 'r') : o.kd === 'sand' ? (h < .7 ? 'y' : h < .85 ? 'u' : 'f') : (h < .45 ? '#' : h < .6 ? 'n' : h < .66 ? 'f' : 'g');
+        if (i > 1 && sea[j][i - 1]) shore.push([i, j]);
       }
       // treasure: a west-facing beach tile with sea on its left
-      shore.sort((a, b) => a[1] - b[1]); const t = shore[shore.length >> 1]; if (t) treasure.push({ n: o.n, x: t[0], y: t[1], id: n });
-      ci0.push([o.n, ci, cj]);
+      shore.sort((a, b) => a[1] - b[1]); const t = shore[shore.length >> 1]; if (t) { grid[t[1]][t[0]] = 'y'; treasure.push({ n: o.n, x: t[0], y: t[1], id: n }); }
+      ci0.push([o.n, Math.round(o.cx), Math.round(o.cy)]);
     });
     // harbour surroundings: sand and a clear gate block
     for (const g of gates) for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++) { const x = g.gx + a, y = g.gy + b; if (grid[y][x] === 'r') grid[y][x] = 'w'; if (Math.abs(a) <= 1 && Math.abs(b) <= 1) grid[y][x] = 'w'; }

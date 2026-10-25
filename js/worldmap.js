@@ -13,7 +13,7 @@ const RW = 1536, RH = 1024;
 //   arena: badge id; port: a point in the sea where ferries leave from.
 const SPEC = [
   ['lanternrest', 'town', 675, 407, 0, { tag: 'b' }],
-  ['homestead', 'special', 765, 500, 0, { tag: 'r' }],
+  ['homestead', 'special', 790, 355, 0, { tag: 'r' }],
   ['sunmeadow', 'route', 520, 420, 0, { tag: 't' }],
   ['sunhaven', 'city', 257, 351, 0, { tag: 'b', arena: 'bloom' }],
   ['evergreen', 'route', 423, 226, 1, { tag: 't' }],
@@ -21,7 +21,7 @@ const SPEC = [
   ['verdant', 'island', 255, 92, 3, { tag: 'b', port: [190, 150] }],
   ['mirewood', 'route', 400, 543, 0, { tag: 'b' }],
   ['shore', 'route', 690, 725, 0, { tag: 'b', port: [680, 800] }],
-  ['hollow', 'special', 612, 520, 0, { tag: 'b', lantern: true }],
+  ['hollow', 'special', 700, 365, 0, { tag: 'b', lantern: true }],
   ['stonebridge', 'town', 790, 605, 0, { tag: 'b', arena: 'keystone' }],
   ['whispering', 'route', 1080, 702, 1, { tag: 'b' }],
   ['tidefall', 'island', 553, 806, 3, { tag: 'b', port: [470, 905] }],
