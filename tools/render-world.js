@@ -1,4 +1,4 @@
-// Renders every outdoor map with the game's own tile art and lays them out by their edge exits: PX=4 node tools/render-world.js (writes /tmp/claude-0/wm/world-PX.jpg)
+// Renders every outdoor map with the game's own tile art, laid out by their edge exits; exits the flat layout cannot place are drawn as dashed lines: PX=4 node tools/render-world.js
 const { chromium } = require('/opt/node-tools/node_modules/playwright');
 const fs = require('fs');
 const PX = +(process.env.PX || 4);
@@ -53,6 +53,22 @@ const PX = +(process.env.PX || 4);
       bx.fillStyle = 'rgba(40,30,60,.75)'; bx.fillRect(cx - tw / 2, cy - fsz, tw, fsz * 1.35); bx.fillStyle = '#fff'; bx.textAlign = 'center'; bx.fillText(nm, cx, cy);
     }
     G.W = fw; G.H = fh;
+    // the true connections: where an exit does not land on the neighbour drawn beside it, a dashed line joins the exit to where it really arrives
+    const want = (A, ax, ay, w, B) => { const s2 = sideOf(A, w); return s2 === 'S' ? [ax + w.x - w.tx, ay + A.h] : s2 === 'N' ? [ax + w.x - w.tx, ay - B.h] : s2 === 'E' ? [ax + A.w, ay + w.y - w.ty] : [ax - B.w, ay + w.y - w.ty]; };
+    const P = (id, x, y) => [(pos[id][0] - minX + 2 + x) * PX, (pos[id][1] - minY + 2 + y) * PX];
+    const seen = new Set(); let nOff = 0, nOk = 0; const labels = [];
+    for (const a of placed) { const A = G.MAPS[a]; for (const w of A.warps) { const bId = w.to; if (!placed.includes(bId) || !sideOf(A, w)) continue; const key = [a, bId].sort().join('|'); if (seen.has(key)) continue; seen.add(key);
+      const [x, y] = want(A, pos[a][0], pos[a][1], w, G.MAPS[bId]); if (x === pos[bId][0] && y === pos[bId][1]) { nOk++; continue; } nOff++;
+      const [x1, y1] = P(a, w.x + .5, w.y + .5), [x2, y2] = P(bId, w.tx + .5, w.ty + .5), mx = (x1 + x2) / 2, my = (y1 + y2) / 2 - Math.hypot(x2 - x1, y2 - y1) * .18;
+      bx.save(); bx.lineWidth = Math.max(3, PX * .9); bx.strokeStyle = 'rgba(30,20,40,.55)'; bx.setLineDash([]); bx.beginPath(); bx.moveTo(x1, y1); bx.quadraticCurveTo(mx, my, x2, y2); bx.stroke();
+      bx.lineWidth = Math.max(2, PX * .55); bx.strokeStyle = '#ffd24a'; bx.setLineDash([PX * 3, PX * 2]); bx.beginPath(); bx.moveTo(x1, y1); bx.quadraticCurveTo(mx, my, x2, y2); bx.stroke(); bx.restore();
+      for (const [cx, cy] of [[x1, y1], [x2, y2]]) { bx.fillStyle = '#ffd24a'; bx.strokeStyle = '#3a2a48'; bx.lineWidth = 2; bx.beginPath(); bx.arc(cx, cy, Math.max(5, PX * 1.6), 0, 7); bx.fill(); bx.stroke(); }
+      const nm = id => (G.WORLD.byId[id] ? G.WORLD.byId[id].name : G.MAPS[id].name).toUpperCase(), word = { N: 'NORTH', S: 'SOUTH', E: 'EAST', W: 'WEST' }[sideOf(A, w)];
+      labels.push([mx, my, `${nm(a)} ${word} EXIT → ${nm(bId)}`]);
+    } }
+    for (const [lx, ly, t] of labels) { const fz = Math.max(10, PX * 2.6); bx.font = `900 ${fz}px sans-serif`; const tw = bx.measureText(t).width + 10; bx.fillStyle = 'rgba(255,210,74,.95)'; bx.fillRect(lx - tw / 2, ly - fz * .8, tw, fz * 1.3); bx.fillStyle = '#3a2a48'; bx.textAlign = 'center'; bx.fillText(t, lx, ly + fz * .25); }
+    // key
+    { const fz = Math.max(12, PX * 3.2); bx.font = `900 ${fz}px sans-serif`; bx.textAlign = 'left'; const lines = [`${nOk} exits join the neighbour drawn beside them.`, `${nOff} exits (dashed yellow) lead somewhere the flat picture cannot put next to them: follow the line.`]; const tw = Math.max(...lines.map(l => bx.measureText(l).width)) + 20; bx.fillStyle = 'rgba(255,250,240,.95)'; bx.fillRect(PX * 2, PX * 2, tw, fz * 3.2); bx.fillStyle = '#3a2a48'; lines.forEach((l, i) => bx.fillText(l, PX * 2 + 10, PX * 2 + fz * 1.2 + i * fz * 1.4)); }
     bx.font = `900 ${PX * 4}px sans-serif`; bx.fillStyle = '#fff'; bx.textAlign = 'left'; bx.fillText('BY SEA (Verdant, Moonlit, Aurora) AND THE STARLIT HOLLOW (through the gate in Lanternrest)', (minX - minX + 2) * PX, (ey - minY + 1) * PX);
     return { url: big.toDataURL('image/jpeg', .88), W, H, placed: placed.length, extra };
   }, PX);
