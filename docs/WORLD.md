@@ -271,6 +271,14 @@ the other end, which `js/access.js` uses as the "from" place). A visited place s
 To add a road: write a `between('a', 'b', { ... })` call in `js/maps/zz_roads.js` for two places that have exactly two edge warps to each other, and add the road to the `REGION` table in
 `js/story.js` and to the lists in `tests/e2e-roads.js` and `tests/maps.test.js`.
 
+## 7d. Directions to the story goal
+
+`js/directions.js` (`G.routeHint(place)`, `G.leadHint()`, test `tests/e2e-directions.js`) says which way to go for the current story step.
+It searches the world graph (land routes and ferries) from where you stand and reads the exit from the real warps of the current map,
+so "take the south exit along Stonebridge Road" always matches the edge you walk off. It handles roads (counting from the nearer end),
+interiors ("Leave the building, then..."), ferries, already being there, and a locked next place ("(locked: finish chapter 1)").
+Shown in three places: a WAY line under the quest tracker, a WAY line under CURRENT LEAD in the journal, and a NEXT box on the map screen.
+
 ## 8. Tests
 
 - Every owner keeps `node tests/maps.test.js` and `node tests/logic.test.js` passing for their maps.

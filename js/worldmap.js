@@ -787,6 +787,10 @@ G.worldMapScreen = async function () {
       G.tapZone(bx, py0 + 4, 52, 11, toggle);
       G.kit.pill(ctx, bx, py0 + 17, 52, 9, '#9a8ea8', G.touch ? 'TAP: CLOSE' : 'B: CLOSE');
       G.tapZone(bx, py0 + 16, 52, 11, () => { close = true; });
+      { const Hn = G.leadHint && G.leadHint(); if (Hn && Hn.text) {   // the way to the story goal (js/directions.js), on the side away from the info panel
+        ctx.font = G.FONT_S; const lines = G.wrap('NEXT: ' + Hn.text, Math.min(W - 24, 200)).slice(0, 2), tw = Math.max(...lines.map(l => ctx.measureText(l).width)) + 12, bh = 3 + lines.length * 7.5, ny = top ? H - bh - 3 : 3;
+        G.kit.rr(ctx, (W - tw) / 2, ny, tw, bh, 5); ctx.fillStyle = 'rgba(20,40,60,.85)'; ctx.fill();
+        lines.forEach((l, i) => G.text(ctx, l, W / 2, ny + 2 + i * 7.5, { font: G.FONT_S, color: '#ffe9a8', shadow: false, align: 'center' })); } }
       if (zoom && G.touch) G.text(ctx, 'DRAG TO LOOK AROUND', W / 2, top ? py0 + ph + 3 : py0 - 11, { font: G.FONT_S, color: '#fff', shadow: '#000', align: 'center' });
     },
   };

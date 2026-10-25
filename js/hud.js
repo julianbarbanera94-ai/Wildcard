@@ -34,12 +34,18 @@ function tracker(ctx, S, x, y, maxW) {
   const lead = G.quest && G.quest.lead && G.quest.lead(); if (!lead || !lead.step) return;
   let txt = lead.step.text || lead.q.title, c = lead.step.count; if (typeof c === 'function') { try { c = c(S); } catch (e) { c = null; } }
   if (Array.isArray(c) && c[1] > 1) txt += ` (${c[0]}/${c[1]})`;
-  const at = lead.step.at && lead.step.at !== G.world.mapId && G.worldShort ? '  > ' + G.worldShort(lead.step.at) : '';
+  const hint = lead.step.at && G.routeHint ? G.routeHint(lead.step.at) : null;   // which way to go (js/directions.js)
+  const at = hint ? '' : lead.step.at && lead.step.at !== G.world.mapId && G.worldShort ? '  > ' + G.worldShort(lead.step.at) : '';
   ctx.font = F; const body = fit(ctx, txt + at, maxW - 14), w = Math.ceil(ctx.measureText(body).width) + 14;
   pillBg(ctx, x, y, w, 11);
   ctx.fillStyle = '#f7a33f'; ctx.beginPath(); ctx.moveTo(x + 3.5, y + 2.8); ctx.lineTo(x + 6.7, y + 5.5); ctx.lineTo(x + 3.5, y + 8.2); ctx.closePath(); ctx.fill();
   G.text(ctx, body, x + 9, y + 2.4, { font: F, color: '#fff', shadow: false });
   G.tapZone(x, y, w, 11, open(() => G.journalScreen()));
+  if (hint && hint.short) {   // the way to go, on its own line so it is never cut off
+    ctx.font = F; const hb = fit(ctx, 'WAY: ' + hint.short, maxW - 14), hw = Math.ceil(ctx.measureText(hb).width) + 10;
+    pillBg(ctx, x, y + 12.5, hw, 10); G.text(ctx, hb, x + 5, y + 14.5, { font: F, color: '#ffe9a8', shadow: false });
+    G.tapZone(x, y + 12, hw, 11, open(() => G.journalScreen()));
+  }
 }
 // ---- Mini-map -------------------------------------------------------------------------------------------------------------
 const cache = { id: null, rev: null, c: null };

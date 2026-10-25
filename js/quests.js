@@ -148,10 +148,10 @@ G.journalScreen = async function () {
       return;
     }
     const list = listOf(tabs[tab][0]);
-    if (tab === 0) { const L = quest.lead(); G.text(ctx, L ? 'CURRENT LEAD: ' + L.step.text : 'No story lead right now. Explore!', 10, 30, { font: G.FONT_S, color: '#c06a10', shadow: false }); }
+    if (tab === 0) { const L = quest.lead(); G.text(ctx, L ? 'CURRENT LEAD: ' + L.step.text : 'No story lead right now. Explore!', 10, 30, { font: G.FONT_S, color: '#c06a10', shadow: false }); const H = L && G.leadHint && G.leadHint(); if (H && H.text) G.text(ctx, 'WAY: ' + H.text, 10, 37.5, { font: G.FONT_S, color: '#2a7a8a', shadow: false }); }
     if (!list.length) { G.text(ctx, 'Nothing here yet. Explore, talk to people and help out.', 10, 44, sm); return; }
     row = Math.min(row, list.length - 1);
-    const top = tab === 0 ? 40 : 32, lw = 92;
+    const top = tab === 0 ? 47 : 32, lw = 92;
     list.slice(0, 10).forEach((q, i) => { const s = S.quests[q.id], y = top + i * 11.5, on = i === row;
       if (on) { G.kit.rr(ctx, 6, y - 1.5, lw, 10.5, 4); ctx.fillStyle = 'rgba(247,132,63,.18)'; ctx.fill(); }
       G.text(ctx, (s.st === 'done' ? '✓ ' : s.st === 'failed' ? '✗ ' : '• ') + q.title, 9, y, { font: G.FONT_S, color: s.st === 'done' ? '#8aa86a' : s.st === 'failed' ? '#b06060' : '#4a3a56', shadow: false });
