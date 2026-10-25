@@ -164,7 +164,7 @@ const OUT = process.env.OUT || '/tmp';
     G.setPref('access.colourFriendly', true); r.hp = G.hpColor(.9); G.setPref('access.colourFriendly', false);
     G.setPref('access.noVibration', true); let buzz = 0; const v = navigator.vibrate; navigator.vibrate = () => { buzz++; }; G.haptic(); G.setPref('access.noVibration', false); G.haptic(); navigator.vibrate = v; r.buzz = buzz;
     return r; });
-  assert.deepEqual(acc, { shake: false, motion: [false, false], fade: '#2a2040', px: 9.5, hp: '#3a8ad8', buzz: 1 });
+  assert.deepEqual(acc, { shake: false, motion: [false, false], fade: '#2a2040', px: await ev(() => G.H > 200 ? 10.5 : 9.5), hp: '#3a8ad8', buzz: 1 });
   const frames = await ev(async () => { const out = {}; for (const sp of ['normal', 'instant']) { G.setPref('battle.textSpeed', sp); const f0 = G.frameNo; const p = G.say('The quick brown fox jumps over the lazy creature.', { auto: 1 }); await p; out[sp] = G.frameNo - f0; G.closeText(); } G.setPref('battle.textSpeed', 'normal'); return out; });
   assert(frames.instant < 6 && frames.normal > 30, 'instant text: ' + JSON.stringify(frames));
   const fast = await ev(async () => { const sc = G.scene, fake = { battle: true, update() {}, draw() {} }; G.scene = fake; const n = async () => { const f0 = G.frameNo; await new Promise(r => setTimeout(r, 500)); return G.frameNo - f0; };
