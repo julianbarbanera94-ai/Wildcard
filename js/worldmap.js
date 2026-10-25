@@ -12,34 +12,34 @@ const RW = 1536, RH = 1024;
 //   tag: where the name tag sits ('b' below, 't' above, 'r' right); lantern: needs the Lantern relit;
 //   arena: badge id; port: a point in the sea where ferries leave from.
 const SPEC = [
-  ['lanternrest', 'town', 640, 500, 0, { tag: 'b' }],
-  ['homestead', 'special', 722, 452, 0, { tag: 'r' }],
-  ['sunmeadow', 'route', 520, 428, 0, { tag: 't' }],
-  ['sunhaven', 'city', 312, 398, 0, { tag: 'b', arena: 'bloom' }],
-  ['evergreen', 'route', 385, 262, 1, { tag: 't' }],
-  ['driftwood', 'town', 98, 498, 2, { tag: 'r', arena: 'gale', port: [150, 560] }],
-  ['verdant', 'island', 300, 108, 3, { tag: 'b', port: [250, 190] }],
-  ['mirewood', 'route', 400, 592, 0, { tag: 'b' }],
-  ['shore', 'route', 592, 772, 0, { tag: 'b', port: [650, 850] }],
-  ['hollow', 'special', 612, 612, 0, { tag: 'b', lantern: true }],
-  ['stonebridge', 'town', 792, 640, 0, { tag: 'b', arena: 'keystone' }],
-  ['whispering', 'route', 1042, 722, 1, { tag: 'b' }],
-  ['tidefall', 'island', 240, 800, 3, { tag: 'b', port: [330, 770] }],
-  ['moonlit', 'island', 1000, 900, 8, { tag: 'b', port: [920, 900] }],
-  ['lakeside', 'town', 690, 352, 0, { tag: 'b', arena: 'tide' }],
-  ['ridge', 'route', 560, 300, 0, { tag: 't' }],
-  ['cloudpeak', 'route', 655, 172, 3, { tag: 'b' }],
-  ['glacier', 'route', 1030, 205, 5, { tag: 'b' }],
-  ['frostmere', 'city', 1078, 130, 5, { tag: 'b', arena: 'rime', port: [1170, 38] }],
-  ['aurora', 'island', 1405, 95, 7, { tag: 'b', port: [1330, 70] }],
-  ['sandsreach', 'route', 1010, 520, 2, { tag: 'b', arena: 'dune' }],
-  ['badlands', 'route', 1330, 440, 4, { tag: 'b' }],
-  ['emberfall', 'route', 1290, 262, 6, { tag: 'b', arena: 'magma' }],
-  ['cobalt', 'city', 1250, 606, 4, { tag: 'b', arena: 'circuit', port: [1345, 720] }],
+  ['lanternrest', 'town', 675, 407, 0, { tag: 'b' }],
+  ['homestead', 'special', 765, 500, 0, { tag: 'r' }],
+  ['sunmeadow', 'route', 520, 420, 0, { tag: 't' }],
+  ['sunhaven', 'city', 257, 351, 0, { tag: 'b', arena: 'bloom' }],
+  ['evergreen', 'route', 423, 226, 1, { tag: 't' }],
+  ['driftwood', 'town', 203, 719, 2, { tag: 'r', arena: 'gale', port: [120, 820] }],
+  ['verdant', 'island', 255, 92, 3, { tag: 'b', port: [190, 150] }],
+  ['mirewood', 'route', 400, 543, 0, { tag: 'b' }],
+  ['shore', 'route', 690, 725, 0, { tag: 'b', port: [680, 800] }],
+  ['hollow', 'special', 612, 520, 0, { tag: 'b', lantern: true }],
+  ['stonebridge', 'town', 790, 605, 0, { tag: 'b', arena: 'keystone' }],
+  ['whispering', 'route', 1080, 702, 1, { tag: 'b' }],
+  ['tidefall', 'island', 553, 806, 3, { tag: 'b', port: [470, 905] }],
+  ['moonlit', 'island', 1128, 887, 8, { tag: 'b', port: [980, 950] }],
+  ['lakeside', 'town', 742, 296, 0, { tag: 'b', arena: 'tide' }],
+  ['ridge', 'route', 600, 250, 0, { tag: 't' }],
+  ['cloudpeak', 'route', 650, 111, 3, { tag: 'b' }],
+  ['glacier', 'route', 998, 126, 5, { tag: 'b' }],
+  ['frostmere', 'city', 1280, 102, 5, { tag: 'b', arena: 'rime', port: [1420, 150] }],
+  ['aurora', 'island', 1450, 45, 7, { tag: 'b', port: [1470, 95] }],
+  ['sandsreach', 'route', 1058, 445, 2, { tag: 'b', arena: 'dune' }],
+  ['badlands', 'route', 1367, 444, 4, { tag: 'b' }],
+  ['emberfall', 'route', 1318, 246, 6, { tag: 'b', arena: 'magma' }],
+  ['cobalt', 'city', 1313, 599, 4, { tag: 'b', arena: 'circuit', port: [1440, 690] }],
 ];
-const CAVES = { ridge: [586, 282], evergreen: [392, 318], cloudpeak: [545, 150], glacier: [905, 165], emberfall: [1163, 232], badlands: [1358, 347], sandsreach: [1085, 382], mirewood: [380, 555], stonebridge: [640, 662], whispering: [1035, 705] };
+const CAVES = { ridge: [570, 236], evergreen: [393, 212], cloudpeak: [620, 97], glacier: [968, 112], emberfall: [1288, 232], badlands: [1337, 430], sandsreach: [1028, 431], mirewood: [370, 529], stonebridge: [760, 591], whispering: [1050, 688] };
 // Where a ferry boat goes between two ports (sea waypoints), keyed 'a>b'.
-const SEA_VIA = { 'shore>moonlit': [[760, 880]], 'cobalt>moonlit': [[1240, 800], [1100, 880]], 'driftwood>verdant': [[60, 380], [100, 230]], 'driftwood>tidefall': [[130, 640], [180, 750]], 'frostmere>aurora': [[1250, 30]] };
+const SEA_VIA = { 'shore>moonlit': [[820, 900]], 'cobalt>moonlit': [[1380, 800], [1180, 960]], 'driftwood>verdant': [[40, 600], [60, 300], [110, 180]], 'driftwood>tidefall': [[300, 900]], 'frostmere>aurora': [[1480, 130]] };
 const KIND_WORD = { city: 'City', town: 'Town', route: 'Wild area', island: 'Island', special: 'Special place' };
 const BLURB = {
   lanternrest: 'The hub village around the Great Lantern.',
@@ -580,13 +580,17 @@ function settlements(c, R) {
   c.strokeStyle = '#6a5a4a'; c.lineWidth = 2; c.beginPath(); c.moveTo(640, 20); c.lineTo(640, 4); c.stroke(); poly(c, [[640, 4], [654, 9], [640, 14]], '#e8504a');
 }
 
-let baseCache = null;
+// The base: the supplied painting (js/worldart.js) once it has loaded, else the code-drawn map below.
+let baseCache = null, artImg = null;
+if (G.worldArt) { artImg = new Image(); artImg.onload = () => { baseCache = null; SEA = null; }; artImg.src = G.worldArt; }
 function baseMap() {
   if (baseCache) return baseCache;
   const [cn, cx] = G.cv(RW, RH);
-  paintBase(cx);
+  if (artImg && artImg.complete && artImg.naturalWidth) cx.drawImage(artImg, 0, 0, RW, RH); else paintBase(cx);
   return baseCache = cn;
 }
+// places whose names are painted on the art (the game adds a tag only when one is selected or you are there)
+const PAINTED = new Set(['verdant', 'cloudpeak', 'glacier', 'frostmere', 'evergreen', 'sunhaven', 'lakeside', 'lanternrest', 'emberfall', 'sandsreach', 'badlands', 'mirewood', 'stonebridge', 'cobalt', 'whispering', 'driftwood', 'tidefall', 'moonlit']);
 G.worldBase = baseMap;
 
 // ---- Dynamic overlays: fog, locks, pins, tags, service icons ----------------------------------------------------------------
@@ -680,7 +684,7 @@ G.drawWorldMap = function (ctx, x, y, w, h, o) {
     const qm = o.markers && o.markers[p.id];   // journal markers: gold for the story lead, blue for other quests
     if (qm) { const mx = px - r * 1.1, my = py - r * 1.2 + Math.sin(t / 9 + p.x) * .8, mr = 2.6 * zs; circ2(ctx, mx, my, mr + .6, '#ffffff'); circ2(ctx, mx, my, mr, qm === 'main' ? '#f7a33f' : '#3a9ae8'); ctx.fillStyle = '#fff'; ctx.fillRect(mx - mr * .14, my - mr * .6, mr * .28, mr * .75); ctx.fillRect(mx - mr * .14, my + mr * .3, mr * .28, mr * .28); }
     const known = !st.fog;
-    if (showNames !== 'none' && (st.sel || st.here || (known && (showNames === 'all' || (showNames === 'known' && st.visited))))) drawTag(ctx, p, px, py, r, st, t);
+    if (showNames !== 'none' && (st.sel || st.here || (known && !(artImg && artImg.naturalWidth && PAINTED.has(p.id)) && (showNames === 'all' || (showNames === 'known' && st.visited))))) drawTag(ctx, p, px, py, r, st, t);
     if (showIcons !== 'none' && known && (showIcons === 'all' || st.sel || st.here)) {
       const sv = G.worldServices(p.id), icons = [];
       if (sv.heal) icons.push(c => iconCross(c, 0, 0, 2.6)); if (sv.shop) icons.push(c => iconCoin(c, 0, 0, 2.6));
