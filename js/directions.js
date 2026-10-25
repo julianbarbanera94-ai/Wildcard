@@ -25,6 +25,18 @@ function path(from, to) {
 // { here, target, next, how: 'here'|'land'|'ferry'|'none', side, road, inside, locked, text, short }
 G.routeHint = function (target) {
   const W = G.world; if (!target || !W || !W.map || !G.WORLD) return null;
+  const tm = G.MAPS[target];
+  if (tm && !G.WORLD.byId[target]) {   // a goal that is not a place: a road, or a cave or building inside one
+    const tn = title(tm.name);
+    if (W.mapId === target) return { here: target, target, next: target, how: 'here', text: `You are in ${tn}.`, short: '' };
+    const ends = tm.road ? [...new Set(tm.warps.map(w => w.to).filter(id => G.WORLD.byId[id]))] : [G.WORLD.parent[target]].filter(Boolean);
+    let best = null; for (const e of ends) { const h = G.routeHint(e), n = h ? (h.how === 'here' ? 0 : (path(h.here, e) || []).length || 99) : 99; if (h && (!best || n < best.n)) best = { e, h, n }; }
+    if (!best) return null;
+    if (best.h.how !== 'here') return Object.assign({}, best.h, { target, text: best.h.text.replace(/\.( \(.*\))?$/, (m, l) => `, then ${tm.road ? 'onto' : 'into'} ${tn}.${l || ''}`) });
+    const pm = W.map; let side = null; for (const w of pm.warps) if (w.to === target) { side = sideOf(pm, w); break; }
+    return tm.road ? { here: best.e, target, next: target, how: 'land', side, text: side ? `Take the ${WORD[side]} exit onto ${tn}.` : `Head onto ${tn}.`, short: side ? `${WORD[side].toUpperCase()} ONTO ${tn.toUpperCase()}` : tn.toUpperCase() }
+      : { here: best.e, target, next: target, how: 'land', text: `Find the way into ${tn}, here in ${name(best.e)}.`, short: `FIND ${tn.toUpperCase()}` };
+  }
   const map = W.map, onRoad = !!map.road, inside = !map.outdoor;
   let here = onRoad ? null : G.worldPlaceOf(W.mapId) || W.mapId;
   if (onRoad) {   // on a road: count from whichever end is nearer the goal

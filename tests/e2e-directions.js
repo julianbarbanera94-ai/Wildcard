@@ -26,10 +26,10 @@ const OUT = process.env.OUT || '/tmp';
     const bad = [], seen = new Set(); G.loadMap('lanternrest'); G.placePlayer(30, 26, 0);
     for (const q of Object.values(G.QUESTS).filter(q => q.cat === 'main')) for (const s of q.steps) {
       const at = typeof s.at === 'function' ? s.at(G.state) : s.at; if (!at) { bad.push(q.id + ': a step with no place: ' + s.text); continue; }
-      if (!G.WORLD.byId[at]) { bad.push(q.id + ': unknown place ' + at); continue; } if (seen.has(at)) continue; seen.add(at);
+      if (!G.WORLD.byId[at] && !G.MAPS[at]) { bad.push(q.id + ': unknown place ' + at); continue; } if (seen.has(at)) continue; seen.add(at);
       const h = G.routeHint(at); if (!h || !h.text) { bad.push('no hint for ' + at); continue; }
       if (h.how === 'none') { bad.push('no route from Lanternrest to ' + at); continue; }
-      if (h.how === 'land') { const m = G.MAPS.lanternrest, side = h.side, ok = m.warps.some(w => { const s2 = w.y === 0 ? 'N' : w.y === m.h - 1 ? 'S' : w.x === 0 ? 'W' : w.x === m.w - 1 ? 'E' : null; const t = G.MAPS[w.to]; const far = t && t.road ? t.warps.find(x => x.to !== 'lanternrest').to : w.to; return s2 === side && far === h.next; }); if (!ok) bad.push(`${at}: the ${side} exit of Lanternrest does not lead to ${h.next}`); }
+      if (h.how === 'land' && G.WORLD.byId[at]) { const m = G.MAPS.lanternrest, side = h.side, ok = m.warps.some(w => { const s2 = w.y === 0 ? 'N' : w.y === m.h - 1 ? 'S' : w.x === 0 ? 'W' : w.x === m.w - 1 ? 'E' : null; const t = G.MAPS[w.to]; const far = t && t.road ? t.warps.find(x => x.to !== 'lanternrest').to : w.to; return s2 === side && far === h.next; }); if (!ok) bad.push(`${at}: the ${side} exit of Lanternrest does not lead to ${h.next}`); }
     }
     return { bad, n: seen.size };
   });

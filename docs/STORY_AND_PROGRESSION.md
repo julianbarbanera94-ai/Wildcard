@@ -1,6 +1,6 @@
 # WILDCARD: Story, Quests and Progression Guide
 
-Build 3.33.x. This guide is checked against the game by `tests/e2e-guide.js` (see the appendix). Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
+Build 3.34.x. This guide is checked against the game by `tests/e2e-guide.js` (see the appendix). Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
 arena and map data), not from the old design drafts. Where the game differs from `docs/STORY_DESIGN.md`, this document is right.
 
 Contents
@@ -393,8 +393,9 @@ The world map shows a "tough" warning when a place is well above your team.
 | 8 | Vesper, stage 1 / 2 / 3 | each creature is your top level minus 4 (at least 30) plus 3 to 8. Stage 1: Gloomoth, Masquiff, Venomite. Stage 2: Grottowing, Prismantle, Snowhoot. Stage 3: Infernox, Anvilord, Glacimaul, Oraclowl |
 | F | the Wildcard (Strength) | your top level + 2 (at least 40) |
 
-**Length** (the number of written steps per chapter): 5, 5, 5, 6, 4, 5, 4, 3. The step count is flat or falling, but the later chapters
-contain more fights per step (Chapter 5 is two towns, Chapter 8 is three Vesper stages) and cover larger distances. See section 9.
+**Length** (the number of written steps per chapter): 5, 5, 5, 6, 6, 7, 6, 4. The middle and later chapters are the longest, and they
+also contain more fights per step (Chapter 5 is two towns, Chapter 8 is three Vesper stages) and cover larger distances. The new steps
+in Chapters 5 to 8 are in `js/chapters_more.js` (tested by `tests/e2e-chapters.js`).
 
 ---
 
@@ -511,9 +512,12 @@ Route: Lanternrest, east exit, **Sandsreach**; **Cobalt** is east of Sandsreach 
    Beat the guard, then use the machine and choose SHUT IT DOWN. The first town you help gives +20 reputation and the leader says "You came
    to us first"; the second gives +10 ("You got here in the end").
 2. **Help the other town too.** When both are off, a message says both pipes run east to the Badlands.
-3. **Follow the pipes into the Crimson Badlands** and find the great **iron valve** (46,20). A torn page in its wheel reads that "the calm
+3. **Stop the Ashen courier on Cobalt Flats** (the wild road out of Cobalt's north gate). **Skarl**, Ashen Courier, Lv 27-29, appears once
+   a siphon is shut. He is carrying orders to the Badlands.
+4. **Read the map he dropped** (beside where he stood): red lines from both towns to one valve in the Badlands, "then north, to the volcano".
+5. **Follow the pipes into the Crimson Badlands** and find the great **iron valve** (46,20). A torn page in its wheel reads that "the calm
    of a hundred towns" is gathered under Emberfall so the Wildcard can be bound to the Lantern forever. (This is the plot reveal.)
-4. **Win Osha's Dune Badge** (Sandsreach Arena) **and Rayne's Circuit Badge** (Cobalt Arena).
+6. **Win Osha's Dune Badge** (Sandsreach Arena) **and Rayne's Circuit Badge** (Cobalt Arena).
 
 *Reward:* $6,000, +20 EAST, **a Skyrant (Lv 30) that can carry you** (flight). **Opens:** Glacier Pass and Frostmere (5 badges).
 The siphon you helped first is remembered in the epilogue.
@@ -527,9 +531,12 @@ Route: from Lakeside go east to **Glacier Pass**; **Frostmere** is east of the P
 1. **Cross Glacier Pass.**
 2. **Find Tam** at (30,23). Tam went back to Vesper after Verdant and saw the machine: creatures in cages, too quiet to cry. Tam is done
    with Vesper and asks to come with you.
-3. **Win Isolde's Rime Badge** at the Frostmere Arena. That is your 7th badge.
-4. **Sail to the Aurora Isles** on the Frostmere ferry (or your own boat). Aurora needs 7 badges and Chapter 5 done.
-5. **Earn the Glacitan's trust** (22,19) with Tam beside you (the Glacitan only shows itself if you found Tam first; Tam waits at 24,16).
+3. **Hear out the stranger on Frostmere Approach** (the wild road between Glacier Pass and Frostmere). **Brann**, an Ashen deserter, says
+   Vesper's boat stopped here with the Mine shard and left a supply cache by the pines near the Frostmere end.
+4. **Find the cache**: ferry tickets, a sea chart of the Aurora Isles and 3 Super Potions. Without the chart the Ashen boat is slow.
+5. **Win Isolde's Rime Badge** at the Frostmere Arena. That is your 7th badge.
+6. **Sail to the Aurora Isles** on the Frostmere ferry (or your own boat). Aurora needs 7 badges and Chapter 5 done.
+7. **Earn the Glacitan's trust** (22,19) with Tam beside you (the Glacitan only shows itself if you found Tam first; Tam waits at 24,16).
    It cracks its shell open and gives you the **Mine Ember Shard** (+10 NORTH). Tam: "All three. You did it."
 
 *Reward:* $7,000, +20 NORTH, the Mine shard. **Opens:** Emberfall Volcano (6 badges).
@@ -542,9 +549,12 @@ All three shards are in your bag now. You do not have to place them yet.
 Route: Glacier Pass, south exit, or Badlands, north exit, to **Emberfall Volcano**.
 
 1. **Travel to Emberfall.**
-2. **Talk to Pyrra** (26,17). She has opened the old lava tunnel for you: Vesper's **elite guard** waits at the machine.
-3. **Beat Cindra** (32,19), Lv 42-44.
-4. **Shut the machine down** (29,16): you throw the great lever and the calm of every town flows home. Vesper shouts "Enough!" from the
+2. **Free the caged creatures in the Emberfall cave** (through the cave entrance in Emberfall): an Ashen cage full of frightened creatures;
+   earn the young Embrit's trust (the trust mini-game) and they run free (+10 EAST).
+3. **Beat the Ashen scout** watching the mountain, **Emberly**, Lv 41-42, near (26,22). She appears once the cage is open.
+4. **Talk to Pyrra** (26,17). She has opened the old lava tunnel for you: Vesper's **elite guard** waits at the machine.
+5. **Beat Cindra** (32,19), Lv 42-44.
+6. **Shut the machine down** (29,16): you throw the great lever and the calm of every town flows home. Vesper shouts "Enough!" from the
    ridge and swears to bind the Wildcard at Cloudpeak, then vanishes.
 
 *Reward:* $8,000, +20 EAST. **Opens:** Cloudpeak Mountains (chapter 7 done; 3 badges).
@@ -557,10 +567,11 @@ The Magma Badge is won separately at Pyrra's Arena (optional for the story, need
 Route: the Ridge north exit, or Evergreen east, or Glacier west, to **Cloudpeak**.
 
 1. **Climb to the castle** (the door opens into the castle hall; Vesper stands on the terrace, around 32,9).
-2. **Defeat Vesper** in three stages in a row. Each stage has a speech and a new team; levels are your top level minus 4 (at least 30) plus
+2. **Gather Tam, Pyrra and Kade** at the foot of Cloudpeak (near where you arrive). Talk to all three; they climb with you.
+3. **Defeat Vesper** in three stages in a row. Each stage has a speech and a new team; levels are your top level minus 4 (at least 30) plus
    3 to 8. If you lose a stage, you keep the stages already won (`ch8_stage`), you are healed, and Vesper tells you to come back. Stage
    3 uses Vesper's last partner.
-3. Vesper kneels and says maybe the Wildcard left because we stopped trusting it, and will go and open the cages. Tam: "Let's go home."
+   Vesper kneels and says maybe the Wildcard left because we stopped trusting it, and will go and open the cages. Tam: "Let's go home."
 4. **Return to Lanternrest and place the three shards** on the pedestals in the tower (door at 29,21). When the third shard is down the
    Lantern blazes, every creature howls with joy, and the **Hollow Gate** opens far to the southeast.
 
@@ -690,8 +701,8 @@ Things to know, or to decide:
 1. **Map size and the spaces between cities.** Done for the four direct town-to-town links (the wild roads in 3.3). Still open: roads
    on the links that already reach a wild region, story beats on the new roads and on the seven outer islands (today they hold a treasure cache each), and
    a longer path from Driftwood to Lakeside, which still crosses only three maps.
-2. **Chapter length.** The step count is 5, 5, 5, 6, 4, 5, 4, 3, so chapters do not get longer. Difficulty does rise steadily. Adding two
-   or three objectives to chapters 5 to 8 would make "harder and longer" true.
+2. **Chapter length.** Done: the step count is now 5, 5, 5, 6, 6, 7, 6, 4 (Chapters 5 to 8 gained steps on the new roads, in the
+   Emberfall cave and at the foot of Cloudpeak). Chapter 8 is still short on steps but is the longest fight (three Vesper stages).
 3. **Badge order versus story order.** The arena list is Keystone, Bloom, Tide, Gale ... but the story earns Gale (Chapter 3) before
    Tide (Chapter 4). The scaling makes this harmless.
 4. **Kade and the Mine** are not part of any chapter: Kade gives Mythic Orbs and his shard line, but you never have to go there.

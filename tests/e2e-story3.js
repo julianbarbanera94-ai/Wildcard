@@ -57,6 +57,7 @@ const OUT = process.env.OUT || '/tmp';
   assert(await ev(() => G.state.flags.ch5_cb && G.state.flags.ch5_first === 'cb')); assert.equal((await ev(() => G.rep.get('east'))) - e0, 20, 'the town you help first: +20');
   await at('sandsreach', 36, 24, RIGHT); await talk(); await at('sandsreach', 31, 25, UP); const e1 = await ev(() => G.rep.get('east')); await talk(['SHUT IT DOWN']);
   assert.equal((await ev(() => G.rep.get('east'))) - e1, 10, 'the second town: +10'); assert.match(await ev(() => window.__said.join(' ')), /We held on, but only just/);
+  await ev(() => { Object.assign(G.state.flags, { ashen_flats: true, ch5_pipemap: true }); });   // the new steps of js/chapters_more.js (played in tests/e2e-chapters.js)
   await at('badlands', 46, 21, UP); await talk(); assert(await ev(() => G.state.flags.ch5_machine)); assert.match(await ev(() => window.__said.join(' ')), /bound to the Lantern forever/);
   await ev(() => { G.state.flags.badge_dune = G.state.flags.badge_circuit = true; }); await page.waitForTimeout(900);
   assert(await ev(() => G.quest.done('ch5') && G.state.party.concat(G.state.box).some(c => c.id === 17)), 'Chapter 5 done; a Skyrant');
@@ -64,6 +65,7 @@ const OUT = process.env.OUT || '/tmp';
 
   // ---- Chapter 6 ----
   await ev(() => { G.state.visited.glacier = true; }); await at('glacier', 29, 23, RIGHT); await talk(); assert(await ev(() => G.state.flags.ch6_tam));
+  await ev(() => { Object.assign(G.state.flags, { ch6_brann: true, ch6_cache: true }); });   // the new steps of js/chapters_more.js (played in tests/e2e-chapters.js)
   assert.match(await ev(() => window.__said.join(' ')), /done with Vesper/);
   await ev(() => { G.state.flags.badge_rime = true; G.state.visited.aurora = true; });
   assert(await ev(() => G.access.open('aurora')), 'the Aurora Isles open with 7 badges, before the Lantern');
@@ -72,6 +74,7 @@ const OUT = process.env.OUT || '/tmp';
   step("Chapter 6: Tam turns on Vesper on Glacier Pass; with Tam beside you, the Glacitan on the Aurora Isles gives you the Mine shard");
 
   // ---- Chapter 7 ----
+  await ev(() => { Object.assign(G.state.flags, { ch7_cage: true, ashen_scout: true }); });   // the new steps of js/chapters_more.js (played in tests/e2e-chapters.js)
   await ev(() => { G.state.visited.emberfall = true; }); await at('emberfall', 27, 17, LEFT); await talk(); assert(await ev(() => G.state.flags.ch7_pyrra));
   await at('emberfall', 31, 19, RIGHT); await talk(); assert(await ev(() => G.state.flags.ashen_ef), 'beat Cindra');
   await at('emberfall', 29, 17, UP); await shot('volcano-machine'); await talk(); assert(await ev(() => G.state.flags.ch7_machine));
@@ -80,6 +83,7 @@ const OUT = process.env.OUT || '/tmp';
 
   // ---- Chapter 8 ----
   await ev(() => { G.state.cheats = { on: true, unlocked: true, god: true, pp: true }; G.state.visited.cloudpeak = true; G.state.party.forEach(c => { c.lvl = 100; c.exp = G.expFor(100); c.stats = G.calcStats(c); c.hp = c.stats.hp; c.moves = [{ id: 'Boulder Crash', pp: 5 }, { id: 'Slam', pp: 20 }]; }); });
+  await ev(() => { Object.assign(G.state.flags, { ch8_tam: true, ch8_pyrra: true, ch8_kade: true }); });   // the new step of js/chapters_more.js
   await at('cloudpeak', 32, 10, UP); await shot('vesper');
   await key('z', 300);   // three stages of battle: keep pressing A until Vesper is beaten and the scene is over
   for (let i = 0; i < 6000 && !(await ev(() => G.state.flags.ch8_vesper && !G.world.busy && !G.ui.text)); i++) { await key('z', 60); if (i % 200 === 0) await ev(() => G.state.party.forEach(c => { c.hp = Math.max(c.hp, c.stats.hp >> 1); })); }
