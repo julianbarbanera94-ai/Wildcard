@@ -184,7 +184,8 @@ function rowsOf(id, sh, tab) {
   const stock = sh.stock.filter(s => (s.cat || 'BUY') === tab);
   if (stock.some(s => s.vehicle)) rows.push(...vehicleRows(stock.filter(s => s.vehicle)));
   for (const s of stock) if (s.item && I[s.item]) {
-    const d = I[s.item]; rows.push({ type: 'item', item: s.item, name: s.item, price: s.price || d.price, lock: s.need ? s.need() : null, desc: d.desc, kind: d.kind });
+    const d = I[s.item], off = G.rep && G.regionOf ? G.rep.discount(G.regionOf(G.worldPlaceOf ? G.worldPlaceOf(G.world.mapId) || G.world.mapId : G.world.mapId)) : 0;   // reputation: friends pay less
+      rows.push({ type: 'item', item: s.item, name: s.item, price: Math.max(1, Math.round((s.price || d.price) * (1 - off))), lock: s.need ? s.need() : null, desc: d.desc, kind: d.kind });
   }
   return rows;
 }

@@ -26,10 +26,13 @@ G.grantOnce = function (key, fn) { const S = st(); if (!S || S.once[key]) return
 
 const rep = G.rep = {
   get: r => { const S = st(); return S ? Math.min(100, S.rep[r] || 0) : 0; },
-  add(r, n) { const S = st(); if (!S) return; const was = rep.tier(r); S.rep[r] = Math.max(0, Math.min(100, (S.rep[r] || 0) + n)); const now = rep.tier(r); if (now !== was && n > 0) G.questToast(`${G.REP_REGIONS.find(x => x[0] === r)[1]}: ${now}`, 'rep'); },
+  add(r, n) { const S = st(); if (!S) return; const was = rep.tier(r); S.rep[r] = Math.max(0, Math.min(100, (S.rep[r] || 0) + n)); const now = rep.tier(r); if (now !== was && n > 0) G.questToast(`${G.REP_REGIONS.find(x => x[0] === r)[1]}: ${now}` + (rep.perk(r) ? ` (${rep.perk(r)})` : ''), 'rep'); },
   tier: r => { const v = rep.get(r); let t = REP_TIERS[0][1]; for (const [m, n] of REP_TIERS) if (v >= m) t = n; return t; },
   tiers: REP_TIERS,
   max() { const S = st(); for (const [r] of G.REP_REGIONS) S.rep[r] = 100; },
+  // what a tier gives: shops in the region sell items cheaper (js/shops.js); reputation also counts toward homestead deeds (js/homestead.js)
+  discount: r => ({ FRIEND: .05, TRUSTED: .1, HERO: .15 })[rep.tier(r)] || 0,
+  perk: r => { const d = rep.discount(r); return d ? `shops ${Math.round(d * 100)}% off` : ''; },
 };
 
 function give(q) {
@@ -117,8 +120,8 @@ G.hooks.overlay.push(ctx => {
   const T = toasts[0]; T.t++;
   const col = { main: '#f7a33f', done: '#3fae5a', rep: '#9a5ae0', step: '#3a9ae8' }[T.kind] || '#41c7b4';
   const k = T.t < 12 ? T.t / 12 : T.t > 150 ? Math.max(0, (170 - T.t) / 20) : 1, W = G.W, sl = G.motionOK() ? 1 : 0;
-  ctx.save(); const hs = G.hudScale(); ctx.translate(W / 2, 22); ctx.scale(hs, hs); ctx.translate(-W / 2, -22); ctx.globalAlpha = k * G.hudAlpha();
-  ctx.font = G.FONT_S; const tw = Math.min(W - 24, ctx.measureText(T.text).width + 30), x = (W - tw) / 2, y = 22 - (1 - k) * 8 * sl;
+  const TY = G.H - 46; ctx.save(); const hs = G.hudScale(); ctx.translate(W / 2, TY); ctx.scale(hs, hs); ctx.translate(-W / 2, -TY); ctx.globalAlpha = k * G.hudAlpha();
+  ctx.font = G.FONT_S; const tw = Math.min(W - 24, ctx.measureText(T.text).width + 30), x = (W - tw) / 2, y = TY + (1 - k) * 8 * sl;   // above the bottom prompts, clear of the tracker and the mini-map
   G.frame(ctx, x, y, tw, 14, 'light'); G.kit.pill(ctx, x + 4, y + 3, 8, 8, col, '');
   G.text(ctx, T.text, x + 16, y + 4, { font: G.FONT_S, color: '#4a3a56', shadow: false });
   ctx.restore();
@@ -142,7 +145,7 @@ G.journalScreen = async function () {
     const sm = { font: G.FONT_S, color: '#5a4a66', shadow: false };
     if (tabs[tab][0] === 'rep') {
       G.REP_REGIONS.forEach(([r, n, sub], i) => { const y = 33 + i * 23, v = rep.get(r);
-        G.text(ctx, n, 10, y, { font: G.FONT_B || G.FONT }); G.text(ctx, rep.tier(r), 230, y, { align: 'right', font: G.FONT_S, color: '#9a5ae0', shadow: false });
+        G.text(ctx, n, 10, y, { font: G.FONT_B || G.FONT }); G.text(ctx, rep.tier(r) + (rep.perk(r) ? '  ' + rep.perk(r).toUpperCase() : ''), 230, y, { align: 'right', font: G.FONT_S, color: '#9a5ae0', shadow: false });
         G.text(ctx, sub, 10, y + 9, sm);
         G.kit.rr(ctx, 84, y + 3, 100, 4, 2); ctx.fillStyle = '#e8dff0'; ctx.fill(); if (v) { G.kit.rr(ctx, 84, y + 3, 100 * v / 100, 4, 2); ctx.fillStyle = '#b07ae8'; ctx.fill(); } });
       return;

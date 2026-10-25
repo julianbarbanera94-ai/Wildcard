@@ -1,6 +1,6 @@
 # WILDCARD: Story, Quests and Progression Guide
 
-Build 3.34.x. This guide is checked against the game by `tests/e2e-guide.js` (see the appendix). Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
+Build 3.35.x. This guide is checked against the game by `tests/e2e-guide.js` (see the appendix). Everything in this document was read from the game's own code and data (the quest definitions, the gate rules, the
 arena and map data), not from the old design drafts. Where the game differs from `docs/STORY_DESIGN.md`, this document is right.
 
 Contents
@@ -151,7 +151,9 @@ different movement puzzle (hopping pools, feather bridges, sand pits, three swit
 Five regions keep a reputation from 0 to 100: **WEST** (Sunmeadow, Sunhaven, Evergreen, Driftwood, Verdant), **SOUTH** (Stonebridge,
 Mirewood, Whispering Woods, Tidepool, Tidefall, Moonlit), **NORTH** (the Ridge, Lakeside, Cloudpeak, Glacier Pass, Frostmere, Aurora),
 **EAST** (Sandsreach, Badlands, Emberfall, Cobalt) and **LANTERNREST** (the village and your homestead). Tiers: 15 KNOWN, 40 FRIEND,
-70 TRUSTED, 100 HERO.
+70 TRUSTED, 100 HERO. **What it gives:** the region's shops sell items 5% cheaper at FRIEND, 10% at TRUSTED and 15% at HERO
+(the tier-up message and the journal's REP tab say so; vehicles are not discounted), and all reputation together counts toward homestead
+deeds (section 4).
 
 You earn it from: each trainer you beat (+2, once), each new species caught (+1 in the region you are in), each badge (+20 in its
 region), each shard (+15), every chapter and side quest reward, and the choices in side quests (some give negative reputation).
