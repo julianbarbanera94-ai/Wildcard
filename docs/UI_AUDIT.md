@@ -40,3 +40,14 @@ Whichever you pick, the same set of fixes follows:
 ## Not covered
 
 Summary and crafting screens; evolution; trust mini-game; ferry and flight screens; vehicles garage. They will be captured in the next pass.
+
+## Done in 3.37.0 (direction chosen: warm cream with hints of dark)
+
+- Battle HUD (status panels, command bar, move cards) restyled to cream panels with orange edges and dark ink; the battle message bar stays
+  dark navy as the accent. Icons recoloured to warm tones (js/battleui.js).
+- One header for every screen: the same orange ribbon on the bag, party, summary, Dex, shop, healing centre and badge case, with a small
+  coloured marker that says what kind of screen it is (shop colour, green cross for healing, purple for badges). `G.HEADER_COL`, `G.headerMark`.
+- Screen backgrounds: party, summary, Dex and badge case moved from blue, mint, pink and lilac to the shared warm peach; shop tabs orange.
+- Kept as dark accents: the quest tracker and WAY pills, the battle message bar, the badge case's velvet lining.
+
+Still to do: portrait text size, the start menu panel and icons, Dex empty rows, touch-control colours, cave brightness and banner.

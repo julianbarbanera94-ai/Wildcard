@@ -73,16 +73,16 @@ G.badgeCase = async function (start) {
   const layer = { draw(ctx) {
     const t = G.frameNo;
     // backdrop: soft lilac with drifting dots, like the other menu screens
-    K.blit(ctx, K.cache('bcbg', 240, 160, x => { x.fillStyle = K.lin(x, 0, 0, 0, 160, ['#f0e0ff', '#d2b8f4', '#b8a0e8']); x.fillRect(0, 0, 240, 160); const g = x.createRadialGradient(60, 30, 0, 60, 30, 160); g.addColorStop(0, 'rgba(255,255,255,.4)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 240, 160); }, { pad: 0, qmax: 4 }), 0, 0);
+    K.blit(ctx, K.cache('bcbg', 240, 160, x => { x.fillStyle = K.lin(x, 0, 0, 0, 160, ['#fff0dc', '#ffd8a8', '#ffc488']); x.fillRect(0, 0, 240, 160); const g = x.createRadialGradient(60, 30, 0, 60, 30, 160); g.addColorStop(0, 'rgba(255,255,255,.4)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 240, 160); }, { pad: 0, qmax: 4 }), 0, 0);
     const o = (t * .2) % 32; ctx.fillStyle = 'rgba(255,255,255,.3)';
     for (let yy = -16; yy < 176; yy += 16) for (let xx = ((yy / 16) % 2 ? 16 : 0) - 32; xx < 272; xx += 32) { ctx.beginPath(); ctx.arc(xx + 8 + o, yy + 8 + o, 3.2, 0, 7); ctx.fill(); }
     // header ribbon
     K.rr(ctx, 2, 1, 236, 14, 7); ctx.fillStyle = '#fff'; ctx.fill();
-    K.rr(ctx, 3.4, 2.4, 233.2, 11.2, 5.6); ctx.fillStyle = K.lin(ctx, 0, 2, 0, 14, ['#c9a0ff', '#a070e0', '#7e50c0']); ctx.fill();
+    K.rr(ctx, 3.4, 2.4, 233.2, 11.2, 5.6); ctx.fillStyle = K.lin(ctx, 0, 2, 0, 14, ['#ffc078', '#f7983f', '#e07a2a']); ctx.fill();   // the shared orange header
     ctx.fillStyle = 'rgba(255,255,255,.3)'; K.rr(ctx, 8, 3.4, 224, 3, 1.5); ctx.fill();
-    K.star(ctx, 10, 8, 3, '#fff6a8');
-    G.text(ctx, 'BADGE CASE', 16, 4, { color: '#fff', shadow: '#5a3490' });
-    G.text(ctx, `${G.badgeCount()} / 8`, 214, 4, { align: 'right', color: '#fff', shadow: '#5a3490' });
+    G.headerMark(ctx, 10, 8, '#a070e0');
+    G.text(ctx, 'BADGE CASE', 16, 4, { color: '#fff', shadow: '#9a4a10' });
+    G.text(ctx, `${G.badgeCount()} / 8`, 214, 4, { align: 'right', color: '#fff', shadow: '#9a4a10' });
     K.pill(ctx, 217, 4, 19, 8, '#ff7a6a', 'B'); G.tapZone(200, 0, 40, 17, () => G.tapKey('b'));
     // the velvet-lined case
     G.frame(ctx, 3, 18, 234, 90, 'light');

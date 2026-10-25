@@ -207,20 +207,22 @@ function vehicleRows(stock) {
 
 function drawShop(ctx, shop, st, tap) {
   const col = shop.color || '#4a9ad8', t = G.frameNo;
-  K.blit(ctx, backdrop(col), 0, 0);
-  K.blit(ctx, ribbon(col), 2, 1);
-  K.star(ctx, 11, 8.5, 3, '#fff6a8');
-  G.text(ctx, shop.name, 18, 4.6, { color: '#fff', shadow: shd(col, .5), font: FB });
+  const H = G.HEADER_COL || '#f7983f';   // one header colour for every screen; the shop's own colour marks it
+  K.blit(ctx, backdrop('#ffb060'), 0, 0);
+  K.blit(ctx, ribbon(H), 2, 1);
+  G.headerMark ? G.headerMark(ctx, 11, 8.5, col) : K.star(ctx, 11, 8.5, 3, '#fff6a8');
+  G.text(ctx, shop.name, 18, 4.6, { color: '#fff', shadow: shd(H, .5), font: FB });
   moneyPill(ctx, 172, 3, 62, money());
   // tabs
   const tabs = st.tabs, tw = Math.min(58, Math.floor(232 / tabs.length) - 3);
+  { const col = H;   // tabs in the shared orange too
   tabs.forEach((name, i) => {
     const x = 4 + i * (tw + 3), on = i === st.tab, y = on ? 18 : 19.5;
     K.rr(ctx, x, y, tw, 12, 5); ctx.fillStyle = on ? shd(col, .7) : 'rgba(255,255,255,.55)'; ctx.fill();
     K.rr(ctx, x + .8, y + .8, tw - 1.6, 10.4, 4.4); ctx.fillStyle = on ? K.lin(ctx, 0, y, 0, y + 12, [shd(col, 1.3), col]) : 'rgba(255,255,255,.75)'; ctx.fill();
     G.text(ctx, name, x + tw / 2, y + 3, { align: 'center', font: F6, color: on ? '#fff' : shd(col, .6), shadow: on ? shd(col, .45) : false });
     G.tapZone(x, 17, tw, 14, () => tap({ k: 'tab', i }));
-  });
+  }); }
   // list
   G.frame(ctx, 4, 32, 144, 93, 'light');
   const rows = st.rows, VIS = 6;
@@ -407,10 +409,10 @@ function drawHeal(ctx, o, st, tap) {
   const party = G.state.party, t = G.frameNo, PINK = '#ff6b8a';
   ctx.fillStyle = 'rgba(40,20,40,.25)'; ctx.fillRect(-60, -60, 360, 168);
   G.frame(ctx, 4, 4, 232, 102, 'light');
-  K.rr(ctx, 10, 9, 220, 14, 7); ctx.fillStyle = K.lin(ctx, 0, 9, 0, 23, ['#ff9ab0', PINK, '#e8506e']); ctx.fill();
+  K.rr(ctx, 10, 9, 220, 14, 7); ctx.fillStyle = K.lin(ctx, 0, 9, 0, 23, ['#ffc078', '#f7983f', '#e07a2a']); ctx.fill();   // the shared orange header
   ctx.fillStyle = 'rgba(255,255,255,.3)'; K.rr(ctx, 16, 10.5, 208, 3, 1.5); ctx.fill();
-  ctx.fillStyle = '#fff'; K.rr(ctx, 15, 11.5, 9, 9, 2.5); ctx.fill(); ctx.fillStyle = PINK; ctx.fillRect(18.6, 13, 1.8, 6); ctx.fillRect(16.5, 15.1, 6, 1.8);
-  G.text(ctx, o.name || 'HEALING', 28, 12, { color: '#fff', shadow: '#b03050', font: FB });
+  ctx.fillStyle = '#fff'; K.rr(ctx, 15, 11.5, 9, 9, 2.5); ctx.fill(); ctx.fillStyle = '#3fae5a'; ctx.fillRect(18.6, 13, 1.8, 6); ctx.fillRect(16.5, 15.1, 6, 1.8);   // green cross: healing
+  G.text(ctx, o.name || 'HEALING', 28, 12, { color: '#fff', shadow: '#9a4a10', font: FB });
   const tag = o.free || o.charges == null ? 'FREE · UNLIMITED' : `HEALS LEFT TODAY: ${o.charges}`;
   const tw = G.textW(ctx, tag) * .75 + 10; K.pill(ctx, 226 - tw, 11.5, tw, 9, o.free || o.charges == null ? '#5cc86a' : '#ffb43a', tag, F6);
   if (!party.length) G.text(ctx, 'You have no creatures with you.', 120, 50, { align: 'center', color: '#8a7a98' });

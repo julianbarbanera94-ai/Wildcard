@@ -20,14 +20,19 @@ function bg(ctx, c1, c2) {
   ctx.drawImage(dots.c, o - 32, o - 32, 272, 192);
 }
 // Rounded title ribbon along the top of a full-screen screen.
-function header(ctx, text, col, right) {
+// Every screen uses the same orange ribbon; `col` only tints the small marker at its left, which says what kind of screen it is.
+G.HEADER_COL = '#f7983f';
+// the marker: a white disc with a coloured centre
+G.headerMark = (ctx, x, y, mark) => { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 3.4, 0, 7); ctx.fill(); ctx.fillStyle = mark || '#fff6a8'; ctx.beginPath(); ctx.arc(x, y, 2.2, 0, 7); ctx.fill(); };
+function header(ctx, text, mark, right) {
+  const col = G.HEADER_COL;
   K.blit(ctx, K.cache('shdr' + col, 236, 14, x => {
     x.save(); x.shadowColor = 'rgba(40,20,30,.3)'; x.shadowBlur = 2 * x.getTransform().a; x.shadowOffsetY = 1 * x.getTransform().a;
     K.rr(x, 0, 0, 236, 14, 7); x.fillStyle = '#ffffff'; x.fill(); x.restore();
     K.rr(x, 1.4, 1.4, 233.2, 11.2, 5.6); x.fillStyle = K.lin(x, 0, 1, 0, 13, [G.shade(col, 1.25), col, G.shade(col, .85)]); x.fill();
     x.fillStyle = 'rgba(255,255,255,.3)'; K.rr(x, 6, 2.4, 224, 3, 1.5); x.fill();
   }), 2, 1);
-  K.star(ctx, 10, 8, 3, '#fff6a8');
+  G.headerMark(ctx, 10, 8, mark);
   G.text(ctx, text, 16, 4, { color: '#fff', shadow: G.shade(col, .55) });
   if (right) G.text(ctx, right, G.W - 9, 4, { align: 'right', color: '#fff', shadow: G.shade(col, .55) });
 }
@@ -86,7 +91,7 @@ G.summaryScreen = async function (start) {
   const layer = push({ draw(ctx) {
     G.tapZone(0, 0, 120, 160, () => { if (i > 0) { i--; G.audio.sfx('select'); } }); G.tapZone(120, 0, 120, 160, () => { if (i < party.length - 1) { i++; G.audio.sfx('select'); } });
     const c = party[i], sp = G.SPECIES[c.id];
-    bg(ctx, '#bfeedd', 'rgba(255,255,255,.35)');
+    bg(ctx, '#ffd3a1', 'rgba(255,255,255,.35)');
     header(ctx, `${G.name(c)}  Lv${c.lvl}`, '#3cc0a8', `${i + 1}/${party.length}`);
     G.frame(ctx, 4, 18, 80, 78, 'light');
     spot(ctx, 44, 52, 30, G.TYPE_COL[sp.types[0]]);
@@ -120,7 +125,7 @@ G.partyScreen = async function (o) {
   o = o || {}; const party = G.state.party;
   let idx = o.start !== undefined ? o.start : o.current >= 0 ? o.current : 0, swap = -1, hint = o.mode === 'use' ? 'Use on which creature?' : o.mode === 'switch' ? 'Choose a creature.' : 'Choose a creature.';
   const layer = push({ draw(ctx) {
-    bg(ctx, '#8fd3f0', 'rgba(255,255,255,.28)');
+    bg(ctx, '#ffd3a1', 'rgba(255,255,255,.28)');
     party.forEach((c, i) => {
       const sel = i === idx, x = 3 + (i % 2) * 119, y = 4 + Math.floor(i / 2) * 42 - (sel ? 1 + Math.abs(Math.sin(G.frameNo / 12)) * .8 : 0);
       G.tapZone(x, y, 116, 40, () => { idx = i; G.tapKey('a'); });
@@ -255,7 +260,7 @@ G.bagScreen = async function (where) {
 G.dexScreen = async function () {
   const ids = Object.keys(G.SPECIES).map(Number); let idx = 0, top = 0;
   const layer = push({ draw(ctx) {
-    bg(ctx, '#ffb3b8', 'rgba(255,255,255,.3)');
+    bg(ctx, '#ffd3a1', 'rgba(255,255,255,.3)');
     G.frame(ctx, 2, 2, 116, 156, 'light');
     ids.slice(top, top + 9).forEach((id, k) => {
       const y = 9 + k * 16, d = G.state.dex[id] || 0, i = top + k;
